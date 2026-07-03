@@ -1,0 +1,21 @@
+# Build output — the jar is built inside the image, not copied from host
+target/
+
+# Maven wrapper cache / IDE noise
+.mvn/wrapper/maven-wrapper.jar
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Docs and infra that don't belong in the build context
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+.git/
+.gitignore
+.gitattributes
+kong/
