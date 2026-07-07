@@ -1,6 +1,6 @@
 # Feature Specification: whatsapp-service (chat)
 
-**Feature Branch:** `003-whatsapp-service` | **Created:** 2026-07-07 | **Status:** Draft
+**Feature Branch:** `003-whatsapp-service` | **Created:** 2026-07-07 | **Status:** Done
 **Input:** Realtime 1:1 and group chat behind Kong — REST for history,
 WebSocket for live delivery, guaranteed offline delivery via an inbox.
 Interview-scale evolution documented in

@@ -70,7 +70,7 @@ services:
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth", "tweeter"]
+    profiles: ["auth", "tweeter", "chat"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -87,7 +87,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth", "tweeter"]
+    profiles: ["auth", "tweeter", "chat"]
     build:
       context: ./auth-service
       dockerfile: Dockerfile
@@ -158,10 +158,54 @@ services:
     networks:
       - kong-net
 
+  # ---- Postgres for the chat service (chats + messages + inbox) ----
+  chats-db:
+    image: postgres:16-alpine
+    container_name: chats-db
+    profiles: ["chat"]
+    environment:
+      POSTGRES_USER: chatsuser
+      POSTGRES_DB: chatsdb
+      POSTGRES_PASSWORD: chatspass
+    volumes:
+      - chats_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatsuser -d chatsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- WhatsApp-style chat service: REST history + WebSocket delivery ----
+  whatsapp-service:
+    profiles: ["chat"]
+    build:
+      context: ./whatsapp-service
+      dockerfile: Dockerfile
+    container_name: whatsapp-service
+    depends_on:
+      chats-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://chats-db:5432/chatsdb
+      SPRING_DATASOURCE_USERNAME: chatsuser
+      SPRING_DATASOURCE_PASSWORD: chatspass
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
 volumes:
   kong_data:
   app_data:
   posts_data:
+  chats_data:
 
 networks:
   kong-net:
