@@ -5,53 +5,53 @@
 
 ## Phase 1 — Setup
 
-- [ ] T001 Scaffold `tweeter-service/` (copy auth-service pom/Dockerfile
+- [x] T001 Scaffold `tweeter-service/` (copy auth-service pom/Dockerfile
       pattern; own artifactId; port 8080 internal)
-- [ ] T002 [P] Add `posts-db` + `tweeter-service` to root compose under
+- [x] T002 [P] Add `posts-db` + `tweeter-service` to root compose under
       profile `tweeter`
-- [ ] T003 [P] Copy JWT-decode helper (reads `sub` only) into
+- [x] T003 [P] Copy JWT-decode helper (reads `sub` only) into
       `tweeter-service/src/.../security/`
 
 ## Phase 2 — User Story 1: posts CRUD (P1)
 
-- [ ] T004 [US1] Post entity + repository (`posts` table, index
+- [x] T004 [US1] Post entity + repository (`posts` table, index
       `(author_username, created_at DESC)`)
-- [ ] T005 [US1] `POST /posts` (author from token `sub`; `400` on empty/oversize
+- [x] T005 [US1] `POST /posts` (author from token `sub`; `400` on empty/oversize
       content), `GET /posts/{id}`, `GET /posts?author=`
-- [ ] T006 [US1] **Checkpoint:** US1 scenarios pass through Kong (after T012)
+- [x] T006 [US1] **Checkpoint:** US1 scenarios pass through Kong (after T012)
       or direct-to-service pre-gateway
 
 ## Phase 3 — User Story 2: follow graph (P1)
 
-- [ ] T007 [US2] Follow entity + repository; unique (follower, followee);
+- [x] T007 [US2] Follow entity + repository; unique (follower, followee);
       `ON CONFLICT DO NOTHING`
-- [ ] T008 [US2] `PUT /posts/users/{username}/follow` + `DELETE`; `400` on
+- [x] T008 [US2] `PUT /posts/users/{username}/follow` + `DELETE`; `400` on
       self-follow; both idempotent
-- [ ] T009 [US2] **Checkpoint:** follow/unfollow/re-follow scenarios pass
+- [x] T009 [US2] **Checkpoint:** follow/unfollow/re-follow scenarios pass
 
 ## Phase 4 — User Story 3: feed (P1)
 
-- [ ] T010 [US3] Feed query with composite cursor `(created_at, id)` —
+- [x] T010 [US3] Feed query with composite cursor `(created_at, id)` —
       single SQL, fan-out on read, `pageSize` clamp
-- [ ] T011 [US3] **Checkpoint:** interleaved order, cursor walk with no
+- [x] T011 [US3] **Checkpoint:** interleaved order, cursor walk with no
       duplicates/gaps (including identical-timestamp fixture), empty feed case
 
 ## Phase 5 — Plug kit + gateway
 
-- [ ] T012 [P] `tweeter-service/plug/kong-setup.sh` — `/posts` route + jwt
+- [x] T012 [P] `tweeter-service/plug/kong-setup.sh` — `/posts` route + jwt
       plugin + rate limiting, idempotent, `KONG_ADMIN_URL` param
-- [ ] T013 [P] `tweeter-service/plug/compose.plug.yml` (image + posts-db,
+- [x] T013 [P] `tweeter-service/plug/compose.plug.yml` (image + posts-db,
       profile `tweeter`)
-- [ ] T014 [P] `tweeter-service/plug/smoke.sh` — full two-user scenario
+- [x] T014 [P] `tweeter-service/plug/smoke.sh` — full two-user scenario
       (register×2 via auth, follow, post, feed, paging, 401 check)
-- [ ] T015 Thin wrapper `kong/setup-tweeter.sh` delegating to the plug kit
+- [x] T015 Thin wrapper `kong/setup-tweeter.sh` delegating to the plug kit
 
 ## Phase 6 — User Story 4: integration demo (P2, Art. VII)
 
-- [ ] T016 [US4] `examples/tweeter-standalone/docker-compose.yml`: fresh Kong
+- [x] T016 [US4] `examples/tweeter-standalone/docker-compose.yml`: fresh Kong
       + auth plug kit + tweeter plug kit, images only
-- [ ] T017 [US4] `examples/tweeter-standalone/README.md` with exact commands
-- [ ] T018 [US4] **Checkpoint (feature exit):** standalone `smoke.sh` green,
+- [x] T017 [US4] `examples/tweeter-standalone/README.md` with exact commands
+- [x] T018 [US4] **Checkpoint (feature exit):** standalone `smoke.sh` green,
       zero service-code changes → SC-002
 
 ## Dependencies

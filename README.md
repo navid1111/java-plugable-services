@@ -7,6 +7,7 @@ Everything runs in Docker.
 Client ──▶ Kong (:18000)
               │
               ├─ /auth/*   PUBLIC   (register + login + me) ──▶ auth-service (:8080)
+              ├─ /posts/*  JWT      (posts + follows + feed) ─▶ tweeter-service (:8080)
               └─ Postgres           (Kong config store)
 ```
 
@@ -34,12 +35,17 @@ Every backend service is packaged as a "plug kit" with a standard contract. The 
 echo "JWT_SECRET=change-me-super-secret-jwt-signing-key-min-32-bytes-0123456789" > .env
 echo "JWT_ISSUER=springboot-auth" >> .env
 
-# 2. Build the app image and start the stack (core + auth profile)
+# 2. Build the app image and start the stack
+#    Auth only:
 docker compose --profile auth up --build -d
+#    Auth + tweeter:
+docker compose --profile tweeter up --build -d
 
 # 3. Wait until Kong is healthy, then configure the gateway
 #    (creates the core jwt issuer + delegates to auth-service plug kit)
 ./kong/setup-core.sh
+#    If the tweeter profile is enabled, register /posts too:
+./kong/setup-tweeter.sh
 ```
 
 ## Test it
@@ -48,6 +54,7 @@ You can use the provided smoke test script to verify the full register → login
 
 ```bash
 ./auth-service/plug/smoke.sh
+./tweeter-service/plug/smoke.sh
 ```
 
 ## Useful admin calls

@@ -66,11 +66,11 @@ services:
     networks:
       - kong-net
 
-  # ---- Postgres for the application (users table) — separate from Kong's DB ----
+  # ---- Postgres for auth (users table) — separate from Kong's DB ----
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth"]
+    profiles: ["auth", "tweeter"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -87,7 +87,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth"]
+    profiles: ["auth", "tweeter"]
     build:
       context: ./auth-service
       dockerfile: Dockerfile
@@ -107,6 +107,49 @@ services:
       JWT_EXPIRATION_MINUTES: "60"
     expose:
       - "8080"   # reachable only inside kong-net, via Kong
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+  # ---- Postgres for the tweeter service (posts + follows) ----
+  posts-db:
+    image: postgres:16-alpine
+    container_name: posts-db
+    profiles: ["tweeter"]
+    environment:
+      POSTGRES_USER: postsuser
+      POSTGRES_DB: postsdb
+      POSTGRES_PASSWORD: postspass
+    volumes:
+      - posts_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postsuser -d postsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Tweeter service: posts, follows, and feed ----
+  tweeter-service:
+    profiles: ["tweeter"]
+    build:
+      context: ./tweeter-service
+      dockerfile: Dockerfile
+    container_name: tweeter-service
+    depends_on:
+      posts-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://posts-db:5432/postsdb
+      SPRING_DATASOURCE_USERNAME: postsuser
+      SPRING_DATASOURCE_PASSWORD: postspass
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
       interval: 10s

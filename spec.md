@@ -46,18 +46,20 @@ deliberately not taking yet) are documented in
 ## Current state (built & verified)
 
 - Kong 3.9 (DB-backed, Postgres) proxying on host **:18000**, Admin API :8001
-- Spring Boot 4.1 (Java 21) app with `/auth/register`, `/auth/login`
-  (BCrypt + Postgres) and a JWT-protected demo endpoint
+- Spring Boot 4.1 (Java 21) auth service with `/auth/register`,
+  `/auth/login`, and `/auth/me` (BCrypt + Postgres)
 - Edge auth: HS256 JWT (`iss=springboot-auth`, `sub=<username>`); Kong `jwt`
   plugin verifies on protected routes; rate limiting 10/min, 100/hour
+- `tweeter-service` with `/posts` CRUD, follow/unfollow, reverse-chron feed
+  with cursor paging, and a standalone plug-kit demo
 - Everything in Docker Compose; multi-stage Dockerfile (no local JDK)
 
 ## Feature index
 
 | # | Feature | Delivers | Status |
 |---|---------|----------|--------|
-| [001](specs/001-auth-service/spec.md) | auth-service | register/login/me, monorepo restructure, first plug kit + standalone demo | Draft |
-| [002](specs/002-tweeter-service/spec.md) | tweeter-service | posts, follow graph, cursor feed + standalone demo | Draft |
+| [001](specs/001-auth-service/spec.md) | auth-service | register/login/me, monorepo restructure, first plug kit + standalone demo | Done |
+| [002](specs/002-tweeter-service/spec.md) | tweeter-service | posts, follow graph, cursor feed + standalone demo | Done |
 | [003](specs/003-whatsapp-service/spec.md) | whatsapp-service | chat REST + WebSocket realtime + offline inbox + standalone demo | Draft |
 | [004](specs/004-turf-service/spec.md) | turf-service | venues/slots/bookings, no double-booking + standalone demo | Draft |
 | [005](specs/005-composition-facebook/spec.md) | composition demo | tweeter + chat = "facebook", one command, one login, zero code change | Draft |
