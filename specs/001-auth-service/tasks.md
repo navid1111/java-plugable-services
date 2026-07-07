@@ -5,15 +5,15 @@
 
 ## Phase 1 — Setup (repo restructure)
 
-- [ ] T001 Create `auth-service/` and move `src/`, `pom.xml`, `mvnw*`, `.mvn/`,
+- [x] T001 Create `auth-service/` and move `src/`, `pom.xml`, `mvnw*`, `.mvn/`,
       `Dockerfile`, `.dockerignore` into it
-- [ ] T002 Update `docker-compose.yml`: build context `./auth-service`, rename
+- [x] T002 Update `docker-compose.yml`: build context `./auth-service`, rename
       service `app` → `auth-service`, `app-database` → `users-db`
-- [ ] T003 Rename `kong/setup.sh` → `kong/setup-core.sh`; update upstream host
+- [x] T003 Rename `kong/setup.sh` → `kong/setup-core.sh`; update upstream host
       to `auth-service`
-- [ ] T004 Add compose profile scaffolding (core services always on; feature
+- [x] T004 Add compose profile scaffolding (core services always on; feature
       services behind profiles)
-- [ ] T005 **Checkpoint:** existing register → login → protected-call flow is
+- [x] T005 **Checkpoint:** existing register → login → protected-call flow is
       green through Kong (nothing behavioral changed yet)
 
 ## Phase 2 — User Story 1: register & login (P1)

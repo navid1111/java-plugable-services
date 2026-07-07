@@ -17,7 +17,7 @@
 set -euo pipefail
 
 ADMIN="${KONG_ADMIN_URL:-http://localhost:8001}"
-UPSTREAM_HOST="${UPSTREAM_HOST:-app}"
+UPSTREAM_HOST="${UPSTREAM_HOST:-auth-service}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8080}"
 
 # --- These two MUST match docker-compose.yml's app service (JWT_SECRET / JWT_ISSUER) ---

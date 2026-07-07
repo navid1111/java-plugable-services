@@ -8,7 +8,7 @@
 ## Feature progress
 
 - [ ] **001 auth-service** — [tasks](specs/001-auth-service/tasks.md)
-  - [ ] Phase 1 — repo restructure (T001–T005)
+  - [x] Phase 1 — repo restructure (T001–T005)
   - [ ] US1 register & login (T006–T009)
   - [ ] US2 `/auth/me` (T010–T011)
   - [ ] Plug kit + service contract in README (T012–T016)

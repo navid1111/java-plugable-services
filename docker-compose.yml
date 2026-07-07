@@ -67,9 +67,10 @@ services:
       - kong-net
 
   # ---- Postgres for the application (users table) — separate from Kong's DB ----
-  app-database:
+  users-db:
     image: postgres:16-alpine
-    container_name: app-database
+    container_name: users-db
+    profiles: ["auth"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -85,17 +86,18 @@ services:
       - kong-net
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
-  app:
+  auth-service:
+    profiles: ["auth"]
     build:
-      context: .
+      context: ./auth-service
       dockerfile: Dockerfile
-    container_name: springboot-app
+    container_name: auth-service
     depends_on:
-      app-database:
+      users-db:
         condition: service_healthy
     environment:
       # Datasource -> the app's own Postgres
-      SPRING_DATASOURCE_URL: jdbc:postgresql://app-database:5432/appdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/appdb
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: apppass
       # JWT signing — this SECRET must match the jwt credential secret in kong/setup.sh,
