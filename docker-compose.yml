@@ -1,0 +1,122 @@
+services:
+  # ---- Postgres: Kong's configuration store ----
+  kong-database:
+    image: postgres:16-alpine
+    container_name: kong-database
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kongpass
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- One-shot job: create/upgrade Kong's schema, then exit ----
+  kong-migrations:
+    image: kong:3.9
+    container_name: kong-migrations
+    command: kong migrations bootstrap
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+    restart: on-failure
+    networks:
+      - kong-net
+
+  # ---- Kong Gateway: the API gateway itself ----
+  kong:
+    image: kong:3.9
+    container_name: kong
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+      # Proxy on 8000 (http) / 8443 (https); Admin API on 8001.
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+      - "18000:8000"  # public proxy — clients hit this (host 18000 to avoid a local conflict)
+      - "8001:8001"   # admin API — for configuration (keep private in prod)
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Postgres for the application (users table) — separate from Kong's DB ----
+  app-database:
+    image: postgres:16-alpine
+    container_name: app-database
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_DB: appdb
+      POSTGRES_PASSWORD: apppass
+    volumes:
+      - app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Spring Boot upstream service (not exposed to host directly) ----
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot-app
+    depends_on:
+      app-database:
+        condition: service_healthy
+    environment:
+      # Datasource -> the app's own Postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://app-database:5432/appdb
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: apppass
+      # JWT signing — this SECRET must match the jwt credential secret in kong/setup.sh,
+      # and JWT_ISSUER must match that credential's `key`.
+      JWT_SECRET: change-me-super-secret-jwt-signing-key-min-32-bytes-0123456789
+      JWT_ISSUER: springboot-auth
+      JWT_EXPIRATION_MINUTES: "60"
+    expose:
+      - "8080"   # reachable only inside kong-net, via Kong
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+volumes:
+  kong_data:
+  app_data:
+
+networks:
+  kong-net:
+    driver: bridge
