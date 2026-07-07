@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Facebook Composition Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d8dee9;
+      --text: #1f2937;
+      --muted: #667085;
+      --brand: #2563eb;
+      --danger: #b42318;
+      --ok: #047857;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr) minmax(320px, 420px);
+      gap: 16px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    section header {
+      border-bottom: 1px solid var(--line);
+      border-radius: 8px 8px 0 0;
+      padding: 12px 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font: inherit;
+      font-weight: 700;
+      background: var(--brand);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--line);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .row > * {
+      flex: 1;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.bad {
+      color: var(--danger);
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      max-height: 390px;
+      overflow: auto;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      background: #fff;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-log {
+      min-height: 260px;
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fbfcff;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .chat-event {
+      border-left: 3px solid var(--brand);
+      padding: 6px 8px;
+      background: #fff;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 980px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <h1>Facebook Composition</h1>
+      <div id="sessionStatus" class="status">Signed out</div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <header><h2>Session</h2></header>
+      <div class="body">
+        <label>
+          Username
+          <input id="username" autocomplete="username" value="alice">
+        </label>
+        <label>
+          Password
+          <input id="password" type="password" autocomplete="current-password" value="secret123">
+        </label>
+        <div class="row">
+          <button id="registerBtn" class="secondary">Register</button>
+          <button id="loginBtn">Login</button>
+        </div>
+        <button id="clearBtn" class="secondary">Clear Token</button>
+        <div id="authStatus" class="status"></div>
+      </div>
+    </section>
+
+    <section>
+      <header><h2>Posts</h2></header>
+      <div class="body">
+        <label>
+          Post Content
+          <textarea id="postContent">Composed through Kong with one token.</textarea>
+        </label>
+        <div class="row">
+          <button id="postBtn">Create Post</button>
+          <button id="refreshPostsBtn" class="secondary">Refresh</button>
+        </div>
+        <div id="postStatus" class="status"></div>
+        <div id="postsList" class="list"></div>
+      </div>
+    </section>
+
+    <section>
+      <header><h2>Chat</h2></header>
+      <div class="body">
+        <label>
+          Recipient Username
+          <input id="chatRecipient" value="bob">
+        </label>
+        <label>
+          Chat ID
+          <input id="chatId" inputmode="numeric" placeholder="Create a chat first">
+        </label>
+        <div class="row">
+          <button id="createChatBtn">Create Chat</button>
+          <button id="connectChatBtn" class="secondary">Connect</button>
+        </div>
+        <label>
+          Message
+          <input id="chatMessage" value="Hello from the composed frontend.">
+        </label>
+        <button id="sendChatBtn">Send Message</button>
+        <div id="chatStatus" class="status"></div>
+        <div id="chatLog" class="chat-log"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let token = '';
+    let currentUser = '';
+    let socket = null;
+
+    const els = {
+      username: document.querySelector('#username'),
+      password: document.querySelector('#password'),
+      sessionStatus: document.querySelector('#sessionStatus'),
+      authStatus: document.querySelector('#authStatus'),
+      postContent: document.querySelector('#postContent'),
+      postStatus: document.querySelector('#postStatus'),
+      postsList: document.querySelector('#postsList'),
+      chatRecipient: document.querySelector('#chatRecipient'),
+      chatId: document.querySelector('#chatId'),
+      chatMessage: document.querySelector('#chatMessage'),
+      chatStatus: document.querySelector('#chatStatus'),
+      chatLog: document.querySelector('#chatLog'),
+    };
+
+    function setStatus(node, text, tone) {
+      node.textContent = text;
+      node.className = tone ? `status ${tone}` : 'status';
+    }
+
+    function headers(json) {
+      const result = {};
+      if (json) {
+        result['Content-Type'] = 'application/json';
+      }
+      if (token) {
+        result.Authorization = `Bearer ${token}`;
+      }
+      return result;
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          ...headers(Boolean(options.body)),
+          ...(options.headers || {}),
+        },
+      });
+      const text = await response.text();
+      const body = text ? JSON.parse(text) : null;
+      if (!response.ok) {
+        const message = body && body.error ? body.error : `${response.status} ${response.statusText}`;
+        throw new Error(message);
+      }
+      return body;
+    }
+
+    function updateSession() {
+      if (token) {
+        setStatus(els.sessionStatus, `Signed in as ${currentUser}`, 'ok');
+      } else {
+        setStatus(els.sessionStatus, 'Signed out');
+      }
+    }
+
+    function addChatEvent(text) {
+      const item = document.createElement('div');
+      item.className = 'chat-event';
+      item.textContent = text;
+      els.chatLog.append(item);
+      els.chatLog.scrollTop = els.chatLog.scrollHeight;
+    }
+
+    async function register() {
+      try {
+        await request('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: els.username.value.trim(),
+            password: els.password.value,
+          }),
+        });
+        setStatus(els.authStatus, 'Registered', 'ok');
+      } catch (error) {
+        setStatus(els.authStatus, error.message, 'bad');
+      }
+    }
+
+    async function login() {
+      try {
+        const body = await request('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: els.username.value.trim(),
+            password: els.password.value,
+          }),
+        });
+        token = body.access_token;
+        currentUser = els.username.value.trim();
+        updateSession();
+        setStatus(els.authStatus, 'Token ready', 'ok');
+        await refreshPosts();
+      } catch (error) {
+        setStatus(els.authStatus, error.message, 'bad');
+      }
+    }
+
+    function clearToken() {
+      token = '';
+      currentUser = '';
+      if (socket) {
+        socket.close();
+      }
+      updateSession();
+      setStatus(els.authStatus, 'Token cleared');
+    }
+
+    async function createPost() {
+      try {
+        const post = await request('/posts', {
+          method: 'POST',
+          body: JSON.stringify({ content: els.postContent.value }),
+        });
+        setStatus(els.postStatus, `Created post ${post.id}`, 'ok');
+        await refreshPosts();
+      } catch (error) {
+        setStatus(els.postStatus, error.message, 'bad');
+      }
+    }
+
+    async function refreshPosts() {
+      if (!currentUser) {
+        els.postsList.innerHTML = '';
+        return;
+      }
+      try {
+        const posts = await request(`/posts?author=${encodeURIComponent(currentUser)}`);
+        els.postsList.innerHTML = '';
+        for (const post of posts) {
+          const item = document.createElement('div');
+          const content = document.createElement('strong');
+          const meta = document.createElement('span');
+          item.className = 'item';
+          meta.className = 'meta';
+          content.textContent = post.content;
+          meta.textContent = `#${post.id} by ${post.authorUsername} at ${post.createdAt}`;
+          item.append(content, meta);
+          els.postsList.append(item);
+        }
+        setStatus(els.postStatus, `${posts.length} post(s) loaded`, 'ok');
+      } catch (error) {
+        setStatus(els.postStatus, error.message, 'bad');
+      }
+    }
+
+    async function createChat() {
+      try {
+        const recipient = els.chatRecipient.value.trim();
+        const chat = await request('/chat/chats', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: `${currentUser} and ${recipient}`,
+            participants: [recipient],
+          }),
+        });
+        els.chatId.value = chat.id;
+        setStatus(els.chatStatus, `Chat ${chat.id} ready`, 'ok');
+      } catch (error) {
+        setStatus(els.chatStatus, error.message, 'bad');
+      }
+    }
+
+    function connectChat() {
+      try {
+        if (!token) {
+          throw new Error('missing token');
+        }
+        const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = `${scheme}//${window.location.host}/chat/ws?token=${encodeURIComponent(token)}`;
+        socket = new WebSocket(url);
+        socket.addEventListener('open', () => {
+          setStatus(els.chatStatus, 'Socket connected', 'ok');
+        });
+        socket.addEventListener('message', (event) => {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'newMessage') {
+            const message = payload.data.message;
+            addChatEvent(`${message.senderUsername}: ${message.content}`);
+            socket.send(JSON.stringify({ type: 'ack', messageId: message.id }));
+          } else if (payload.type === 'messageSent') {
+            const message = payload.data.message;
+            addChatEvent(`sent: ${message.content}`);
+          } else {
+            addChatEvent(JSON.stringify(payload));
+          }
+        });
+        socket.addEventListener('close', () => {
+          setStatus(els.chatStatus, 'Socket closed');
+        });
+        socket.addEventListener('error', () => {
+          setStatus(els.chatStatus, 'Socket error', 'bad');
+        });
+      } catch (error) {
+        setStatus(els.chatStatus, error.message, 'bad');
+      }
+    }
+
+    function sendChat() {
+      try {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          throw new Error('socket is not connected');
+        }
+        socket.send(JSON.stringify({
+          type: 'sendMessage',
+          chatId: Number(els.chatId.value),
+          content: els.chatMessage.value,
+        }));
+      } catch (error) {
+        setStatus(els.chatStatus, error.message, 'bad');
+      }
+    }
+
+    document.querySelector('#registerBtn').addEventListener('click', register);
+    document.querySelector('#loginBtn').addEventListener('click', login);
+    document.querySelector('#clearBtn').addEventListener('click', clearToken);
+    document.querySelector('#postBtn').addEventListener('click', createPost);
+    document.querySelector('#refreshPostsBtn').addEventListener('click', refreshPosts);
+    document.querySelector('#createChatBtn').addEventListener('click', createChat);
+    document.querySelector('#connectChatBtn').addEventListener('click', connectChat);
+    document.querySelector('#sendChatBtn').addEventListener('click', sendChat);
+    updateSession();
+  </script>
+</body>
+</html>

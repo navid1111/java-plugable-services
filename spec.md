@@ -54,6 +54,10 @@ deliberately not taking yet) are documented in
   with cursor paging, and a standalone plug-kit demo
 - `whatsapp-service` with `/chat` REST APIs, Kong-proxied WebSockets,
   offline inbox replay, ACK handling, and a standalone plug-kit demo
+- `turf-service` with seeded venues/slots, database-enforced no-double-booking,
+  mine/cancel flows, and a standalone plug-kit demo
+- Facebook composition demo in `examples/facebook/`: one login drives posts
+  and chat through Kong with zero service code changes
 - Everything in Docker Compose; multi-stage Dockerfile (no local JDK)
 
 ## Feature index
@@ -63,8 +67,8 @@ deliberately not taking yet) are documented in
 | [001](specs/001-auth-service/spec.md) | auth-service | register/login/me, monorepo restructure, first plug kit + standalone demo | Done |
 | [002](specs/002-tweeter-service/spec.md) | tweeter-service | posts, follow graph, cursor feed + standalone demo | Done |
 | [003](specs/003-whatsapp-service/spec.md) | whatsapp-service | chat REST + WebSocket realtime + offline inbox + standalone demo | Done |
-| [004](specs/004-turf-service/spec.md) | turf-service | venues/slots/bookings, no double-booking + standalone demo | Draft |
-| [005](specs/005-composition-facebook/spec.md) | composition demo | tweeter + chat = "facebook", one command, one login, zero code change | Draft |
+| [004](specs/004-turf-service/spec.md) | turf-service | venues/slots/bookings, no double-booking + standalone demo | Done |
+| [005](specs/005-composition-facebook/spec.md) | composition demo | tweeter + chat = "facebook", one command, one login, zero code change | Done |
 | [006](specs/006-hardening/spec.md) | hardening | .env secrets, HTTPS, RS256 evaluation, decK | Draft |
 
 ## Out of scope (platform-wide)

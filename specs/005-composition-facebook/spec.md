@@ -1,6 +1,6 @@
 # Feature Specification: composition demo ("facebook" = tweeter + chat)
 
-**Feature Branch:** `005-composition-facebook` | **Created:** 2026-07-07 | **Status:** Draft
+**Feature Branch:** `005-composition-facebook` | **Created:** 2026-07-07 | **Status:** Done
 **Input:** Prove the platform's core claim — two independently built services
 compose into one product with zero code changes, one command, one login.
 

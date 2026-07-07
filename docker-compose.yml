@@ -70,7 +70,7 @@ services:
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth", "tweeter", "chat"]
+    profiles: ["auth", "tweeter", "chat", "turf"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -87,7 +87,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth", "tweeter", "chat"]
+    profiles: ["auth", "tweeter", "chat", "turf"]
     build:
       context: ./auth-service
       dockerfile: Dockerfile
@@ -201,11 +201,55 @@ services:
     networks:
       - kong-net
 
+  # ---- Postgres for the turf booking service (venues + slots + bookings) ----
+  bookings-db:
+    image: postgres:16-alpine
+    container_name: bookings-db
+    profiles: ["turf"]
+    environment:
+      POSTGRES_USER: bookingsuser
+      POSTGRES_DB: bookingsdb
+      POSTGRES_PASSWORD: bookingspass
+    volumes:
+      - bookings_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookingsuser -d bookingsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Turf service: venues, slots, and no-double-booking guarantee ----
+  turf-service:
+    profiles: ["turf"]
+    build:
+      context: ./turf-service
+      dockerfile: Dockerfile
+    container_name: turf-service
+    depends_on:
+      bookings-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bookings-db:5432/bookingsdb
+      SPRING_DATASOURCE_USERNAME: bookingsuser
+      SPRING_DATASOURCE_PASSWORD: bookingspass
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
 volumes:
   kong_data:
   app_data:
   posts_data:
   chats_data:
+  bookings_data:
 
 networks:
   kong-net:

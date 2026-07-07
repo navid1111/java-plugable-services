@@ -1,6 +1,6 @@
 # Feature Specification: turf-service (booking)
 
-**Feature Branch:** `004-turf-service` | **Created:** 2026-07-07 | **Status:** Draft
+**Feature Branch:** `004-turf-service` | **Created:** 2026-07-07 | **Status:** Done
 **Input:** Venue/slot/booking CRUD with a hard no-double-booking guarantee.
 Deliberately the simplest service — it measures how cheap adding a service
 has become (target: ~an afternoon). Interview-scale evolution documented in
