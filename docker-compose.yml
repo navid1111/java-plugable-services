@@ -102,8 +102,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: apppass
       # JWT signing — this SECRET must match the jwt credential secret in kong/setup.sh,
       # and JWT_ISSUER must match that credential's `key`.
-      JWT_SECRET: change-me-super-secret-jwt-signing-key-min-32-bytes-0123456789
-      JWT_ISSUER: springboot-auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
       JWT_EXPIRATION_MINUTES: "60"
     expose:
       - "8080"   # reachable only inside kong-net, via Kong
@@ -118,6 +118,7 @@ services:
 volumes:
   kong_data:
   app_data:
+  posts_data:
 
 networks:
   kong-net:

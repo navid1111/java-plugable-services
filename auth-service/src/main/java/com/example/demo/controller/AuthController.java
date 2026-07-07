@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +44,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody Credentials body) {
+    public ResponseEntity<?> register(@RequestBody Credentials body) {
+        if (body.username() == null || body.username().trim().isEmpty() || body.password() == null || body.password().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "username and password are required"));
+        }
         if (users.existsByUsername(body.username())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "username already taken"));
@@ -66,5 +72,21 @@ public class AuthController {
                 })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "invalid username or password")));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "missing or invalid token"));
+        }
+        try {
+            String token = authorization.substring(7);
+            String username = jwtService.extractUsername(token);
+            return users.findByUsername(username)
+                    .map(u -> ResponseEntity.ok(Map.of("id", u.getId(), "username", u.getUsername())))
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "user not found")));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "invalid or expired token"));
+        }
     }
 }

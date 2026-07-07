@@ -60,6 +60,7 @@ public class JwtService {
     public String extractUsername(String token) {
         Jws<Claims> jws = Jwts.parser()
                 .verifyWith(key)
+                .requireIssuer(issuer)
                 .build()
                 .parseSignedClaims(token);
         return jws.getPayload().getSubject();

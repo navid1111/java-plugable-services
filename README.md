@@ -1,37 +1,26 @@
 # Spring Boot + Kong API Gateway
 
-An API gateway setup where **Kong** sits in front of a **Spring Boot** backend and
-handles **authentication** (JWT) and **rate limiting** at the edge. Spring Boot
-issues the tokens (login against a Postgres users table); Kong verifies them.
+An API gateway setup where **Kong** sits in front of a **Spring Boot** backend and handles **authentication** (JWT) and **rate limiting** at the edge. The `auth-service` issues the tokens (login against a Postgres users table); Kong verifies them for other downstream services.
 Everything runs in Docker.
 
-```
-Client ──▶ Kong (:18000) ──▶ Spring Boot app (:8080, internal only)
+```text
+Client ──▶ Kong (:18000)
               │
-              ├─ /auth/*   PUBLIC   (register + login -> issues a JWT)
-              ├─ /api/*    jwt      (Kong verifies the HS256 token)
-              ├─ rate-limiting      (10/min, 100/hour, whole service)
+              ├─ /auth/*   PUBLIC   (register + login + me) ──▶ auth-service (:8080)
               └─ Postgres           (Kong config store)
-
-Spring Boot ──▶ app-database (Postgres)   users table, BCrypt password hashes
 ```
 
-**Auth model:** Spring Boot signs HS256 JWTs (`iss=springboot-auth`, `sub=<username>`);
-Kong holds a matching jwt credential (same shared secret) and verifies every `/api`
-request. The shared secret lives in `docker-compose.yml` (`JWT_SECRET`) and must equal
-the one in `kong/setup.sh`.
+## Service Contract & Plug Kit Layout
 
-## Components
+Every backend service is packaged as a "plug kit" with a standard contract. The `auth-service` establishes this template:
 
-| Service          | Port (host) | Purpose                                   |
-|------------------|-------------|-------------------------------------------|
-| `kong`           | 8000 / 8001 | Proxy (8000) + Admin API (8001)           |
-| `kong-database`  | —           | Postgres 16, Kong's config store          |
-| `kong-migrations`| —           | One-shot schema bootstrap, then exits     |
-| `app`            | — (internal)| Spring Boot backend, reachable via Kong   |
-
-The Spring Boot app is **not** published to the host — the only way in is through
-Kong on port 8000. That's the whole point of a gateway.
+- **Prefix:** It owns the `/auth` prefix.
+- **JWT Verification:** `auth-service` endpoints are public (no Kong jwt plugin, since it handles auth itself). Future services will have their routes protected by `jwt-by-default`.
+- **Database:** It has its own dedicated database (`users-db`), completely separate from Kong's config store.
+- **Plug Kit Layout:** The service exports a `plug/` directory containing everything needed to integrate it:
+  - `compose.plug.yml`: Docker Compose definition for the service and its DB.
+  - `kong-setup.sh`: Idempotent script to register the service and its routes with Kong.
+  - `smoke.sh`: Script to automatically test the service's happy path through the gateway.
 
 ## Prerequisites
 
@@ -41,43 +30,25 @@ Kong on port 8000. That's the whole point of a gateway.
 ## Run
 
 ```bash
-# 1. Build the app image and start the stack
-docker compose up --build -d
+# 1. Create a .env file with your JWT secrets
+echo "JWT_SECRET=change-me-super-secret-jwt-signing-key-min-32-bytes-0123456789" > .env
+echo "JWT_ISSUER=springboot-auth" >> .env
 
-# 2. Wait until Kong is healthy, then configure the gateway
-#    (creates the service, public /auth + protected /api routes, jwt, rate-limiting)
-./kong/setup.sh
+# 2. Build the app image and start the stack (core + auth profile)
+docker compose --profile auth up --build -d
+
+# 3. Wait until Kong is healthy, then configure the gateway
+#    (creates the core jwt issuer + delegates to auth-service plug kit)
+./kong/setup-core.sh
 ```
 
 ## Test it
 
+You can use the provided smoke test script to verify the full register → login → `/auth/me` flow:
+
 ```bash
-BASE=http://localhost:18000
-
-# 1. No token -> 401
-curl -i $BASE/api/hello
-
-# 2. Register a user (public /auth) -> 201
-curl -s -X POST $BASE/auth/register -H 'Content-Type: application/json' \
-  -d '{"username":"alice","password":"secret123"}'
-
-# 3. Log in -> returns access_token
-TOKEN=$(curl -s -X POST $BASE/auth/login -H 'Content-Type: application/json' \
-  -d '{"username":"alice","password":"secret123"}' \
-  | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
-
-# 4. Call the protected API with the token -> 200, "user":"alice"
-curl -i $BASE/api/hello -H "Authorization: Bearer $TOKEN"
-
-# 5. Rate limit -> >10 requests/min returns 429
-for i in $(seq 1 12); do
-  curl -s -o /dev/null -w "%{http_code}\n" \
-    $BASE/api/hello -H "Authorization: Bearer $TOKEN"
-done
+./auth-service/plug/smoke.sh
 ```
-
-Kong returns `401` for a missing/expired/forged token; Spring returns `401` for a
-wrong password. Rate-limit responses include a `RateLimit-Remaining` header.
 
 ## Useful admin calls
 
@@ -92,12 +63,5 @@ curl http://localhost:8001/consumers           # API consumers
 
 ```bash
 docker compose down          # stop containers
-docker compose down -v       # stop AND wipe Postgres (Kong config) volume
+docker compose down -v       # stop AND wipe Postgres volumes
 ```
-
-## Configuration knobs
-
-- **API key / consumer** — edit `kong/setup.sh` (`API_KEY`, consumer name).
-- **Rate limits** — edit the `rate-limiting` `config.minute` / `config.hour` in `kong/setup.sh`.
-- **DB credentials** — set in `docker-compose.yml` (inline for local dev; move to a
-  `.env` file before deploying anywhere real).

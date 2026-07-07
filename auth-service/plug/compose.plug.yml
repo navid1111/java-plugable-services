@@ -1,0 +1,37 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    container_name: users-db
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_DB: appdb
+      POSTGRES_PASSWORD: apppass
+    volumes:
+      - auth_app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    image: auth-service:latest
+    container_name: auth-service
+    depends_on:
+      users-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/appdb
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: apppass
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-springboot-auth}
+      JWT_EXPIRATION_MINUTES: "60"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  auth_app_data:

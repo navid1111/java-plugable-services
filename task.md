@@ -7,12 +7,12 @@
 
 ## Feature progress
 
-- [ ] **001 auth-service** — [tasks](specs/001-auth-service/tasks.md)
+- [x] **001 auth-service** — [tasks](specs/001-auth-service/tasks.md)
   - [x] Phase 1 — repo restructure (T001–T005)
-  - [ ] US1 register & login (T006–T009)
-  - [ ] US2 `/auth/me` (T010–T011)
-  - [ ] Plug kit + service contract in README (T012–T016)
-  - [ ] 🔌 Integration demo `examples/auth-standalone/` (T017–T019)
+  - [x] US1 register & login (T006–T009)
+  - [x] US2 `/auth/me` (T010–T011)
+  - [x] Plug kit + service contract in README (T012–T016)
+  - [x] 🔌 Integration demo `examples/auth-standalone/` (T017–T019)
 - [ ] **002 tweeter-service** — [tasks](specs/002-tweeter-service/tasks.md)
   - [ ] Setup + posts CRUD (T001–T006)
   - [ ] Follow graph (T007–T009)

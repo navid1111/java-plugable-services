@@ -18,44 +18,44 @@
 
 ## Phase 2 — User Story 1: register & login (P1)
 
-- [ ] T006 [US1] Remove `HelloController` `/api/hello` (or convert to
+- [x] T006 [US1] Remove `HelloController` `/api/hello` (or convert to
       `/auth/ping`) in `auth-service/src/.../controller/`
-- [ ] T007 [US1] Add `400` validation (empty username/password) and `409` on
+- [x] T007 [US1] Add `400` validation (empty username/password) and `409` on
       duplicate username to register endpoint
-- [ ] T008 [US1] Move JWT secret + issuer to env vars consumed by both the app
+- [x] T008 [US1] Move JWT secret + issuer to env vars consumed by both the app
       and Kong config (single `.env` source)
-- [ ] T009 [US1] **Checkpoint:** acceptance scenarios 1–4 of US1 pass via curl
+- [x] T009 [US1] **Checkpoint:** acceptance scenarios 1–4 of US1 pass via curl
       through Kong
 
 ## Phase 3 — User Story 2: /auth/me (P1)
 
-- [ ] T010 [US2] Add `GET /auth/me` controller: validate Bearer token via
+- [x] T010 [US2] Add `GET /auth/me` controller: validate Bearer token via
       `JwtService`, return `{id, username}`; `401` on missing/invalid/expired
-- [ ] T011 [US2] **Checkpoint:** US2 scenarios pass; garbage/foreign-issuer
+- [x] T011 [US2] **Checkpoint:** US2 scenarios pass; garbage/foreign-issuer
       tokens rejected
 
 ## Phase 4 — Plug kit (Constitution Art. IV)
 
-- [ ] T012 [P] Write `auth-service/plug/compose.plug.yml` (auth-service image +
+- [x] T012 [P] Write `auth-service/plug/compose.plug.yml` (auth-service image +
       users-db, env-driven secret)
-- [ ] T013 [P] Write `auth-service/plug/kong-setup.sh` — idempotent `/auth`
+- [x] T013 [P] Write `auth-service/plug/kong-setup.sh` — idempotent `/auth`
       route registration, `KONG_ADMIN_URL` parameter, **no jwt plugin**
-- [ ] T014 [P] Write `auth-service/plug/smoke.sh` — register → login →
+- [x] T014 [P] Write `auth-service/plug/smoke.sh` — register → login →
       `/auth/me` through whatever Kong the host provides
-- [ ] T015 Refactor `kong/setup-core.sh` to delegate to the plug kit
-- [ ] T016 Document the service contract in README (prefix, jwt-by-default for
+- [x] T015 Refactor `kong/setup-core.sh` to delegate to the plug kit
+- [x] T016 Document the service contract in README (prefix, jwt-by-default for
       others, own DB, plug kit layout) — this is the template every later
       service copies
 
 ## Phase 5 — User Story 3: integration demo (P2, Constitution Art. VII)
 
-- [ ] T017 [US3] Create `examples/auth-standalone/docker-compose.yml`: fresh
+- [x] T017 [US3] Create `examples/auth-standalone/docker-compose.yml`: fresh
       Kong + kong-db + auth via `compose.plug.yml` include — **image only, no
       build context into service source**
-- [ ] T018 [US3] Write `examples/auth-standalone/README.md`: the exact
+- [x] T018 [US3] Write `examples/auth-standalone/README.md`: the exact
       commands a stranger runs (build image → compose up → kong-setup →
       smoke)
-- [ ] T019 [US3] **Checkpoint (feature exit):** `smoke.sh` passes in the
+- [x] T019 [US3] **Checkpoint (feature exit):** `smoke.sh` passes in the
       standalone project with zero service-code changes → SC-002 met
 
 ## Dependencies
