@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Streamin
 from pydantic import BaseModel
 
 from . import workspace
+from .chat_store import list_events
 from .events import bus
 from .sessions import manager
 from .ui import INDEX_HTML
@@ -56,6 +57,14 @@ async def files(slug: str) -> JSONResponse:
     if not cwd.exists():
         raise HTTPException(404, "unknown app")
     return JSONResponse(workspace.list_files(cwd))
+
+
+@router.get("/api/apps/{slug}/history")
+async def history(slug: str) -> dict:
+    cwd = workspace.workspace_dir(slug)
+    if not cwd.exists():
+        raise HTTPException(404, "unknown app")
+    return {"events": await list_events(cwd)}
 
 
 @router.get("/api/apps/{slug}/events")

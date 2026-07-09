@@ -9,10 +9,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .agent import AppAgent, create_app_agent
+from .chat_store import append_event, load_agent_history, save_agent_history
 from .events import bus
 from . import workspace
 
 logger = logging.getLogger("appbuilder.sessions")
+
+PERSISTED_EVENT_TYPES = {
+    "user",
+    "assistant_text",
+    "tool_use",
+    "tool_result",
+    "preview",
+    "error",
+    "done",
+}
 
 
 @dataclass
@@ -37,14 +48,17 @@ class SessionManager:
             cwd = workspace.workspace_dir(slug)
             if not cwd.exists():
                 await workspace.scaffold(slug)
+            history = await load_agent_history(cwd)
             session_holder: dict[str, AppSession] = {}
 
             async def publish(event_type: str, data: dict) -> None:
+                if event_type in PERSISTED_EVENT_TYPES:
+                    await append_event(cwd, event_type, data)
                 await bus.publish(slug, event_type, data)
                 if event_type in ("tool_result", "done"):
                     await self._maybe_preview(session_holder["session"])
 
-            agent = create_app_agent(cwd=cwd, publisher=publish)
+            agent = create_app_agent(cwd=cwd, publisher=publish, history=history)
             session = AppSession(slug=slug, cwd=cwd, agent=agent,
                                  last_index_mtime=workspace.index_mtime(cwd))
             session_holder["session"] = session
@@ -64,7 +78,6 @@ class SessionManager:
 
     async def run_turn(self, slug: str, text: str) -> None:
         """Drive one agent turn and relay SDK messages as SSE events."""
-        await bus.publish(slug, "user", {"text": text})
         try:
             session = await self.get_or_create(slug)
         except Exception as exc:
@@ -74,18 +87,25 @@ class SessionManager:
 
         async with session.lock:
             try:
+                await append_event(session.cwd, "user", {"text": text})
+                await bus.publish(slug, "user", {"text": text})
                 await session.agent.run(text)
+                await save_agent_history(session.cwd, session.agent.history())
                 await self._maybe_preview(session)
             except Exception as exc:
                 logger.exception("turn failed for app %s", slug)
-                await bus.publish(slug, "error", {"message": str(exc)[:500]})
+                data = {"message": str(exc)[:500]}
+                await append_event(session.cwd, "error", data)
+                await bus.publish(slug, "error", data)
 
     async def _maybe_preview(self, session: AppSession) -> None:
         mtime = workspace.index_mtime(session.cwd)
         if mtime <= session.last_index_mtime:
             return
         session.last_index_mtime = mtime
-        await bus.publish(session.slug, "preview", {"url": f"/apps/{session.slug}/"})
+        data = {"url": f"/apps/{session.slug}/"}
+        await append_event(session.cwd, "preview", data)
+        await bus.publish(session.slug, "preview", data)
 
 
 manager = SessionManager()

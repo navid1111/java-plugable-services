@@ -1,0 +1,1487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AlgoDesk</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e1116;
+      --panel: #161b22;
+      --panel-2: #1f2630;
+      --line: #303844;
+      --text: #edf2f7;
+      --muted: #9aa7b5;
+      --soft: #c8d3df;
+      --green: #2fc074;
+      --amber: #f4aa3a;
+      --red: #f26868;
+      --blue: #5ba7ff;
+      --cyan: #43c7c2;
+      --shadow: 0 18px 40px rgba(0, 0, 0, .28);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(23, 28, 36, .94), rgba(14, 17, 22, 1) 360px),
+        radial-gradient(circle at top left, rgba(91, 167, 255, .2), transparent 34rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #536172;
+      background: #28313d;
+    }
+
+    button:disabled,
+    textarea:disabled,
+    input:disabled,
+    select:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: auto minmax(240px, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 17, 22, .86);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1px solid rgba(91, 167, 255, .42);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(91, 167, 255, .18), rgba(47, 192, 116, .15));
+      color: #dcecff;
+      font-weight: 800;
+    }
+
+    .brand strong {
+      display: block;
+      line-height: 1.1;
+      font-size: 1.04rem;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .global-search {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 740px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 10px;
+      background: rgba(22, 27, 34, .82);
+    }
+
+    .global-search span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .global-search input {
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .global-search kbd {
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 3px 6px;
+      color: var(--muted);
+      font-size: .72rem;
+      font-family: inherit;
+    }
+
+    .userbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .username {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--soft);
+      font-size: .9rem;
+    }
+
+    .primary {
+      border-color: rgba(47, 192, 116, .45);
+      background: #238251;
+      color: white;
+      font-weight: 750;
+      padding: 0 14px;
+    }
+
+    .secondary {
+      padding: 0 12px;
+    }
+
+    .danger {
+      border-color: rgba(242, 104, 104, .42);
+      background: rgba(242, 104, 104, .12);
+      color: #ffc5c5;
+      padding: 0 12px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(270px, 360px) minmax(0, 1fr) minmax(280px, 360px);
+      gap: 1px;
+      min-height: 0;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    aside,
+    main {
+      min-width: 0;
+      background: var(--bg);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 65px);
+    }
+
+    .panel-header {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(22, 27, 34, .82);
+    }
+
+    .panel-header h1,
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0;
+      line-height: 1.16;
+    }
+
+    .panel-header h1 {
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+      letter-spacing: 0;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+    }
+
+    .panel-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: .9rem;
+    }
+
+    .section {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title h3 {
+      margin: 0;
+      font-size: .86rem;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: var(--panel);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.35rem;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: .76rem;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .filters select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--text);
+      padding: 0 10px;
+    }
+
+    .problem-list {
+      display: grid;
+      gap: 8px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .problem-button {
+      display: grid;
+      width: 100%;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+      min-height: 76px;
+      padding: 12px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .problem-button.active {
+      border-color: rgba(91, 167, 255, .72);
+      background: #202937;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .problem-button strong {
+      display: block;
+      line-height: 1.25;
+    }
+
+    .problem-button small {
+      color: var(--muted);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .badge,
+    .difficulty {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--soft);
+      background: rgba(255, 255, 255, .035);
+      font-size: .74rem;
+      white-space: nowrap;
+    }
+
+    .difficulty.easy {
+      border-color: rgba(47, 192, 116, .35);
+      color: #8de0b5;
+    }
+
+    .difficulty.medium {
+      border-color: rgba(244, 170, 58, .35);
+      color: #ffd48d;
+    }
+
+    .difficulty.hard {
+      border-color: rgba(242, 104, 104, .35);
+      color: #ffb1b1;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      min-height: calc(100vh - 65px);
+      background: #10141b;
+    }
+
+    .workspace-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(22, 27, 34, .8);
+    }
+
+    .workspace-title {
+      min-width: 0;
+    }
+
+    .workspace-title h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.4vw, 2rem);
+      letter-spacing: 0;
+    }
+
+    .workspace-title p {
+      max-width: 78ch;
+      margin: 10px 0 0;
+      color: var(--soft);
+      line-height: 1.55;
+    }
+
+    .tabbar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 14px;
+      background: #141922;
+    }
+
+    .tabbar button {
+      min-height: 34px;
+      padding: 0 12px;
+      white-space: nowrap;
+      background: transparent;
+    }
+
+    .tabbar button.active {
+      border-color: rgba(91, 167, 255, .72);
+      background: rgba(91, 167, 255, .13);
+      color: #d9eaff;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(320px, .92fr) minmax(360px, 1.08fr);
+      min-height: 0;
+    }
+
+    .statement,
+    .editor {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .statement {
+      padding: 22px;
+      border-right: 1px solid var(--line);
+    }
+
+    .statement h2 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .statement p,
+    .statement li {
+      color: var(--soft);
+      line-height: 1.62;
+    }
+
+    .statement ul {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+
+    .example {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 14px 0;
+      background: #151b24;
+      overflow: hidden;
+    }
+
+    .example strong {
+      display: block;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #1b222d;
+      font-size: .82rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      overflow: auto;
+      color: #dbe7f4;
+      font-size: .9rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-rows: auto minmax(260px, 1fr) auto;
+      background: #0d1117;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #151b24;
+    }
+
+    .editor-toolbar select {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 10px;
+      background: #0d1117;
+      color: var(--text);
+    }
+
+    .editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .editor-actions button {
+      min-height: 34px;
+      padding: 0 12px;
+    }
+
+    .codebox {
+      width: 100%;
+      height: 100%;
+      min-height: 360px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: #0d1117;
+      color: #d6deeb;
+      padding: 18px;
+      font: 14px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      tab-size: 2;
+    }
+
+    .console {
+      min-height: 134px;
+      border-top: 1px solid var(--line);
+      padding: 12px;
+      background: #111821;
+    }
+
+    .console h3 {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .notice {
+      border: 1px solid rgba(244, 170, 58, .36);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: rgba(244, 170, 58, .08);
+      color: #ffe0a6;
+      line-height: 1.45;
+    }
+
+    .blocked-card {
+      border: 1px dashed rgba(244, 170, 58, .5);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(244, 170, 58, .08);
+      color: #ffdf9c;
+    }
+
+    .blocked-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #ffe9bd;
+    }
+
+    .side-scroll {
+      overflow: auto;
+      min-height: 0;
+      padding-bottom: 16px;
+    }
+
+    .auth-card,
+    .community-card,
+    .thread {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .auth-card {
+      padding: 14px;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .auth-tabs button {
+      min-height: 34px;
+    }
+
+    .auth-tabs button.active {
+      border-color: rgba(91, 167, 255, .68);
+      background: rgba(91, 167, 255, .12);
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #101620;
+      color: var(--text);
+      padding: 10px 11px;
+    }
+
+    textarea {
+      min-height: 98px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .message {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.4;
+    }
+
+    .message.error {
+      color: #ffb1b1;
+    }
+
+    .message.ok {
+      color: #8de0b5;
+    }
+
+    .community-card {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .community-card h3,
+    .thread h4 {
+      margin: 0;
+    }
+
+    .thread-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .thread {
+      padding: 12px;
+      box-shadow: none;
+    }
+
+    .thread p {
+      margin: 8px 0 0;
+      color: var(--soft);
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .thread-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .empty-state {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .025);
+      line-height: 1.45;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 310px minmax(0, 1fr);
+      }
+
+      .right-panel {
+        display: none;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .userbar {
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .left-panel {
+        min-height: auto;
+      }
+
+      .left-panel .side-scroll {
+        max-height: none;
+      }
+
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .statement {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .workspace-top {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .topbar,
+      .workspace-top,
+      .statement,
+      .section {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .filters,
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="AlgoDesk">
+        <div class="brand-mark">A</div>
+        <div>
+          <strong>AlgoDesk</strong>
+          <span>Practice, discuss, and prepare</span>
+        </div>
+      </div>
+
+      <label class="global-search" for="problem-search">
+        <span>/</span>
+        <input id="problem-search" type="search" placeholder="Search problems by title, tag, or difficulty">
+        <kbd>filter</kbd>
+      </label>
+
+      <div class="userbar">
+        <span id="session-label" class="username">Not signed in</span>
+        <button id="refresh-me" class="secondary" type="button">Check session</button>
+        <button id="sign-out" class="danger hidden" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel left-panel">
+        <div class="panel-header">
+          <h2>Problem Set</h2>
+          <p>Static practice catalog with backend-gated judge actions.</p>
+        </div>
+        <div class="side-scroll">
+          <section class="section">
+            <div class="stat-grid" aria-label="problem statistics">
+              <div class="stat">
+                <strong id="stat-count">0</strong>
+                <span>Visible</span>
+              </div>
+              <div class="stat">
+                <strong>0</strong>
+                <span>Submissions</span>
+              </div>
+              <div class="stat">
+                <strong>0%</strong>
+                <span>Acceptance</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h3>Filters</h3>
+            </div>
+            <div class="filters">
+              <select id="difficulty-filter" aria-label="Difficulty filter">
+                <option value="all">All difficulty</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+              <select id="tag-filter" aria-label="Topic filter">
+                <option value="all">All topics</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="section">
+            <ul id="problem-list" class="problem-list"></ul>
+          </section>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <div class="workspace-top">
+          <div class="workspace-title">
+            <div class="badge-row" id="selected-badges"></div>
+            <h1 id="problem-title">Select a problem</h1>
+            <p id="problem-summary">Choose a challenge from the list to view the prompt and starter code.</p>
+          </div>
+          <div class="blocked-card" role="status">
+            <strong>Being developed — backend not available yet</strong>
+            Online judging, accepted submissions, progress tracking, contests, and rankings need the missing leetcode-service.
+          </div>
+        </div>
+
+        <nav class="tabbar" aria-label="workspace sections">
+          <button class="active" type="button" data-tab="statement">Statement</button>
+          <button type="button" data-tab="discussion">Discussion</button>
+          <button type="button" data-tab="submissions" disabled>Submissions</button>
+          <button type="button" data-tab="leaderboard" disabled>Leaderboard</button>
+        </nav>
+
+        <section id="tab-statement" class="split">
+          <article class="statement">
+            <h2>Prompt</h2>
+            <div id="problem-body"></div>
+          </article>
+          <section class="editor" aria-label="code editor">
+            <div class="editor-toolbar">
+              <select id="language">
+                <option>JavaScript</option>
+                <option>Java</option>
+                <option>Python</option>
+                <option>C++</option>
+              </select>
+              <div class="editor-actions">
+                <button id="reset-code" type="button">Reset</button>
+                <button id="run-code" type="button" disabled>Run</button>
+                <button id="submit-code" class="primary" type="button" disabled>Submit</button>
+              </div>
+            </div>
+            <textarea id="code-editor" class="codebox" spellcheck="false"></textarea>
+            <div class="console">
+              <h3>Console</h3>
+              <div class="notice">Being developed — backend not available yet</div>
+            </div>
+          </section>
+        </section>
+
+        <section id="tab-discussion" class="section hidden">
+          <div class="community-card">
+            <h3>Community Threads</h3>
+            <p class="message">Threads use the available Tweeter post backend. Sign in before loading or posting.</p>
+            <div class="field">
+              <label for="thread-search">Search discussion</label>
+              <input id="thread-search" type="search" placeholder="Search via /post-search?q=dynamic-programming">
+            </div>
+            <div class="form-actions">
+              <button id="load-feed" class="secondary" type="button">Load feed</button>
+              <button id="search-threads" class="secondary" type="button">Search</button>
+            </div>
+            <div class="field">
+              <label for="thread-content">New thread</label>
+              <textarea id="thread-content" placeholder="Ask for a hint, share an approach, or discuss complexity."></textarea>
+            </div>
+            <div class="form-actions">
+              <button id="create-thread" class="primary" type="button">Post thread</button>
+              <span id="thread-message" class="message" aria-live="polite"></span>
+            </div>
+            <div id="thread-list" class="thread-list" aria-live="polite"></div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="panel right-panel">
+        <div class="panel-header">
+          <h2>Account</h2>
+          <p>Auth is wired to the gateway; coding progress is disabled until the judge backend exists.</p>
+        </div>
+        <div class="side-scroll">
+          <section class="section">
+            <div class="auth-card">
+              <div class="auth-tabs" role="tablist" aria-label="auth mode">
+                <button id="login-tab" class="active" type="button">Login</button>
+                <button id="register-tab" type="button">Register</button>
+              </div>
+              <form id="auth-form">
+                <div class="field">
+                  <label for="username">Username</label>
+                  <input id="username" autocomplete="username" required placeholder="coder42">
+                </div>
+                <div class="field">
+                  <label for="password">Password</label>
+                  <input id="password" type="password" autocomplete="current-password" required placeholder="Password">
+                </div>
+                <div class="form-actions">
+                  <button id="auth-submit" class="primary" type="submit">Login</button>
+                  <button id="demo-fill" class="secondary" type="button">Fill sample</button>
+                </div>
+                <div id="auth-message" class="message" aria-live="polite"></div>
+              </form>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-title">
+              <h3>Unavailable Core</h3>
+            </div>
+            <div class="problem-list">
+              <div class="blocked-card">
+                <strong>Being developed — backend not available yet</strong>
+                Problem persistence and curated backend catalogs require leetcode-service.
+              </div>
+              <div class="blocked-card">
+                <strong>Being developed — backend not available yet</strong>
+                Code execution, hidden tests, verdicts, and submission history are disabled.
+              </div>
+              <div class="blocked-card">
+                <strong>Being developed — backend not available yet</strong>
+                Contest standings, streaks, ranks, and accepted-solution analytics are disabled.
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const GATEWAY = "http://localhost:18000";
+    const JWT_KEY = "appbuilder.jwt";
+
+    async function api(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = headers["Content-Type"] || "application/json";
+      }
+      const token = localStorage.getItem(JWT_KEY);
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(GATEWAY + path, { ...options, headers });
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      return res.status === 204 ? null : res.json();
+    }
+
+    async function login(username, password) {
+      const res = await fetch(GATEWAY + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      const data = await res.json();
+      localStorage.setItem(JWT_KEY, data.access_token);
+      return data;
+    }
+
+    const problems = [
+      {
+        id: "two-sum",
+        title: "Two Sum",
+        difficulty: "Easy",
+        tags: ["Array", "Hash Table"],
+        summary: "Return the indices of two numbers that add up to a target.",
+        prompt: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input has exactly one solution.",
+        examples: [
+          { input: "nums = [2,7,11,15], target = 9", output: "[0,1]" },
+          { input: "nums = [3,2,4], target = 6", output: "[1,2]" }
+        ],
+        constraints: ["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9", "Exactly one valid answer exists."],
+        starter: `function twoSum(nums, target) {\n  const seen = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (seen.has(need)) return [seen.get(need), i];\n    seen.set(nums[i], i);\n  }\n}`
+      },
+      {
+        id: "valid-parentheses",
+        title: "Valid Parentheses",
+        difficulty: "Easy",
+        tags: ["Stack", "String"],
+        summary: "Determine whether a bracket string is balanced.",
+        prompt: "Given a string containing only parentheses, brackets, and braces, determine whether every opening symbol is closed by the same type in the correct order.",
+        examples: [
+          { input: 's = "()[]{}"', output: "true" },
+          { input: 's = "([)]"', output: "false" }
+        ],
+        constraints: ["1 <= s.length <= 10^4", "s contains only ()[]{} characters."],
+        starter: `function isValid(s) {\n  const stack = [];\n  const pairs = { ")": "(", "]": "[", "}": "{" };\n  for (const ch of s) {\n    if (!pairs[ch]) stack.push(ch);\n    else if (stack.pop() !== pairs[ch]) return false;\n  }\n  return stack.length === 0;\n}`
+      },
+      {
+        id: "merge-intervals",
+        title: "Merge Intervals",
+        difficulty: "Medium",
+        tags: ["Array", "Sorting"],
+        summary: "Merge every overlapping interval into a compact range list.",
+        prompt: "Given an array of intervals where intervals[i] = [start, end], merge all overlapping intervals and return the non-overlapping intervals that cover all ranges.",
+        examples: [
+          { input: "intervals = [[1,3],[2,6],[8,10],[15,18]]", output: "[[1,6],[8,10],[15,18]]" }
+        ],
+        constraints: ["1 <= intervals.length <= 10^4", "intervals[i].length == 2", "0 <= start <= end <= 10^4"],
+        starter: `function merge(intervals) {\n  intervals.sort((a, b) => a[0] - b[0]);\n  const merged = [];\n  for (const current of intervals) {\n    const last = merged[merged.length - 1];\n    if (!last || current[0] > last[1]) merged.push(current);\n    else last[1] = Math.max(last[1], current[1]);\n  }\n  return merged;\n}`
+      },
+      {
+        id: "longest-substring",
+        title: "Longest Substring Without Repeating Characters",
+        difficulty: "Medium",
+        tags: ["Hash Table", "Sliding Window", "String"],
+        summary: "Find the length of the longest substring with unique characters.",
+        prompt: "Given a string s, find the length of the longest substring without repeating characters.",
+        examples: [
+          { input: 's = "abcabcbb"', output: "3" },
+          { input: 's = "bbbbb"', output: "1" }
+        ],
+        constraints: ["0 <= s.length <= 5 * 10^4", "s may contain letters, digits, symbols, and spaces."],
+        starter: `function lengthOfLongestSubstring(s) {\n  let left = 0;\n  let best = 0;\n  const seen = new Map();\n  for (let right = 0; right < s.length; right++) {\n    const ch = s[right];\n    if (seen.has(ch) && seen.get(ch) >= left) left = seen.get(ch) + 1;\n    seen.set(ch, right);\n    best = Math.max(best, right - left + 1);\n  }\n  return best;\n}`
+      },
+      {
+        id: "coin-change",
+        title: "Coin Change",
+        difficulty: "Medium",
+        tags: ["Dynamic Programming", "BFS"],
+        summary: "Compute the fewest coins needed to make an amount.",
+        prompt: "Given coins of different denominations and an integer amount, return the fewest number of coins needed to make up that amount. Return -1 if it cannot be made.",
+        examples: [
+          { input: "coins = [1,2,5], amount = 11", output: "3" },
+          { input: "coins = [2], amount = 3", output: "-1" }
+        ],
+        constraints: ["1 <= coins.length <= 12", "1 <= coins[i] <= 2^31 - 1", "0 <= amount <= 10^4"],
+        starter: `function coinChange(coins, amount) {\n  const dp = Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  for (let total = 1; total <= amount; total++) {\n    for (const coin of coins) {\n      if (coin <= total) dp[total] = Math.min(dp[total], dp[total - coin] + 1);\n    }\n  }\n  return dp[amount] === Infinity ? -1 : dp[amount];\n}`
+      },
+      {
+        id: "word-ladder",
+        title: "Word Ladder",
+        difficulty: "Hard",
+        tags: ["BFS", "Hash Table", "String"],
+        summary: "Find the shortest transformation sequence between words.",
+        prompt: "Given beginWord, endWord, and a dictionary, return the number of words in the shortest transformation sequence where only one letter changes at a time and every intermediate word is in the dictionary.",
+        examples: [
+          { input: 'beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]', output: "5" }
+        ],
+        constraints: ["1 <= wordList.length <= 5000", "All words have the same length.", "Each word contains lowercase English letters."],
+        starter: `function ladderLength(beginWord, endWord, wordList) {\n  const words = new Set(wordList);\n  if (!words.has(endWord)) return 0;\n  const queue = [[beginWord, 1]];\n  while (queue.length) {\n    const [word, depth] = queue.shift();\n    if (word === endWord) return depth;\n    for (let i = 0; i < word.length; i++) {\n      for (let code = 97; code <= 122; code++) {\n        const next = word.slice(0, i) + String.fromCharCode(code) + word.slice(i + 1);\n        if (words.delete(next)) queue.push([next, depth + 1]);\n      }\n    }\n  }\n  return 0;\n}`
+      }
+    ];
+
+    const els = {
+      problemSearch: document.querySelector("#problem-search"),
+      difficultyFilter: document.querySelector("#difficulty-filter"),
+      tagFilter: document.querySelector("#tag-filter"),
+      problemList: document.querySelector("#problem-list"),
+      statCount: document.querySelector("#stat-count"),
+      badges: document.querySelector("#selected-badges"),
+      problemTitle: document.querySelector("#problem-title"),
+      problemSummary: document.querySelector("#problem-summary"),
+      problemBody: document.querySelector("#problem-body"),
+      codeEditor: document.querySelector("#code-editor"),
+      resetCode: document.querySelector("#reset-code"),
+      tabs: document.querySelectorAll("[data-tab]"),
+      tabStatement: document.querySelector("#tab-statement"),
+      tabDiscussion: document.querySelector("#tab-discussion"),
+      sessionLabel: document.querySelector("#session-label"),
+      refreshMe: document.querySelector("#refresh-me"),
+      signOut: document.querySelector("#sign-out"),
+      authForm: document.querySelector("#auth-form"),
+      authMessage: document.querySelector("#auth-message"),
+      authSubmit: document.querySelector("#auth-submit"),
+      loginTab: document.querySelector("#login-tab"),
+      registerTab: document.querySelector("#register-tab"),
+      demoFill: document.querySelector("#demo-fill"),
+      username: document.querySelector("#username"),
+      password: document.querySelector("#password"),
+      loadFeed: document.querySelector("#load-feed"),
+      searchThreads: document.querySelector("#search-threads"),
+      threadSearch: document.querySelector("#thread-search"),
+      threadContent: document.querySelector("#thread-content"),
+      createThread: document.querySelector("#create-thread"),
+      threadMessage: document.querySelector("#thread-message"),
+      threadList: document.querySelector("#thread-list")
+    };
+
+    let selectedProblem = problems[0];
+    let authMode = "login";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function uniqueTags() {
+      return [...new Set(problems.flatMap(problem => problem.tags))].sort();
+    }
+
+    function filteredProblems() {
+      const query = els.problemSearch.value.trim().toLowerCase();
+      const difficulty = els.difficultyFilter.value;
+      const tag = els.tagFilter.value;
+      return problems.filter(problem => {
+        const haystack = [problem.title, problem.difficulty, problem.summary, ...problem.tags].join(" ").toLowerCase();
+        return (!query || haystack.includes(query)) &&
+          (difficulty === "all" || problem.difficulty === difficulty) &&
+          (tag === "all" || problem.tags.includes(tag));
+      });
+    }
+
+    function renderTags() {
+      for (const tag of uniqueTags()) {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        els.tagFilter.appendChild(option);
+      }
+    }
+
+    function renderProblemList() {
+      const visible = filteredProblems();
+      els.statCount.textContent = visible.length;
+      els.problemList.innerHTML = "";
+      if (!visible.length) {
+        els.problemList.innerHTML = '<li class="empty-state">No problems match these filters.</li>';
+        return;
+      }
+      for (const problem of visible) {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.className = `problem-button ${problem.id === selectedProblem.id ? "active" : ""}`;
+        button.type = "button";
+        button.innerHTML = `
+          <span>
+            <strong>${escapeHtml(problem.title)}</strong>
+            <small>${escapeHtml(problem.tags.join(" · "))}</small>
+            <span class="badge-row">${problem.tags.slice(0, 2).map(tag => `<span class="badge">${escapeHtml(tag)}</span>`).join("")}</span>
+          </span>
+          <span class="difficulty ${problem.difficulty.toLowerCase()}">${escapeHtml(problem.difficulty)}</span>
+        `;
+        button.addEventListener("click", () => selectProblem(problem.id));
+        item.appendChild(button);
+        els.problemList.appendChild(item);
+      }
+    }
+
+    function selectProblem(id) {
+      const next = problems.find(problem => problem.id === id) || problems[0];
+      selectedProblem = next;
+      localStorage.setItem("algodesk.selectedProblem", next.id);
+      renderSelectedProblem();
+      renderProblemList();
+    }
+
+    function codeStorageKey() {
+      return `algodesk.code.${selectedProblem.id}`;
+    }
+
+    function renderSelectedProblem() {
+      els.badges.innerHTML = `
+        <span class="difficulty ${selectedProblem.difficulty.toLowerCase()}">${escapeHtml(selectedProblem.difficulty)}</span>
+        ${selectedProblem.tags.map(tag => `<span class="badge">${escapeHtml(tag)}</span>`).join("")}
+      `;
+      els.problemTitle.textContent = selectedProblem.title;
+      els.problemSummary.textContent = selectedProblem.summary;
+      const exampleHtml = selectedProblem.examples.map((example, index) => `
+        <div class="example">
+          <strong>Example ${index + 1}</strong>
+          <pre>Input: ${escapeHtml(example.input)}\nOutput: ${escapeHtml(example.output)}</pre>
+        </div>
+      `).join("");
+      const constraints = selectedProblem.constraints.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+      els.problemBody.innerHTML = `
+        <p>${escapeHtml(selectedProblem.prompt)}</p>
+        ${exampleHtml}
+        <h2>Constraints</h2>
+        <ul>${constraints}</ul>
+      `;
+      els.codeEditor.value = localStorage.getItem(codeStorageKey()) || selectedProblem.starter;
+    }
+
+    function setTab(name) {
+      for (const button of els.tabs) {
+        button.classList.toggle("active", button.dataset.tab === name);
+      }
+      els.tabStatement.classList.toggle("hidden", name !== "statement");
+      els.tabDiscussion.classList.toggle("hidden", name !== "discussion");
+    }
+
+    function setMessage(el, text, type = "") {
+      el.textContent = text;
+      el.className = `message ${type}`.trim();
+    }
+
+    function userFromPayload(data) {
+      return data?.username || data?.user?.username || data?.principal || data?.sub || "Signed in";
+    }
+
+    function hasToken() {
+      return Boolean(localStorage.getItem(JWT_KEY));
+    }
+
+    async function refreshSession({ quiet = false } = {}) {
+      if (!hasToken()) {
+        els.sessionLabel.textContent = "Not signed in";
+        els.signOut.classList.add("hidden");
+        return;
+      }
+      try {
+        const me = await api("/auth/me");
+        els.sessionLabel.textContent = userFromPayload(me);
+        els.signOut.classList.remove("hidden");
+        if (!quiet) setMessage(els.authMessage, "Session is active.", "ok");
+      } catch (error) {
+        localStorage.removeItem(JWT_KEY);
+        els.sessionLabel.textContent = "Session expired";
+        els.signOut.classList.add("hidden");
+        if (!quiet) setMessage(els.authMessage, `Backend auth error: ${error.message}`, "error");
+      }
+    }
+
+    function setAuthMode(nextMode) {
+      authMode = nextMode;
+      els.loginTab.classList.toggle("active", authMode === "login");
+      els.registerTab.classList.toggle("active", authMode === "register");
+      els.authSubmit.textContent = authMode === "login" ? "Login" : "Register";
+      els.password.autocomplete = authMode === "login" ? "current-password" : "new-password";
+      setMessage(els.authMessage, "");
+    }
+
+    async function handleAuth(event) {
+      event.preventDefault();
+      const username = els.username.value.trim();
+      const password = els.password.value;
+      if (!username || !password) {
+        setMessage(els.authMessage, "Enter a username and password.", "error");
+        return;
+      }
+      els.authSubmit.disabled = true;
+      setMessage(els.authMessage, authMode === "login" ? "Logging in..." : "Registering...");
+      try {
+        if (authMode === "register") {
+          await fetch(GATEWAY + "/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+          }).then(async res => {
+            if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+          });
+        }
+        await login(username, password);
+        await refreshSession({ quiet: true });
+        setMessage(els.authMessage, authMode === "register" ? "Registered and signed in." : "Signed in.", "ok");
+        loadFeed();
+      } catch (error) {
+        setMessage(els.authMessage, `Backend error: ${error.message}`, "error");
+      } finally {
+        els.authSubmit.disabled = false;
+      }
+    }
+
+    function normalizePosts(data) {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.content)) return data.content;
+      if (Array.isArray(data?.items)) return data.items;
+      if (Array.isArray(data?.posts)) return data.posts;
+      if (Array.isArray(data?.results)) return data.results;
+      return [];
+    }
+
+    function postId(post) {
+      return post?.id ?? post?.targetId ?? post?.documentId ?? "";
+    }
+
+    function postAuthor(post) {
+      return post?.authorUsername || post?.author?.username || post?.username || "community";
+    }
+
+    function postContent(post) {
+      return post?.content || post?.text || post?.body || post?.title || JSON.stringify(post);
+    }
+
+    function postDate(post) {
+      const raw = post?.createdAt || post?.created_at || post?.timestamp;
+      if (!raw) return "";
+      const date = new Date(raw);
+      return Number.isNaN(date.getTime()) ? String(raw) : date.toLocaleString();
+    }
+
+    function renderThreads(posts) {
+      els.threadList.innerHTML = "";
+      if (!posts.length) {
+        els.threadList.innerHTML = '<div class="empty-state">No discussion threads returned by the backend.</div>';
+        return;
+      }
+      for (const post of posts) {
+        const article = document.createElement("article");
+        article.className = "thread";
+        const id = postId(post);
+        article.innerHTML = `
+          <div class="thread-meta">
+            <span>${escapeHtml(postAuthor(post))}</span>
+            ${id ? `<span>#${escapeHtml(id)}</span>` : ""}
+            ${postDate(post) ? `<span>${escapeHtml(postDate(post))}</span>` : ""}
+          </div>
+          <p>${escapeHtml(postContent(post))}</p>
+        `;
+        els.threadList.appendChild(article);
+      }
+    }
+
+    async function requireAuthForThreads() {
+      if (!hasToken()) {
+        setMessage(els.threadMessage, "Login or register before using community backend calls.", "error");
+        return false;
+      }
+      return true;
+    }
+
+    async function loadFeed() {
+      if (!(await requireAuthForThreads())) return;
+      setMessage(els.threadMessage, "Loading feed...");
+      try {
+        const data = await api("/posts/feed");
+        renderThreads(normalizePosts(data));
+        setMessage(els.threadMessage, "Feed loaded.", "ok");
+      } catch (error) {
+        setMessage(els.threadMessage, `Backend error: ${error.message}`, "error");
+      }
+    }
+
+    async function searchThreads() {
+      if (!(await requireAuthForThreads())) return;
+      const query = els.threadSearch.value.trim();
+      if (!query) {
+        setMessage(els.threadMessage, "Enter a search term before calling /post-search?q=.", "error");
+        return;
+      }
+      setMessage(els.threadMessage, "Searching...");
+      try {
+        const data = await api(`/post-search?q=${encodeURIComponent(query)}`);
+        renderThreads(normalizePosts(data));
+        setMessage(els.threadMessage, "Search complete.", "ok");
+      } catch (error) {
+        setMessage(els.threadMessage, `Backend search error: ${error.message}`, "error");
+      }
+    }
+
+    async function createThread() {
+      if (!(await requireAuthForThreads())) return;
+      const content = els.threadContent.value.trim();
+      if (!content) {
+        setMessage(els.threadMessage, "Write a thread before posting.", "error");
+        return;
+      }
+      els.createThread.disabled = true;
+      setMessage(els.threadMessage, "Posting...");
+      try {
+        const fullContent = `[${selectedProblem.title}] ${content}`;
+        const post = await api("/posts", {
+          method: "POST",
+          body: JSON.stringify({ content: fullContent })
+        });
+        const id = postId(post);
+        if (id) {
+          await api(`/post-search/documents/post/${encodeURIComponent(id)}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              authorUsername: postAuthor(post),
+              content: fullContent,
+              createdAt: post?.createdAt || new Date().toISOString()
+            })
+          }).catch(error => {
+            setMessage(els.threadMessage, `Posted, but search indexing failed: ${error.message}`, "error");
+          });
+        }
+        els.threadContent.value = "";
+        setMessage(els.threadMessage, "Thread posted.", "ok");
+        loadFeed();
+      } catch (error) {
+        setMessage(els.threadMessage, `Backend post error: ${error.message}`, "error");
+      } finally {
+        els.createThread.disabled = false;
+      }
+    }
+
+    function wireEvents() {
+      els.problemSearch.addEventListener("input", renderProblemList);
+      els.difficultyFilter.addEventListener("change", renderProblemList);
+      els.tagFilter.addEventListener("change", renderProblemList);
+      els.resetCode.addEventListener("click", () => {
+        localStorage.removeItem(codeStorageKey());
+        els.codeEditor.value = selectedProblem.starter;
+      });
+      els.codeEditor.addEventListener("input", () => {
+        localStorage.setItem(codeStorageKey(), els.codeEditor.value);
+      });
+      for (const button of els.tabs) {
+        button.addEventListener("click", () => setTab(button.dataset.tab));
+      }
+      els.loginTab.addEventListener("click", () => setAuthMode("login"));
+      els.registerTab.addEventListener("click", () => setAuthMode("register"));
+      els.authForm.addEventListener("submit", handleAuth);
+      els.demoFill.addEventListener("click", () => {
+        const stamp = Date.now().toString().slice(-6);
+        els.username.value = `coder_${stamp}`;
+        els.password.value = "appbuilder_pass";
+      });
+      els.refreshMe.addEventListener("click", () => refreshSession());
+      els.signOut.addEventListener("click", () => {
+        localStorage.removeItem(JWT_KEY);
+        els.sessionLabel.textContent = "Signed out";
+        els.signOut.classList.add("hidden");
+        setMessage(els.authMessage, "Signed out locally.", "ok");
+      });
+      els.loadFeed.addEventListener("click", loadFeed);
+      els.searchThreads.addEventListener("click", searchThreads);
+      els.createThread.addEventListener("click", createThread);
+      els.threadSearch.addEventListener("keydown", event => {
+        if (event.key === "Enter") searchThreads();
+      });
+    }
+
+    function init() {
+      renderTags();
+      const savedId = localStorage.getItem("algodesk.selectedProblem");
+      selectedProblem = problems.find(problem => problem.id === savedId) || problems[0];
+      renderSelectedProblem();
+      renderProblemList();
+      wireEvents();
+      refreshSession({ quiet: true });
+    }
+
+    init();
+  </script>
+</body>
+</html>

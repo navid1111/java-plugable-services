@@ -44,7 +44,7 @@ INDEX_HTML = """<!doctype html>
         promptEl = document.getElementById('p'), btn = document.getElementById('b'),
         statusEl = document.getElementById('status'), frame = document.getElementById('frame'),
         openLink = document.getElementById('open');
-  let slug = null, es = null;
+  let slug = new URLSearchParams(location.search).get('app'), es = null;
 
   function add(type, text) {
     const el = document.createElement('div'); el.className = 'ev ' + type;
@@ -53,24 +53,39 @@ INDEX_HTML = """<!doctype html>
   }
   function esc(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
+  function renderEvent(type, data) {
+    if (type === 'user') add('user', esc(data.text));
+    else if (type === 'thinking') { if ((data.text||'').trim()) add('thinking', esc(data.text)); }
+    else if (type === 'assistant_text' || type === 'assistant_delta') add('assistant_text', esc(data.text));
+    else if (type === 'tool_use') add('tool_use', esc(data.tool) + ' — ' + esc(data.input));
+    else if (type === 'tool_result') add('tool_result', (data.ok ? 'ok' : 'error') + ' — ' + esc(data.summary));
+    else if (type === 'preview') { frame.src = data.url + '?t=' + Date.now(); openLink.href = data.url; openLink.style.display = 'inline'; statusEl.textContent = 'Live preview'; }
+    else if (type === 'error') add('error', esc(data.message));
+    else if (type === 'done') { add('done', 'turn complete' + (data.is_error ? ' (with errors)' : '')); btn.disabled = false; }
+  }
+
+  async function loadHistory() {
+    if (!slug) return;
+    const r = await fetch('/api/apps/' + slug + '/history');
+    if (!r.ok) return;
+    const d = await r.json();
+    log.innerHTML = '';
+    (d.events || []).forEach(ev => renderEvent(ev.type, ev.data || {}));
+  }
+
   function connect() {
+    if (es) es.close();
     es = new EventSource('/api/apps/' + slug + '/events');
     const on = (t, fn) => es.addEventListener(t, e => fn(JSON.parse(e.data)));
-    on('user', d => add('user', esc(d.text)));
-    on('thinking', d => { if ((d.text||'').trim()) add('thinking', esc(d.text)); });
-    on('assistant_text', d => add('assistant_text', esc(d.text)));
-    on('tool_use', d => add('tool_use', esc(d.tool) + ' — ' + esc(d.input)));
-    on('tool_result', d => add('tool_result', (d.ok ? 'ok' : 'error') + ' — ' + esc(d.summary)));
-    on('preview', d => { frame.src = d.url + '?t=' + Date.now(); openLink.href = d.url; openLink.style.display = 'inline'; statusEl.textContent = 'Live preview'; });
-    on('error', d => add('error', esc(d.message)));
-    on('done', d => { add('done', 'turn complete' + (d.is_error ? ' (with errors)' : '')); btn.disabled = false; });
+    ['user','thinking','assistant_text','assistant_delta','tool_use','tool_result','preview','error','done']
+      .forEach(t => on(t, d => renderEvent(t, d)));
   }
 
   async function send(text) {
     btn.disabled = true;
     if (!slug) {
       const r = await fetch('/api/apps', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt: text}) });
-      const d = await r.json(); slug = d.slug; statusEl.textContent = 'Building ' + slug + '…'; connect();
+      const d = await r.json(); slug = d.slug; window.history.replaceState(null, '', '?app=' + encodeURIComponent(slug)); statusEl.textContent = 'Building ' + slug + '…'; connect();
       await new Promise(res => setTimeout(res, 150)); // let SSE attach before first turn
     }
     await fetch('/api/apps/' + slug + '/message', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text}) });
@@ -82,6 +97,12 @@ INDEX_HTML = """<!doctype html>
     promptEl.value = '';
     try { await send(text); } catch (err) { add('error', esc(String(err))); btn.disabled = false; }
   });
+
+  if (slug) {
+    statusEl.textContent = 'Loaded ' + slug;
+    openLink.href = '/apps/' + slug + '/'; openLink.style.display = 'inline'; frame.src = '/apps/' + slug + '/';
+    loadHistory().finally(connect);
+  }
 </script>
 </body></html>
 """

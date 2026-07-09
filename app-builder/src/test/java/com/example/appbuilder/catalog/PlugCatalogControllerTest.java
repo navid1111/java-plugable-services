@@ -23,7 +23,8 @@ class PlugCatalogControllerTest {
         Files.writeString(plugDir.resolve("kong-setup.sh"), "curl --data \"paths[]=/auth\"\n");
         Files.writeString(plugDir.resolve("smoke.sh"), "#!/usr/bin/env bash\n");
 
-        MockMvc mvc = MockMvcBuilders.standaloneSetup(new PlugCatalogController(new PlugCatalogService(repoRoot))).build();
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new PlugCatalogController(
+                new PlugCatalogService(repoRoot), new EndpointScanner(repoRoot.toString()))).build();
 
         mvc.perform(get("/api/plugs"))
                 .andExpect(status().isOk())

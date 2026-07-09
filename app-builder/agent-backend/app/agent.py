@@ -49,14 +49,15 @@ EventPublisher = Callable[[str, dict], Coroutine[Any, Any, None]]
 class AppAgent(Protocol):
     async def run(self, text: str) -> None: ...
     async def interrupt(self) -> None: ...
+    def history(self) -> list[dict[str, Any]]: ...
 
 
-def create_app_agent(cwd: Path, publisher: EventPublisher) -> AppAgent:
+def create_app_agent(cwd: Path, publisher: EventPublisher, history: list[dict[str, Any]] | None = None) -> AppAgent:
     backend = settings.agent_backend.strip().lower()
     if backend in {"codex", "codex-cli", "codex_cli"}:
-        return CodexCliAppAgent(cwd=cwd, publisher=publisher)
+        return CodexCliAppAgent(cwd=cwd, publisher=publisher, history=history)
     if backend == "hermes":
-        return HermesAppAgent(cwd=cwd, publisher=publisher)
+        return HermesAppAgent(cwd=cwd, publisher=publisher, history=history)
     raise ValueError(
         "Unsupported APPBUILDER_AGENT_BACKEND "
         f"{settings.agent_backend!r}; use 'codex-cli' or 'hermes'."
@@ -96,13 +97,13 @@ def _summarize_tool_input(name: str, tool_input: dict) -> str:
 class HermesAppAgent:
     """Small async adapter around Hermes' synchronous AIAgent SDK."""
 
-    def __init__(self, cwd: Path, publisher: EventPublisher) -> None:
+    def __init__(self, cwd: Path, publisher: EventPublisher, history: list[dict[str, Any]] | None = None) -> None:
         AIAgent, runtime_cwd = _load_hermes_classes()
         self.cwd = cwd.resolve()
         self._runtime_cwd = runtime_cwd
         self._loop = asyncio.get_running_loop()
         self._publisher = publisher
-        self._history: list[dict[str, Any]] = []
+        self._history: list[dict[str, Any]] = history or []
         old_terminal_cwd = os.environ.get("TERMINAL_CWD")
         os.environ["TERMINAL_CWD"] = str(self.cwd)
         token = runtime_cwd.set_session_cwd(str(self.cwd))
@@ -148,6 +149,9 @@ class HermesAppAgent:
     async def interrupt(self) -> None:
         self._agent.interrupt()
 
+    def history(self) -> list[dict[str, Any]]:
+        return self._history
+
     def _run_sync(self, text: str) -> dict[str, Any]:
         old_terminal_cwd = os.environ.get("TERMINAL_CWD")
         os.environ["TERMINAL_CWD"] = str(self.cwd)
@@ -171,7 +175,7 @@ class HermesAppAgent:
 
     def _on_stream_delta(self, delta: str | None) -> None:
         if delta:
-            self._publish_from_thread("assistant_text", {"text": delta})
+            self._publish_from_thread("assistant_delta", {"text": delta})
 
     def _on_thinking(self, text: str) -> None:
         if text:
@@ -197,10 +201,11 @@ class HermesAppAgent:
 class CodexCliAppAgent:
     """Adapter that runs the installed Codex CLI inside the app workspace."""
 
-    def __init__(self, cwd: Path, publisher: EventPublisher) -> None:
+    def __init__(self, cwd: Path, publisher: EventPublisher, history: list[dict[str, Any]] | None = None) -> None:
         self.cwd = cwd.resolve()
         self._publisher = publisher
         self._process: asyncio.subprocess.Process | None = None
+        self._history = history or []
 
     async def run(self, text: str) -> None:
         with tempfile.NamedTemporaryFile(
@@ -250,6 +255,9 @@ class CodexCliAppAgent:
                 await asyncio.wait_for(self._process.wait(), timeout=5)
             except asyncio.TimeoutError:
                 self._process.kill()
+
+    def history(self) -> list[dict[str, Any]]:
+        return self._history
 
     def _command(self, last_message: Path, text: str) -> list[str]:
         cmd = [

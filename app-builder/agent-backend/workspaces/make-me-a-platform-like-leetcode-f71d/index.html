@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AlgoDock</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#top" aria-label="AlgoDock home">
+        <span class="brand-mark">AD</span>
+        <span>
+          <strong>AlgoDock</strong>
+          <small>Practice platform</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        <a href="#workspace" class="active">Workspace</a>
+        <a href="#community">Discuss</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+
+      <section class="status-panel" aria-live="polite">
+        <span class="status-dot" id="authDot"></span>
+        <div>
+          <strong id="authStatus">Signed out</strong>
+          <small id="authDetail">Login to use backend features.</small>
+        </div>
+      </section>
+    </aside>
+
+    <main id="top" class="main-content">
+      <section class="topbar" aria-label="Account">
+        <div>
+          <p class="eyebrow">Interview prep dashboard</p>
+          <h1>Problems, practice, and discussion in one focused workspace.</h1>
+        </div>
+        <button id="logoutBtn" class="ghost hidden" type="button">Logout</button>
+      </section>
+
+      <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+
+      <section class="auth-grid" aria-label="Authentication">
+        <form id="loginForm" class="panel auth-card">
+          <div class="panel-heading">
+            <span class="pill">Gateway auth</span>
+            <h2>Login</h2>
+          </div>
+          <label>
+            Username
+            <input id="loginUsername" name="username" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Login</button>
+        </form>
+
+        <form id="registerForm" class="panel auth-card">
+          <div class="panel-heading">
+            <span class="pill">New account</span>
+            <h2>Register</h2>
+          </div>
+          <label>
+            Username
+            <input id="registerUsername" name="username" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="4" required>
+          </label>
+          <button type="submit">Create account</button>
+        </form>
+      </section>
+
+      <section id="workspace" class="workspace-grid">
+        <div class="panel problem-board disabled-feature" aria-disabled="true">
+          <div class="panel-heading">
+            <span class="pill danger">Being developed — backend not available yet</span>
+            <h2>Problem Catalog</h2>
+            <p>LeetCode-style curated problems need the unavailable leetcode-service.</p>
+          </div>
+          <div class="problem-table" aria-hidden="true">
+            <div class="problem-row header">
+              <span>Status</span><span>Title</span><span>Difficulty</span><span>Acceptance</span>
+            </div>
+            <div class="problem-row">
+              <span class="muted">Locked</span><strong>Two Sum</strong><span class="easy">Easy</span><span>--</span>
+            </div>
+            <div class="problem-row">
+              <span class="muted">Locked</span><strong>Longest Substring</strong><span class="medium">Medium</span><span>--</span>
+            </div>
+            <div class="problem-row">
+              <span class="muted">Locked</span><strong>Median of Streams</strong><span class="hard">Hard</span><span>--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel editor-panel disabled-feature" aria-disabled="true">
+          <div class="panel-heading">
+            <span class="pill danger">Being developed — backend not available yet</span>
+            <h2>Code Runner</h2>
+          </div>
+          <div class="editor-shell">
+            <div class="editor-tabs">
+              <span>JavaScript</span>
+              <span>Python</span>
+              <span>Java</span>
+            </div>
+            <pre><code>function solve(input) {
+  // Online judge integration pending.
+  return input;
+}</code></pre>
+            <div class="editor-actions">
+              <button type="button" disabled>Run</button>
+              <button type="button" disabled>Submit</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Platform modules">
+        <article class="mini-card disabled-feature" aria-disabled="true">
+          <span class="pill danger">Being developed — backend not available yet</span>
+          <h3>Submissions</h3>
+          <p>Runtime, memory, status, and language history are waiting on judge storage.</p>
+        </article>
+        <article class="mini-card disabled-feature" aria-disabled="true">
+          <span class="pill danger">Being developed — backend not available yet</span>
+          <h3>Contests</h3>
+          <p>Live ranking and timed rounds need a contest backend before they can work.</p>
+        </article>
+        <article class="mini-card disabled-feature" aria-disabled="true">
+          <span class="pill danger">Being developed — backend not available yet</span>
+          <h3>Leaderboard</h3>
+          <p>Ratings and streaks are disabled until profile and scoring services exist.</p>
+        </article>
+      </section>
+
+      <section id="community" class="community-layout">
+        <div class="panel">
+          <div class="panel-heading split">
+            <div>
+              <span class="pill">Tweeter + post-search</span>
+              <h2>Discussion Feed</h2>
+              <p>Use posts for solution notes, interview questions, and platform updates.</p>
+            </div>
+            <button id="refreshFeedBtn" class="ghost" type="button">Refresh</button>
+          </div>
+
+          <form id="postForm" class="composer">
+            <label>
+              Start a discussion
+              <textarea id="postContent" rows="4" placeholder="Share an approach, ask for a hint, or discuss a pattern." required></textarea>
+            </label>
+            <button type="submit">Post discussion</button>
+          </form>
+
+          <div class="search-row">
+            <label>
+              Search discussions
+              <input id="searchInput" placeholder="binary search, arrays, dynamic programming">
+            </label>
+            <button id="searchBtn" type="button">Search</button>
+          </div>
+
+          <div id="feedList" class="feed-list" aria-live="polite"></div>
+        </div>
+
+        <aside class="panel comments-panel">
+          <div class="panel-heading">
+            <span class="pill">Comments</span>
+            <h2 id="commentsTitle">Select a discussion</h2>
+          </div>
+          <div id="commentList" class="comment-list">
+            <p class="empty">Open a discussion from the feed to read or write comments.</p>
+          </div>
+          <form id="commentForm" class="comment-form hidden">
+            <label>
+              Add comment
+              <textarea id="commentContent" rows="3" required></textarea>
+            </label>
+            <button type="submit">Comment</button>
+          </form>
+        </aside>
+      </section>
+
+      <section id="roadmap" class="panel roadmap">
+        <div class="panel-heading">
+          <span class="pill">Backend map</span>
+          <h2>What is wired</h2>
+        </div>
+        <div class="roadmap-grid">
+          <div>
+            <strong>Available now</strong>
+            <p>Auth, discussions, comments, and discussion search use the Kong gateway.</p>
+          </div>
+          <div>
+            <strong>Disabled until backend exists</strong>
+            <p>Problem catalog, online judge, submissions, contests, ratings, and leaderboard.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

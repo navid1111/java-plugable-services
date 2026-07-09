@@ -22,7 +22,8 @@ class PlugCatalogApiTest {
         writePlugKit("auth-service", "/auth");
         writePlugKit("media-service", "/media");
 
-        MockMvc mvc = MockMvcBuilders.standaloneSetup(new PlugCatalogController(new PlugCatalogService(repoRoot))).build();
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new PlugCatalogController(
+                new PlugCatalogService(repoRoot), new EndpointScanner(repoRoot.toString()))).build();
 
         mvc.perform(post("/api/assess")
                         .contentType(MediaType.APPLICATION_JSON)

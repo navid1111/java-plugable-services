@@ -1,38 +1,30 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-KONG_ADMIN_URL=${1:-http://localhost:8001}
+KONG_ADMIN_URL=${1:-${KONG_ADMIN_URL:-http://localhost:18001}}
+UPSTREAM_HOST="${LEETCODE_UPSTREAM_HOST:-leetcode-service}"
+UPSTREAM_PORT="${LEETCODE_UPSTREAM_PORT:-8080}"
 
-echo "Configuring Kong for leetcode-service at $KONG_ADMIN_URL..."
+echo "==> [leetcode-service] Service 'leetcode-service' -> ${UPSTREAM_HOST}:${UPSTREAM_PORT}"
+curl -fsS -X PUT "${KONG_ADMIN_URL}/services/leetcode-service" \
+  --data "url=http://${UPSTREAM_HOST}:${UPSTREAM_PORT}" >/dev/null
 
-# 1. Add Service
-curl -s -X POST $KONG_ADMIN_URL/services \
-  -d "name=leetcode-service" \
-  -d "url=http://leetcode-service:8080/leetcode" \
-  || curl -s -X PATCH $KONG_ADMIN_URL/services/leetcode-service \
-  -d "url=http://leetcode-service:8080/leetcode"
+echo "==> [leetcode-service] PROTECTED route 'leetcode-route' on /leetcode"
+curl -fsS -X PUT "${KONG_ADMIN_URL}/services/leetcode-service/routes/leetcode-route" \
+  --data "paths[]=/leetcode" \
+  --data "strip_path=false" >/dev/null
 
-# 2. Add Route
-curl -s -X POST $KONG_ADMIN_URL/services/leetcode-service/routes \
-  -d "name=leetcode-route" \
-  -d "paths[]=/leetcode" \
-  -d "strip_path=false" \
-  || curl -s -X PATCH $KONG_ADMIN_URL/services/leetcode-service/routes/leetcode-route \
-  -d "paths[]=/leetcode" \
-  -d "strip_path=false"
+echo "==> [leetcode-service] Enabling jwt on the service"
+curl -fsS -X POST "${KONG_ADMIN_URL}/services/leetcode-service/plugins" \
+  --data "name=jwt" \
+  --data "config.claims_to_verify=exp" >/dev/null 2>&1 \
+  || echo "    jwt already enabled, skipping."
 
-# 3. Add Rate Limiting Plugin
-curl -s -X POST $KONG_ADMIN_URL/services/leetcode-service/plugins \
-  -d "name=rate-limiting" \
-  -d "config.minute=60" \
-  -d "config.policy=local" \
-  || true
+echo "==> [leetcode-service] Enabling rate-limiting on the service (60/min)"
+curl -fsS -X POST "${KONG_ADMIN_URL}/services/leetcode-service/plugins" \
+  --data "name=rate-limiting" \
+  --data "config.minute=60" \
+  --data "config.policy=local" >/dev/null 2>&1 \
+  || echo "    rate-limiting already enabled, skipping."
 
-# 4. Add JWT Plugin (Since some endpoints could be public, in a robust setup we might apply 
-# this selectively per path, but for simplicity of this demo, we can just apply globally,
-# or let the service handle 401s if JWT is missing. For now, Kong will apply JWT globally)
-curl -s -X POST $KONG_ADMIN_URL/services/leetcode-service/plugins \
-  -d "name=jwt" \
-  || true
-
-echo "LeetCode service configured in Kong."
+echo "LeetCode setup complete."
