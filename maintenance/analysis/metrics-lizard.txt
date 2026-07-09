@@ -1,0 +1,38 @@
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+       3      1     11      0       3 SecurityConfig::passwordEncoder@17-19@auth-service/src/main/java/com/example/demo/config/SecurityConfig.java
+       5      1     31      3       5 AuthController::AuthController@34-38@auth-service/src/main/java/com/example/demo/controller/AuthController.java
+      14      6    177      1      14 Credentials::register@47-60@auth-service/src/main/java/com/example/demo/controller/AuthController.java
+      13      1    121      1      13 Credentials::login@63-75@auth-service/src/main/java/com/example/demo/controller/AuthController.java
+      14      4    174      1      14 Credentials::me@78-91@auth-service/src/main/java/com/example/demo/controller/AuthController.java
+       3      1     15      0       3 HealthController::health@18-20@auth-service/src/main/java/com/example/demo/controller/HealthController.java
+       2      1      5      0       3 User::User@29-31@auth-service/src/main/java/com/example/demo/model/User.java
+       4      1     22      2       4 User::User@33-36@auth-service/src/main/java/com/example/demo/model/User.java
+       3      1      8      0       3 User::getId@38-40@auth-service/src/main/java/com/example/demo/model/User.java
+       3      1      8      0       3 User::getUsername@42-44@auth-service/src/main/java/com/example/demo/model/User.java
+       3      1      8      0       3 User::getPasswordHash@46-48@auth-service/src/main/java/com/example/demo/model/User.java
+       3      1     13      1       3 User::setPasswordHash@50-52@auth-service/src/main/java/com/example/demo/model/User.java
+       8      1     58      3       9 JwtService::JwtService@32-40@auth-service/src/main/java/com/example/demo/service/JwtService.java
+      11      1     82      1      11 JwtService::issueToken@43-53@auth-service/src/main/java/com/example/demo/service/JwtService.java
+       3      1      8      0       3 JwtService::getExpirationMinutes@55-57@auth-service/src/main/java/com/example/demo/service/JwtService.java
+       8      1     49      1       8 JwtService::extractUsername@60-67@auth-service/src/main/java/com/example/demo/service/JwtService.java
+       3      1     20      1       3 DemoApplication::main@9-11@auth-service/src/main/java/com/example/demo/DemoApplication.java
+7 file analyzed.
+==============================================================
+NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
+--------------------------------------------------------------
+     12       3.0     1.0       11.0         1     auth-service/src/main/java/com/example/demo/config/SecurityConfig.java
+     76      11.5     3.0      125.8         4     auth-service/src/main/java/com/example/demo/controller/AuthController.java
+     11       3.0     1.0       15.0         1     auth-service/src/main/java/com/example/demo/controller/HealthController.java
+     36       3.0     1.0       10.7         6     auth-service/src/main/java/com/example/demo/model/User.java
+      8       0.0     0.0        0.0         0     auth-service/src/main/java/com/example/demo/repository/UserRepository.java
+     48       7.5     1.0       49.2         4     auth-service/src/main/java/com/example/demo/service/JwtService.java
+      9       3.0     1.0       20.0         1     auth-service/src/main/java/com/example/demo/DemoApplication.java
+
+===============================================================================================================
+No thresholds exceeded (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 100)
+==========================================================================================
+Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+------------------------------------------------------------------------------------------
+       200       6.1     1.5       47.6       17            0      0.00    0.00

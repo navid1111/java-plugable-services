@@ -1,0 +1,236 @@
+AST of auth-service/src/main/java/com/example/demo/controller/AuthController.java
+total nodes shown: 233
+======================================================================
+CompilationUnit
+    PackageDeclaration (name='com.example.demo.controller')
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    ClassDeclaration (name='AuthController')
+        Annotation (name='RestController')
+        Annotation (name='RequestMapping')
+            Literal (value='"/auth"')
+        FieldDeclaration
+            ReferenceType (name='UserRepository')
+            VariableDeclarator (name='users')
+        FieldDeclaration
+            ReferenceType (name='PasswordEncoder')
+            VariableDeclarator (name='passwordEncoder')
+        FieldDeclaration
+            ReferenceType (name='JwtService')
+            VariableDeclarator (name='jwtService')
+        ConstructorDeclaration (name='AuthController')
+            FormalParameter (name='users')
+                ReferenceType (name='UserRepository')
+            FormalParameter (name='passwordEncoder')
+                ReferenceType (name='PasswordEncoder')
+            FormalParameter (name='jwtService')
+                ReferenceType (name='JwtService')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='users')
+                    MemberReference (member='users')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='passwordEncoder')
+                    MemberReference (member='passwordEncoder')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='jwtService')
+                    MemberReference (member='jwtService')
+        MethodDeclaration (name='Credentials')
+            ReferenceType (name='record')
+            FormalParameter (name='username')
+                Annotation (name='NotBlank')
+                ReferenceType (name='String')
+            FormalParameter (name='password')
+                Annotation (name='NotBlank')
+                ReferenceType (name='String')
+        MethodDeclaration (name='register')
+            Annotation (name='PostMapping')
+                Literal (value='"/register"')
+            ReferenceType (name='ResponseEntity')
+                TypeArgument
+            FormalParameter (name='body')
+                Annotation (name='RequestBody')
+                ReferenceType (name='Credentials')
+            IfStatement
+                BinaryOperation (operator='||')
+                    BinaryOperation (operator='||')
+                        BinaryOperation (operator='||')
+                            BinaryOperation (operator='==')
+                                MethodInvocation (member='username')
+                                Literal (value='null')
+                            MethodInvocation (member='username')
+                                MethodInvocation (member='trim')
+                                MethodInvocation (member='isEmpty')
+                        BinaryOperation (operator='==')
+                            MethodInvocation (member='password')
+                            Literal (value='null')
+                    MethodInvocation (member='password')
+                        MethodInvocation (member='trim')
+                        MethodInvocation (member='isEmpty')
+                BlockStatement
+                    ReturnStatement
+                        MethodInvocation (member='status')
+                            MethodInvocation (member='body')
+                                MethodInvocation (member='of')
+                                    Literal (value='"error"')
+                                    Literal (value='"username and password are required"')
+                            MemberReference (member='BAD_REQUEST')
+            IfStatement
+                MethodInvocation (member='existsByUsername')
+                    MethodInvocation (member='username')
+                BlockStatement
+                    ReturnStatement
+                        MethodInvocation (member='status')
+                            MethodInvocation (member='body')
+                                MethodInvocation (member='of')
+                                    Literal (value='"error"')
+                                    Literal (value='"username already taken"')
+                            MemberReference (member='CONFLICT')
+            LocalVariableDeclaration
+                ReferenceType (name='User')
+                VariableDeclarator (name='user')
+                    ClassCreator
+                        ReferenceType (name='User')
+                        MethodInvocation (member='username')
+                        MethodInvocation (member='encode')
+                            MethodInvocation (member='password')
+            StatementExpression
+                MethodInvocation (member='save')
+                    MemberReference (member='user')
+            ReturnStatement
+                MethodInvocation (member='status')
+                    MethodInvocation (member='body')
+                        MethodInvocation (member='of')
+                            Literal (value='"message"')
+                            Literal (value='"user registered"')
+                            Literal (value='"username"')
+                            MethodInvocation (member='getUsername')
+                    MemberReference (member='CREATED')
+        MethodDeclaration (name='login')
+            Annotation (name='PostMapping')
+                Literal (value='"/login"')
+            ReferenceType (name='ResponseEntity')
+                TypeArgument
+            FormalParameter (name='body')
+                Annotation (name='Valid')
+                Annotation (name='RequestBody')
+                ReferenceType (name='Credentials')
+            ReturnStatement
+                MethodInvocation (member='findByUsername')
+                    MethodInvocation (member='filter')
+                        LambdaExpression
+                            MemberReference (member='u')
+                            MethodInvocation (member='matches')
+                                MethodInvocation (member='password')
+                                MethodInvocation (member='getPasswordHash')
+                    MethodInvocation (member='map')
+                        LambdaExpression
+                            MemberReference (member='u')
+                            LocalVariableDeclaration
+                                ReferenceType (name='String')
+                                VariableDeclarator (name='token')
+                                    MethodInvocation (member='issueToken')
+                                        MethodInvocation (member='getUsername')
+                            ReturnStatement
+                                MethodInvocation (member='ok')
+                                    MethodInvocation (member='of')
+                                        Literal (value='"access_token"')
+                                        MemberReference (member='token')
+                                        Literal (value='"token_type"')
+                                        Literal (value='"Bearer"')
+                                        Literal (value='"expires_in_minutes"')
+                                        MethodInvocation (member='getExpirationMinutes')
+                    MethodInvocation (member='orElseGet')
+                        LambdaExpression
+                            MethodInvocation (member='status')
+                                MethodInvocation (member='body')
+                                    MethodInvocation (member='of')
+                                        Literal (value='"error"')
+                                        Literal (value='"invalid username or password"')
+                                MemberReference (member='UNAUTHORIZED')
+                    MethodInvocation (member='username')
+        MethodDeclaration (name='me')
+            Annotation (name='GetMapping')
+                Literal (value='"/me"')
+            ReferenceType (name='ResponseEntity')
+                TypeArgument
+            FormalParameter (name='authorization')
+                Annotation (name='RequestHeader')
+                    ElementValuePair (name='value')
+                        Literal (value='"Authorization"')
+                    ElementValuePair (name='required')
+                        Literal (value='false')
+                ReferenceType (name='String')
+            IfStatement
+                BinaryOperation (operator='||')
+                    BinaryOperation (operator='==')
+                        MemberReference (member='authorization')
+                        Literal (value='null')
+                    MethodInvocation (member='startsWith')
+                        Literal (value='"Bearer "')
+                BlockStatement
+                    ReturnStatement
+                        MethodInvocation (member='status')
+                            MethodInvocation (member='body')
+                                MethodInvocation (member='of')
+                                    Literal (value='"error"')
+                                    Literal (value='"missing or invalid token"')
+                            MemberReference (member='UNAUTHORIZED')
+            TryStatement
+                LocalVariableDeclaration
+                    ReferenceType (name='String')
+                    VariableDeclarator (name='token')
+                        MethodInvocation (member='substring')
+                            Literal (value='7')
+                LocalVariableDeclaration
+                    ReferenceType (name='String')
+                    VariableDeclarator (name='username')
+                        MethodInvocation (member='extractUsername')
+                            MemberReference (member='token')
+                ReturnStatement
+                    MethodInvocation (member='findByUsername')
+                        MethodInvocation (member='map')
+                            LambdaExpression
+                                MemberReference (member='u')
+                                MethodInvocation (member='ok')
+                                    MethodInvocation (member='of')
+                                        Literal (value='"id"')
+                                        MethodInvocation (member='getId')
+                                        Literal (value='"username"')
+                                        MethodInvocation (member='getUsername')
+                        MethodInvocation (member='orElseGet')
+                            LambdaExpression
+                                MethodInvocation (member='status')
+                                    MethodInvocation (member='body')
+                                        MethodInvocation (member='of')
+                                            Literal (value='"error"')
+                                            Literal (value='"user not found"')
+                                    MemberReference (member='UNAUTHORIZED')
+                        MemberReference (member='username')
+                CatchClause
+                    CatchClauseParameter (name='e')
+                    ReturnStatement
+                        MethodInvocation (member='status')
+                            MethodInvocation (member='body')
+                                MethodInvocation (member='of')
+                                    Literal (value='"error"')
+                                    Literal (value='"invalid or expired token"')
+                            MemberReference (member='UNAUTHORIZED')

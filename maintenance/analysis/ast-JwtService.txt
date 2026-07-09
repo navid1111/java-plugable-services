@@ -1,0 +1,111 @@
+AST of auth-service/src/main/java/com/example/demo/service/JwtService.java
+total nodes shown: 108
+======================================================================
+CompilationUnit
+    PackageDeclaration (name='com.example.demo.service')
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    Import
+    ClassDeclaration (name='JwtService')
+        Annotation (name='Service')
+        FieldDeclaration
+            ReferenceType (name='SecretKey')
+            VariableDeclarator (name='key')
+        FieldDeclaration
+            ReferenceType (name='String')
+            VariableDeclarator (name='issuer')
+        FieldDeclaration
+            BasicType (name='long')
+            VariableDeclarator (name='expirationMinutes')
+        ConstructorDeclaration (name='JwtService')
+            FormalParameter (name='secret')
+                Annotation (name='Value')
+                    Literal (value='"${jwt.secret}"')
+                ReferenceType (name='String')
+            FormalParameter (name='issuer')
+                Annotation (name='Value')
+                    Literal (value='"${jwt.issuer}"')
+                ReferenceType (name='String')
+            FormalParameter (name='expirationMinutes')
+                Annotation (name='Value')
+                    Literal (value='"${jwt.expiration-minutes}"')
+                BasicType (name='long')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='key')
+                    MethodInvocation (member='hmacShaKeyFor')
+                        MethodInvocation (member='getBytes')
+                            MemberReference (member='UTF_8')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='issuer')
+                    MemberReference (member='issuer')
+            StatementExpression
+                Assignment
+                    This
+                        MemberReference (member='expirationMinutes')
+                    MemberReference (member='expirationMinutes')
+        MethodDeclaration (name='issueToken')
+            ReferenceType (name='String')
+            FormalParameter (name='username')
+                ReferenceType (name='String')
+            LocalVariableDeclaration
+                ReferenceType (name='Instant')
+                VariableDeclarator (name='now')
+                    MethodInvocation (member='now')
+            LocalVariableDeclaration
+                ReferenceType (name='Instant')
+                VariableDeclarator (name='expiry')
+                    MethodInvocation (member='plus')
+                        MemberReference (member='expirationMinutes')
+                        MemberReference (member='MINUTES')
+            ReturnStatement
+                MethodInvocation (member='builder')
+                    MethodInvocation (member='issuer')
+                        MemberReference (member='issuer')
+                    MethodInvocation (member='subject')
+                        MemberReference (member='username')
+                    MethodInvocation (member='issuedAt')
+                        MethodInvocation (member='from')
+                            MemberReference (member='now')
+                    MethodInvocation (member='expiration')
+                        MethodInvocation (member='from')
+                            MemberReference (member='expiry')
+                    MethodInvocation (member='signWith')
+                        MemberReference (member='key')
+                        MemberReference (member='HS256')
+                    MethodInvocation (member='compact')
+        MethodDeclaration (name='getExpirationMinutes')
+            BasicType (name='long')
+            ReturnStatement
+                MemberReference (member='expirationMinutes')
+        MethodDeclaration (name='extractUsername')
+            ReferenceType (name='String')
+            FormalParameter (name='token')
+                ReferenceType (name='String')
+            LocalVariableDeclaration
+                ReferenceType (name='Jws')
+                    TypeArgument
+                        ReferenceType (name='Claims')
+                VariableDeclarator (name='jws')
+                    MethodInvocation (member='parser')
+                        MethodInvocation (member='verifyWith')
+                            MemberReference (member='key')
+                        MethodInvocation (member='requireIssuer')
+                            MemberReference (member='issuer')
+                        MethodInvocation (member='build')
+                        MethodInvocation (member='parseSignedClaims')
+                            MemberReference (member='token')
+            ReturnStatement
+                MethodInvocation (member='getPayload')
+                    MethodInvocation (member='getSubject')

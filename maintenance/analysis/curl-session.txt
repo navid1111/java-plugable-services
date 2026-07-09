@@ -1,0 +1,21 @@
+=== 1. Happy path: register bob ===
+{"message":"user registered","username":"bob"}
+HTTP 201
+
+=== 2. Happy path: login bob ===
+{"expires_in_minutes":60,"access_token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzcHJpbmdib290LWF1dGgiLCJzdWIiOiJib2IiLCJpYXQiOjE3ODM2MzMwMjUsImV4cCI6MTc4MzYzNjYyNX0.hVMLHxVkNfxLdk8ZpC6bQiaYThbbFgK4iAEhveTRivE","token_type":"Bearer"}
+=== 3. Happy path: GET /auth/me with token ===
+{"id":1,"username":"bob"}
+HTTP 200
+
+=== 4. BUG REPRO (CR-001): register username with surrounding spaces ===
+{"message":"user registered","username":"  alice  "}
+HTTP 201
+
+=== 5. BUG: login as "alice" (what the user thinks they registered) -> 401 ===
+{"error":"invalid username or password"}
+HTTP 401
+
+=== 6. BUG: register "alice" again -> duplicate account accepted (should be 409) ===
+{"message":"user registered","username":"alice"}
+HTTP 201

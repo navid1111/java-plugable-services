@@ -1,0 +1,30 @@
+2026-07-10T03:35:21.093+06:00 DEBUG 20629 --- [demo] [           main] com.example.demo.DemoApplication         : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-10T03:35:23.955+06:00 DEBUG 20629 --- [demo] [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 6 mappings in 'requestMappingHandlerMapping'
+2026-07-10T03:35:23.976+06:00 DEBUG 20629 --- [demo] [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2026-07-10T03:35:23.997+06:00 DEBUG 20629 --- [demo] [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 2 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-07-10T03:35:24.039+06:00 DEBUG 20629 --- [demo] [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-07-10T03:35:25.438+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-07-10T03:35:25.438+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-07-10T03:35:25.439+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@10b0dd3a
+2026-07-10T03:35:25.439+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@397f9672
+2026-07-10T03:35:25.439+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-07-10T03:35:25.440+06:00  INFO 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-07-10T03:35:25.445+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/health", parameters={}
+2026-07-10T03:35:25.452+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.demo.controller.HealthController#health()
+2026-07-10T03:35:25.465+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-07-10T03:35:25.466+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Writing [{status=UP}]
+2026-07-10T03:35:25.480+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-07-10T03:37:05.408+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/auth/register", parameters={}
+2026-07-10T03:37:05.408+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.demo.controller.AuthController#register(Credentials)
+2026-07-10T03:37:05.441+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [Credentials[username=bob, password=secret123]]
+2026-07-10T03:37:05.843+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-07-10T03:37:05.844+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{message=user registered, username=bob}]
+2026-07-10T03:37:05.846+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2026-07-10T03:37:05.853+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] o.s.web.servlet.DispatcherServlet        : POST "/auth/login", parameters={}
+2026-07-10T03:37:05.853+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.demo.controller.AuthController#login(Credentials)
+2026-07-10T03:37:05.854+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [Credentials[username=bob, password=secret123]]
+2026-07-10T03:37:06.026+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-07-10T03:37:06.026+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{expires_in_minutes=60, access_token=eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzcHJpbmdib290LWF1dGgiLCJzdWIiOi (truncated)...]
+2026-07-10T03:37:06.028+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-07-10T03:37:06.036+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/auth/me", parameters={}
+2026-07-10T03:37:06.037+06:00 DEBUG 20629 --- [demo] [nio-8085-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.example.demo.controller.AuthController#me(String)

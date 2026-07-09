@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+demo,com.example.demo.service,JwtService,45,15,0,0,16,5,3,1,3,1
+demo,com.example.demo.controller,AuthController.Credentials,9,0,0,0,1,0,1,0,1,0
+demo,com.example.demo.controller,AuthController,167,12,14,0,27,5,15,1,8,1
+demo,com.example.demo.controller,HealthController,4,3,0,0,1,1,1,1,1,1
+demo,com.example.demo.model,User,22,3,0,0,9,2,5,1,5,1
+demo,com.example.demo.config,SecurityConfig,0,7,0,0,0,2,0,2,0,2
+demo,com.example.demo,DemoApplication,5,3,0,0,2,1,1,1,1,1
