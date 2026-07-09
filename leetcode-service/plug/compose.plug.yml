@@ -1,0 +1,44 @@
+services:
+  leetcode-db:
+    image: postgres:16-alpine
+    container_name: leetcode-db
+    profiles: ["leetcode"]
+    environment:
+      POSTGRES_USER: leetcodeuser
+      POSTGRES_DB: leetcodedb
+      POSTGRES_PASSWORD: leetcodepass
+    volumes:
+      - leetcode_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetcodeuser -d leetcodedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  leetcode-service:
+    profiles: ["leetcode"]
+    image: leetcode-service:latest
+    container_name: leetcode-service
+    depends_on:
+      leetcode-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://leetcode-db:5432/leetcodedb
+      SPRING_DATASOURCE_USERNAME: leetcodeuser
+      SPRING_DATASOURCE_PASSWORD: leetcodepass
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+volumes:
+  leetcode_data:

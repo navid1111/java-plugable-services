@@ -21,6 +21,7 @@ stack**, and every service ends with its **standalone integration demo**
 | 7 | 007 comment-service | [plan](specs/007-comment-service/plan.md) | two-user generic target comment scenario through Kong **and** `examples/comments-standalone/` green |
 | 8 | 008 post-search-service | [plan](specs/008-post-search-service/plan.md) | keyword post search through Kong **and** `examples/post-search-standalone/` green with auth + post + comment + post-search |
 | 9 | 009 media-service | [plan](specs/009-media-service/plan.md) | Cloudinary image/video upload through Kong **and** `examples/media-standalone/` green with auth + post + comment + media |
+| 10 | 010 leetcode-service | [plan](specs/010-leetcode-service/plan.md) | dynamic execution through Kong **and** `examples/leetcode-standalone/` green with auth + leetcode |
 
 ## The repeating service pattern
 

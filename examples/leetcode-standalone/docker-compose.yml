@@ -1,0 +1,90 @@
+services:
+  # The Kong gateway + Auth service kit
+  kong-database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kongpass
+    networks:
+      - kong-net
+
+  kong-migrations:
+    image: kong:3.9
+    command: kong migrations bootstrap
+    depends_on:
+      - kong-database
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+    networks:
+      - kong-net
+
+  kong:
+    image: kong:3.9
+    depends_on:
+      - kong-database
+      - kong-migrations
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+      - "18000:8000"
+      - "8001:8001"
+    networks:
+      - kong-net
+
+  users-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_DB: appdb
+      POSTGRES_PASSWORD: apppass
+    networks:
+      - kong-net
+
+  auth-service:
+    image: auth-service:latest
+    depends_on:
+      - users-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/appdb
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: apppass
+      JWT_SECRET: "test-secret"
+      JWT_ISSUER: "springboot-auth"
+    networks:
+      - kong-net
+
+  # The Leetcode service plug kit
+  leetcode-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: leetcodeuser
+      POSTGRES_DB: leetcodedb
+      POSTGRES_PASSWORD: leetcodepass
+    networks:
+      - kong-net
+
+  leetcode-service:
+    image: leetcode-service:latest
+    depends_on:
+      - leetcode-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://leetcode-db:5432/leetcodedb
+      SPRING_DATASOURCE_USERNAME: leetcodeuser
+      SPRING_DATASOURCE_PASSWORD: leetcodepass
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - kong-net
+
+networks:
+  kong-net:
+    driver: bridge

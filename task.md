@@ -63,6 +63,13 @@
   - [ ] Target media listing (T014–T017)
   - [ ] Read/delete asset (T018–T021)
   - [ ] Plug kit + final auth + post + comment + search + media demo (T022–T029)
+- [x] **010 leetcode-service** — [tasks](specs/010-leetcode-service/tasks.md)
+  - [x] Setup + Database Layer (T001-T006)
+  - [x] Container Execution Engine (T007-T013)
+  - [x] API Endpoints for problems/submissions (T014-T017)
+  - [x] Competitions & Leaderboards (T018-T021)
+  - [x] Plug Kit (T022-T024)
+  - [x] Integration Demo auth + leetcode (T025-T029)
 
 ## Done (pre-plan foundation)
 
