@@ -1,0 +1,34 @@
+services:
+  bookings-db:
+    image: postgres:16-alpine
+    container_name: bookings-db
+    environment:
+      POSTGRES_USER: bookingsuser
+      POSTGRES_DB: bookingsdb
+      POSTGRES_PASSWORD: bookingspass
+    volumes:
+      - booking_service_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookingsuser -d bookingsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  booking-service:
+    image: booking-service:latest
+    container_name: booking-service
+    depends_on:
+      bookings-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bookings-db:5432/bookingsdb
+      SPRING_DATASOURCE_USERNAME: bookingsuser
+      SPRING_DATASOURCE_PASSWORD: bookingspass
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  booking_service_data:

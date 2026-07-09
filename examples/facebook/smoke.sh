@@ -37,13 +37,13 @@ require_contains() {
 echo "[1/8] Confirming protected services reject missing tokens..."
 POSTS_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/posts/feed")"
 CHAT_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/chat/chats")"
-BOOKINGS_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/bookings/venues")"
+BOOKINGS_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/bookings/resources")"
 if [ "$POSTS_CODE" != "401" ] || [ "$CHAT_CODE" != "401" ]; then
   echo "Expected /posts and /chat to reject missing tokens; got posts=${POSTS_CODE}, chat=${CHAT_CODE}"
   exit 1
 fi
 if [ "$BOOKINGS_CODE" != "404" ]; then
-  echo "Expected /bookings to be absent when turf profile is not enabled, got ${BOOKINGS_CODE}"
+  echo "Expected /bookings to be absent when booking profile is not enabled, got ${BOOKINGS_CODE}"
   exit 1
 fi
 

@@ -26,7 +26,7 @@ docker compose --profile tweeter --profile chat up --build -d
 ```
 
 I used `-p facebook` during verification so the run has fresh Compose volumes
-and proves `/bookings` is absent when the turf profile is not enabled.
+and proves `/bookings` is absent when the booking profile is not enabled.
 The stack was also restarted successfully as
 `--profile chat --profile tweeter`, confirming profile order does not matter.
 
@@ -89,7 +89,7 @@ The smoke script also checks that:
 
 - `/posts/feed` returns `401` without a token.
 - `/chat/chats` returns `401` without a token.
-- `/bookings/venues` returns `404`, proving turf is not mounted.
+- `/bookings/resources` returns `404`, proving booking-service is not mounted.
 - The same Alice JWT creates a post, creates a chat, sends a WebSocket chat
   message, and reads chat history.
 

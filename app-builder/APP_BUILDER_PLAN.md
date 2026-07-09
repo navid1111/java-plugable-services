@@ -77,14 +77,14 @@ Add:
 
 ```text
 POST /api/assess
-body: { "prompt": "make me a login and turf booking app" }
+body: { "prompt": "make me a login and booking app" }
 ```
 
 Response:
 
 ```json
 {
-  "availableServiceIds": ["auth-service", "turf-service"],
+  "availableServiceIds": ["auth-service", "booking-service"],
   "developingCapabilities": ["payments"]
 }
 ```

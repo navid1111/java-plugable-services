@@ -99,7 +99,7 @@ public class UiController {
                     function renderAssessment(data) {
                         const available = data.availableServiceIds.map(id => `<div class=\"mock-card\"><strong>${id}</strong><p>Available Java plug. The agent can wire this service through Kong.</p></div>`).join('');
                         const missing = data.developingCapabilities.map(name => `<div class=\"mock-card\"><strong>${name}</strong><p>No backend yet — the agent will mark this as being developed, not faked.</p></div>`).join('');
-                        preview.innerHTML = available + missing || '<div class=\"mock-card\"><strong>No backend matches yet</strong><p>Try mentioning login, media, posts, comments, search, leetcode, or turf.</p></div>';
+                        preview.innerHTML = available + missing || '<div class=\"mock-card\"><strong>No backend matches yet</strong><p>Try mentioning login, media, posts, comments, search, leetcode, or booking.</p></div>';
                     }
                     async function loadPlugs() {
                         const res = await fetch('/api/plugs');

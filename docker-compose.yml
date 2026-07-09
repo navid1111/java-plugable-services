@@ -70,7 +70,7 @@ services:
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth", "tweeter", "chat", "turf", "comments", "post-search", "media"]
+    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -87,7 +87,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth", "tweeter", "chat", "turf", "comments", "post-search", "media"]
+    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media"]
     build:
       context: ./auth-service
       dockerfile: Dockerfile
@@ -338,11 +338,11 @@ services:
     networks:
       - kong-net
 
-  # ---- Postgres for the turf booking service (venues + slots + bookings) ----
+  # ---- Postgres for the booking service (resources + slots + bookings) ----
   bookings-db:
     image: postgres:16-alpine
     container_name: bookings-db
-    profiles: ["turf"]
+    profiles: ["booking"]
     environment:
       POSTGRES_USER: bookingsuser
       POSTGRES_DB: bookingsdb
@@ -357,13 +357,13 @@ services:
     networks:
       - kong-net
 
-  # ---- Turf service: venues, slots, and no-double-booking guarantee ----
-  turf-service:
-    profiles: ["turf"]
+  # ---- Booking service: generic resources, slots, and no-double-booking guarantee ----
+  booking-service:
+    profiles: ["booking"]
     build:
-      context: ./turf-service
+      context: ./booking-service
       dockerfile: Dockerfile
-    container_name: turf-service
+    container_name: booking-service
     depends_on:
       bookings-db:
         condition: service_healthy

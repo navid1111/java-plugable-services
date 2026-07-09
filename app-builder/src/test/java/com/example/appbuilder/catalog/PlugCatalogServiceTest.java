@@ -57,8 +57,8 @@ class PlugCatalogServiceTest {
                 "curl --data \"paths[]=/auth\" http://localhost:8001/routes\n",
                 "#!/usr/bin/env bash\necho smoke\n");
         writePlugKit(
-                "turf-service",
-                "services:\n  turf-service:\n    image: turf-service:latest\n",
+                "booking-service",
+                "services:\n  booking-service:\n    image: booking-service:latest\n",
                 "curl --data \"paths[]=/bookings\" http://localhost:8001/routes\n",
                 "#!/usr/bin/env bash\necho smoke\n");
 
@@ -66,7 +66,7 @@ class PlugCatalogServiceTest {
 
         CapabilityAssessment assessment = catalog.assessRequest("make me a login and turf booking app with payments");
 
-        assertThat(assessment.availableServiceIds()).containsExactly("auth-service", "turf-service");
+        assertThat(assessment.availableServiceIds()).containsExactly("auth-service", "booking-service");
         assertThat(assessment.developingCapabilities()).containsExactly("payments");
     }
 

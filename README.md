@@ -10,6 +10,7 @@ Client ──▶ Kong (:18000)
               ├─ /posts/*  JWT      (posts + follows + feed) ─▶ tweeter-service (:8080)
               ├─ /comments/* JWT     (generic target comments) ─▶ comment-service (:8080)
               ├─ /post-search/* JWT  (keyword post search) ────▶ post-search-service (:8080)
+              ├─ /bookings/* JWT     (generic slot booking) ────▶ booking-service (:8080)
               ├─ /media/* JWT        (image/video attachments) ─▶ media-service (:8080)
               └─ Postgres           (Kong config store)
 ```
@@ -49,6 +50,8 @@ docker compose --profile comments up --build -d
 docker compose --profile post-search up --build -d
 #    Auth + reusable media:
 docker compose --profile media up --build -d
+#    Auth + reusable booking (any resource with time slots):
+docker compose --profile booking up --build -d
 
 # 3. Wait until Kong is healthy, then configure the gateway
 #    (creates the core jwt issuer + delegates to auth-service plug kit)
@@ -61,6 +64,8 @@ docker compose --profile media up --build -d
 ./kong/setup-post-search.sh
 #    If the media profile is enabled, register /media too:
 ./kong/setup-media.sh
+#    If the booking profile is enabled, register /bookings too:
+./kong/setup-booking.sh
 ```
 
 ## Test it
@@ -73,6 +78,7 @@ You can use the provided smoke test script to verify the full register → login
 ./comment-service/plug/smoke.sh
 ./post-search-service/plug/smoke.sh
 ./media-service/plug/smoke.sh
+./booking-service/plug/smoke.sh
 ```
 
 ## Useful admin calls

@@ -24,7 +24,7 @@ public class PlugCatalogService {
             "auth-service", Set.of("auth", "login", "register", "signup", "signin"),
             "tweeter-service", Set.of("post", "posts", "feed", "follow", "tweet"),
             "whatsapp-service", Set.of("chat", "message", "messages", "whatsapp"),
-            "turf-service", Set.of("turf", "booking", "bookings", "venue", "slot"),
+            "booking-service", Set.of("booking", "bookings", "reservation", "slot", "resource", "turf", "venue"),
             "comment-service", Set.of("comment", "comments"),
             "post-search-service", Set.of("search", "post-search"),
             "media-service", Set.of("media", "upload", "uploads", "image", "images", "video", "videos"),
