@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ADMIN="${KONG_ADMIN_URL:-http://localhost:8001}"
+ADMIN="${KONG_ADMIN_URL:-http://localhost:18001}"
 UPSTREAM_HOST="${TWEETER_UPSTREAM_HOST:-tweeter-service}"
 UPSTREAM_PORT="${TWEETER_UPSTREAM_PORT:-8080}"
 

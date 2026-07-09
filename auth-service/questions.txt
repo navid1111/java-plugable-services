@@ -1,0 +1,12 @@
+1.what is the use of @Configuration 
+2.Does the @Bean creates and manages a BCryptPasswordEncoder class or is it just a function
+3.@RestController why do we use it what happens if we dont
+4.in controller first we inject the dependencies like for auth the user,the PasswordEncoder,and the jwtService that the controller will be use also the playloads as record
+5.what does the ResponseEntity<?> means
+6..body(Map.of("error", "username already taken")); how does this work
+for creating users we do new User like creating new object and then apply the entries like calling a contructor
+in thee ResponseEntity we see key value like message ,username where did the map come from or is ResponseEntity is a special datastructure
+7.@Value what does this do 
+8.where did it import Jwts from and how does it have a builder function
+9.@RequestHeader
+10.How does JpaRepository work and when to use it

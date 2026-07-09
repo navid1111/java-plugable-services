@@ -57,7 +57,7 @@ services:
       KONG_PROXY_LISTEN: 0.0.0.0:8000
     ports:
       - "18000:8000"  # public proxy — clients hit this (host 18000 to avoid a local conflict)
-      - "8001:8001"   # admin API — for configuration (keep private in prod)
+      - "18001:8001"  # admin API — for configuration (host 18001 avoids local dev conflicts)
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 10s

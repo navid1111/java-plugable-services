@@ -4,7 +4,7 @@
 #
 set -euo pipefail
 
-ADMIN="${KONG_ADMIN_URL:-http://localhost:8001}"
+ADMIN="${KONG_ADMIN_URL:-http://localhost:18001}"
 
 echo "==> Waiting for Kong Admin API at ${ADMIN} ..."
 until curl -fsS "${ADMIN}" >/dev/null 2>&1; do

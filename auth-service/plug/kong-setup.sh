@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ADMIN="${KONG_ADMIN_URL:-http://localhost:8001}"
+ADMIN="${KONG_ADMIN_URL:-http://localhost:18001}"
 UPSTREAM_HOST="${AUTH_UPSTREAM_HOST:-auth-service}"
 UPSTREAM_PORT="${AUTH_UPSTREAM_PORT:-8080}"
 
