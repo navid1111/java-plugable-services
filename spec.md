@@ -27,11 +27,11 @@ calling into each other's code or databases.
 ```
                          Kong (:18000)
                            │  jwt verification + rate limiting at the edge
-         ┌────────────┬────┴────────┬───────────────┐
-      /auth         /posts        /chat          /bookings
-   auth-service  tweeter-svc   whatsapp-svc     turf-svc
-         │            │             │                │
-      users-db     posts-db      chats-db       bookings-db
+         ┌────────────┬────────────┬────┴───────┬──────────────┬──────────────┬──────────────┬────────────┐
+      /auth         /posts       /comments   /post-search    /media         /chat          /bookings
+   auth-service  tweeter-svc   comment-svc  post-search-svc media-svc   whatsapp-svc     turf-svc
+         │            │             │             │            │             │                │
+      users-db     posts-db     comments-db search-db     media-db      chats-db       bookings-db
 ```
 
 Every service ships a **plug kit** (`<service>/plug/`: compose fragment +
@@ -52,6 +52,11 @@ deliberately not taking yet) are documented in
   plugin verifies on protected routes; rate limiting 10/min, 100/hour
 - `tweeter-service` with `/posts` CRUD, follow/unfollow, reverse-chron feed
   with cursor paging, and a standalone plug-kit demo
+- `comment-service` with `/comments` CRUD for generic target references,
+  cursor paging, owner delete, and a standalone plug-kit demo
+- `post-search-service` with `/post-search` manual inverted-index keyword
+  search, recency/likes sorting, like-count updates, and a standalone demo
+  proving auth + post + comment + search composition
 - `whatsapp-service` with `/chat` REST APIs, Kong-proxied WebSockets,
   offline inbox replay, ACK handling, and a standalone plug-kit demo
 - `turf-service` with seeded venues/slots, database-enforced no-double-booking,
@@ -70,10 +75,14 @@ deliberately not taking yet) are documented in
 | [004](specs/004-turf-service/spec.md) | turf-service | venues/slots/bookings, no double-booking + standalone demo | Done |
 | [005](specs/005-composition-facebook/spec.md) | composition demo | tweeter + chat = "facebook", one command, one login, zero code change | Done |
 | [006](specs/006-hardening/spec.md) | hardening | .env secrets, HTTPS, RS256 evaluation, decK | Draft |
+| [007](specs/007-comment-service/spec.md) | comment-service | reusable target comments, cursor paging, own-comment delete + standalone demo | Done |
+| [008](specs/008-post-search-service/spec.md) | post-search-service | manual inverted-index post search, recency/likes sort, auth+post+comment+search demo | Done |
+| [009](specs/009-media-service/spec.md) | media-service | Cloudinary-backed reusable image/video attachments for posts, comments, or any target | Draft |
 
 ## Out of scope (platform-wide)
 
-- Media upload, audio/video calling, message encryption at rest
+- Audio/video calling, message encryption at rest
+- Advanced media processing beyond Cloudinary's basic upload metadata
 - Event bus between services (add when a real cross-service reaction exists)
 - Multi-node chat (Redis pub/sub), feed precomputation, celebrity fan-out
 - Kubernetes; Compose is the deployment unit

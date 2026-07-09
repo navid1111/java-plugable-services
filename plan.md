@@ -18,6 +18,9 @@ stack**, and every service ends with its **standalone integration demo**
 | 4 | 004 turf-service | [plan](specs/004-turf-service/plan.md) | concurrent no-double-booking proof **and** `examples/turf-standalone/` green; wall-clock cost recorded |
 | 5 | 005 composition demo | [spec](specs/005-composition-facebook/spec.md) | tweeter + chat composed with **zero service diffs**, one login token |
 | 6 | 006 hardening | [spec](specs/006-hardening/spec.md) | secrets out of repo, HTTPS smoke green, **all standalone demos re-pass** |
+| 7 | 007 comment-service | [plan](specs/007-comment-service/plan.md) | two-user generic target comment scenario through Kong **and** `examples/comments-standalone/` green |
+| 8 | 008 post-search-service | [plan](specs/008-post-search-service/plan.md) | keyword post search through Kong **and** `examples/post-search-standalone/` green with auth + post + comment + post-search |
+| 9 | 009 media-service | [plan](specs/009-media-service/plan.md) | Cloudinary image/video upload through Kong **and** `examples/media-standalone/` green with auth + post + comment + media |
 
 ## The repeating service pattern
 

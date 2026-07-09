@@ -1,0 +1,34 @@
+services:
+  post-search-db:
+    image: postgres:16-alpine
+    container_name: post-search-db
+    environment:
+      POSTGRES_USER: postsearchuser
+      POSTGRES_DB: postsearchdb
+      POSTGRES_PASSWORD: postsearchpass
+    volumes:
+      - post_search_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postsearchuser -d postsearchdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  post-search-service:
+    image: post-search-service:latest
+    container_name: post-search-service
+    depends_on:
+      post-search-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://post-search-db:5432/postsearchdb
+      SPRING_DATASOURCE_USERNAME: postsearchuser
+      SPRING_DATASOURCE_PASSWORD: postsearchpass
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  post_search_data:

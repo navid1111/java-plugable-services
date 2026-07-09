@@ -70,7 +70,7 @@ services:
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth", "tweeter", "chat", "turf"]
+    profiles: ["auth", "tweeter", "chat", "turf", "comments", "post-search", "media"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -87,7 +87,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth", "tweeter", "chat", "turf"]
+    profiles: ["auth", "tweeter", "chat", "turf", "comments", "post-search", "media"]
     build:
       context: ./auth-service
       dockerfile: Dockerfile
@@ -148,6 +148,143 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://posts-db:5432/postsdb
       SPRING_DATASOURCE_USERNAME: postsuser
       SPRING_DATASOURCE_PASSWORD: postspass
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+  # ---- Postgres for the comment service (generic target comments) ----
+  comments-db:
+    image: postgres:16-alpine
+    container_name: comments-db
+    profiles: ["comments"]
+    environment:
+      POSTGRES_USER: commentsuser
+      POSTGRES_DB: commentsdb
+      POSTGRES_PASSWORD: commentspass
+    volumes:
+      - comments_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commentsuser -d commentsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Comment service: reusable comments attached to target references ----
+  comment-service:
+    profiles: ["comments"]
+    build:
+      context: ./comment-service
+      dockerfile: Dockerfile
+    container_name: comment-service
+    depends_on:
+      comments-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://comments-db:5432/commentsdb
+      SPRING_DATASOURCE_USERNAME: commentsuser
+      SPRING_DATASOURCE_PASSWORD: commentspass
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+  # ---- Postgres for the post search service (manual inverted index) ----
+  post-search-db:
+    image: postgres:16-alpine
+    container_name: post-search-db
+    profiles: ["post-search"]
+    environment:
+      POSTGRES_USER: postsearchuser
+      POSTGRES_DB: postsearchdb
+      POSTGRES_PASSWORD: postsearchpass
+    volumes:
+      - post_search_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postsearchuser -d postsearchdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Post search service: keyword search over indexed post snapshots ----
+  post-search-service:
+    profiles: ["post-search"]
+    build:
+      context: ./post-search-service
+      dockerfile: Dockerfile
+    container_name: post-search-service
+    depends_on:
+      post-search-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://post-search-db:5432/postsearchdb
+      SPRING_DATASOURCE_USERNAME: postsearchuser
+      SPRING_DATASOURCE_PASSWORD: postsearchpass
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
+  # ---- Postgres for the media service (Cloudinary metadata) ----
+  media-db:
+    image: postgres:16-alpine
+    container_name: media-db
+    profiles: ["media"]
+    environment:
+      POSTGRES_USER: ${MEDIA_DB_USERNAME:-mediauser}
+      POSTGRES_DB: ${MEDIA_DB_NAME:-mediadb}
+      POSTGRES_PASSWORD: ${MEDIA_DB_PASSWORD:-mediapass}
+    volumes:
+      - media_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kong-net
+
+  # ---- Media service: reusable Cloudinary-backed image/video attachments ----
+  media-service:
+    profiles: ["media"]
+    build:
+      context: ./media-service
+      dockerfile: Dockerfile
+    container_name: media-service
+    depends_on:
+      media-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://media-db:5432/${MEDIA_DB_NAME:-mediadb}
+      SPRING_DATASOURCE_USERNAME: ${MEDIA_DB_USERNAME:-mediauser}
+      SPRING_DATASOURCE_PASSWORD: ${MEDIA_DB_PASSWORD:-mediapass}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_UPLOAD_FOLDER: ${CLOUDINARY_UPLOAD_FOLDER:-pluggable-services-dev}
+      MEDIA_MAX_IMAGE_BYTES: ${MEDIA_MAX_IMAGE_BYTES:-10485760}
+      MEDIA_MAX_VIDEO_BYTES: ${MEDIA_MAX_VIDEO_BYTES:-104857600}
+      MEDIA_ALLOWED_IMAGE_FORMATS: ${MEDIA_ALLOWED_IMAGE_FORMATS:-jpg,jpeg,png,gif,webp}
+      MEDIA_ALLOWED_VIDEO_FORMATS: ${MEDIA_ALLOWED_VIDEO_FORMATS:-mp4,mov,webm}
     expose:
       - "8080"
     healthcheck:
@@ -248,6 +385,9 @@ volumes:
   kong_data:
   app_data:
   posts_data:
+  comments_data:
+  post_search_data:
+  media_data:
   chats_data:
   bookings_data:
 

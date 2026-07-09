@@ -8,6 +8,9 @@ Client ──▶ Kong (:18000)
               │
               ├─ /auth/*   PUBLIC   (register + login + me) ──▶ auth-service (:8080)
               ├─ /posts/*  JWT      (posts + follows + feed) ─▶ tweeter-service (:8080)
+              ├─ /comments/* JWT     (generic target comments) ─▶ comment-service (:8080)
+              ├─ /post-search/* JWT  (keyword post search) ────▶ post-search-service (:8080)
+              ├─ /media/* JWT        (image/video attachments) ─▶ media-service (:8080)
               └─ Postgres           (Kong config store)
 ```
 
@@ -40,12 +43,24 @@ echo "JWT_ISSUER=springboot-auth" >> .env
 docker compose --profile auth up --build -d
 #    Auth + tweeter:
 docker compose --profile tweeter up --build -d
+#    Auth + reusable comments:
+docker compose --profile comments up --build -d
+#    Auth + post search:
+docker compose --profile post-search up --build -d
+#    Auth + reusable media:
+docker compose --profile media up --build -d
 
 # 3. Wait until Kong is healthy, then configure the gateway
 #    (creates the core jwt issuer + delegates to auth-service plug kit)
 ./kong/setup-core.sh
 #    If the tweeter profile is enabled, register /posts too:
 ./kong/setup-tweeter.sh
+#    If the comments profile is enabled, register /comments too:
+./kong/setup-comments.sh
+#    If the post-search profile is enabled, register /post-search too:
+./kong/setup-post-search.sh
+#    If the media profile is enabled, register /media too:
+./kong/setup-media.sh
 ```
 
 ## Test it
@@ -55,6 +70,9 @@ You can use the provided smoke test script to verify the full register → login
 ```bash
 ./auth-service/plug/smoke.sh
 ./tweeter-service/plug/smoke.sh
+./comment-service/plug/smoke.sh
+./post-search-service/plug/smoke.sh
+./media-service/plug/smoke.sh
 ```
 
 ## Useful admin calls

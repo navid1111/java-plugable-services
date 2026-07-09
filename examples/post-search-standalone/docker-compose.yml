@@ -1,0 +1,90 @@
+include:
+  - ../../auth-service/plug/compose.plug.yml
+  - ../../tweeter-service/plug/compose.plug.yml
+  - ../../comment-service/plug/compose.plug.yml
+  - ../../post-search-service/plug/compose.plug.yml
+
+services:
+  users-db:
+    container_name: users-db-post-search-standalone
+
+  auth-service:
+    container_name: auth-service-post-search-standalone
+
+  posts-db:
+    container_name: posts-db-post-search-standalone
+
+  tweeter-service:
+    container_name: tweeter-service-post-search-standalone
+
+  comments-db:
+    container_name: comments-db-post-search-standalone
+
+  comment-service:
+    container_name: comment-service-post-search-standalone
+
+  post-search-db:
+    container_name: post-search-db-post-search-standalone
+
+  post-search-service:
+    container_name: post-search-service-post-search-standalone
+
+  kong-database:
+    image: postgres:16-alpine
+    container_name: kong-database-post-search-standalone
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kongpass
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kong-migrations:
+    image: kong:3.9
+    container_name: kong-migrations-post-search-standalone
+    command: kong migrations bootstrap
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+    restart: on-failure
+
+  kong:
+    image: kong:3.9
+    container_name: kong-post-search-standalone
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kongpass
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+      - "18000:8000"
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  kong_data:
