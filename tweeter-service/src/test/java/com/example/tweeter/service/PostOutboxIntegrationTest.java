@@ -1,0 +1,131 @@
+package com.example.tweeter.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import com.example.platform.messaging.EventTypes;
+import com.example.platform.messaging.support.OutboxMessageRepository;
+import com.example.tweeter.repository.PostRepository;
+import com.example.tweeter.repository.FollowRepository;
+
+@SpringBootTest
+@Testcontainers(disabledWithoutDocker = true)
+class PostOutboxIntegrationTest {
+
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16-alpine");
+
+    @DynamicPropertySource
+    static void databaseProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    }
+
+    @Autowired PostService posts;
+    @Autowired PostRepository postRepository;
+    @Autowired OutboxMessageRepository outboxRepository;
+    @Autowired FollowRepository followRepository;
+    @Autowired RollbackProbe rollbackProbe;
+
+    @BeforeEach
+    void clearDatabase() {
+        outboxRepository.deleteAll();
+        followRepository.deleteAll();
+        postRepository.deleteAll();
+    }
+
+    @Test
+    void committedPostAlwaysHasCreatedEventInOutbox() {
+        var post = posts.create("alice", "hello from a transaction");
+
+        assertThat(postRepository.findById(post.getId())).isPresent();
+        assertThat(outboxRepository.findAll()).singleElement().satisfies(message -> {
+            assertThat(message.getEventType()).isEqualTo(EventTypes.POST_CREATED_V1);
+            assertThat(message.getAggregateId()).isEqualTo(post.getId().toString());
+            assertThat(message.getPayload()).contains("hello from a transaction", "alice");
+        });
+    }
+
+    @Test
+    void forcedRollbackStoresNeitherPostNorOutboxEvent() {
+        assertThatThrownBy(() -> rollbackProbe.createThenFail())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("forced rollback");
+
+        assertThat(postRepository.count()).isZero();
+        assertThat(outboxRepository.count()).isZero();
+    }
+
+    @Test
+    void updateAndDeleteEmitOneEventPerVersionAndRejectStaleWrites() {
+        var created = posts.create("alice", "version one");
+        var updated = posts.update(created.getId(), "alice", "version two", 1);
+        assertThat(updated.getVersion() + 1).isEqualTo(2);
+
+        assertThatThrownBy(() -> posts.update(created.getId(), "alice", "lost update", 1))
+                .isInstanceOf(org.springframework.dao.OptimisticLockingFailureException.class);
+        assertThat(outboxRepository.count()).isEqualTo(2);
+
+        var deleted = posts.delete(created.getId(), "alice", 2);
+        assertThat(deleted.isDeleted()).isTrue();
+        assertThat(deleted.getVersion() + 1).isEqualTo(3);
+        assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
+                .containsExactlyInAnyOrder(EventTypes.POST_CREATED_V1,
+                        EventTypes.POST_UPDATED_V1, EventTypes.POST_DELETED_V1);
+        assertThat(outboxRepository.findAll()).extracting(message -> message.getPayload())
+                .anySatisfy(payload -> assertThat(payload).contains("\"aggregateVersion\":3"));
+    }
+
+    @Test
+    void repeatedFollowAndUnfollowProduceOnlyEffectiveEvents() {
+        posts.follow("alice", "bob");
+        posts.follow("alice", "bob");
+        assertThat(followRepository.count()).isOne();
+        assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
+                .containsExactly(EventTypes.FOLLOW_CREATED_V1);
+
+        posts.unfollow("alice", "bob");
+        posts.unfollow("alice", "bob");
+        assertThat(followRepository.count()).isZero();
+        assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
+                .containsExactlyInAnyOrder(EventTypes.FOLLOW_CREATED_V1, EventTypes.FOLLOW_DELETED_V1);
+    }
+
+    @TestConfiguration
+    static class RollbackConfiguration {
+        @Bean
+        RollbackProbe rollbackProbe(PostService postService) {
+            return new RollbackProbe(postService);
+        }
+    }
+
+    static class RollbackProbe {
+        private final PostService postService;
+
+        RollbackProbe(PostService postService) {
+            this.postService = postService;
+        }
+
+        @Transactional
+        public void createThenFail() {
+            postService.create("rollback-user", "this must disappear");
+            throw new IllegalStateException("forced rollback");
+        }
+    }
+}

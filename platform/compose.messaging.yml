@@ -1,0 +1,32 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    container_name: rabbitmq
+    profiles: ["leetcode", "tweeter", "post-search", "comments", "media", "chat", "booking"]
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      # Production hooks: mount generated least-privilege definitions and TLS
+      # material, then enable their settings in rabbitmq.conf.
+      # - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      # - ${RABBITMQ_CERT_DIR}:/etc/rabbitmq/certs:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - kong-net
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  kong-net:
+    name: java_kong-net
+    external: true

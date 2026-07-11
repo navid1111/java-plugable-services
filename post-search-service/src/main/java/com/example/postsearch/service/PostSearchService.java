@@ -109,7 +109,29 @@ public class PostSearchService {
 
     @Transactional(readOnly = true)
     public Optional<SearchDocument> findByTarget(String targetType, String targetId) {
-        return documents.findByTargetTypeAndTargetId(requireTargetType(targetType), requireTargetId(targetId));
+        return documents.findByTargetTypeAndTargetIdAndDeletedAtIsNull(
+                requireTargetType(targetType), requireTargetId(targetId));
+    }
+
+    @Transactional
+    public boolean applyPostSnapshot(String postId, String authorUsername, String content,
+            Instant createdAt, long aggregateVersion) {
+        SearchDocument existing = documents.findByTargetTypeAndTargetId("post", postId).orElse(null);
+        if (existing != null && aggregateVersion <= existing.getAggregateVersion()) return false;
+        SearchDocument document = upsertDocument("post", postId, authorUsername, content, createdAt);
+        document.applyVersion(aggregateVersion);
+        documents.save(document);
+        return true;
+    }
+
+    @Transactional
+    public boolean deletePostProjection(String postId, long aggregateVersion, Instant deletedAt) {
+        SearchDocument document = documents.findByTargetTypeAndTargetId("post", postId).orElse(null);
+        if (document == null || aggregateVersion <= document.getAggregateVersion()) return false;
+        termEntries.deleteByDocumentId(document.getId());
+        document.tombstone(aggregateVersion, deletedAt);
+        documents.save(document);
+        return true;
     }
 
     @Transactional(readOnly = true)

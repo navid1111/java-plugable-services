@@ -49,6 +49,12 @@ public class SearchDocument {
     @Column(name = "indexed_at", nullable = false)
     private Instant indexedAt;
 
+    @Column(name = "aggregate_version", nullable = false)
+    private long aggregateVersion;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     protected SearchDocument() {
         // required by JPA
     }
@@ -61,12 +67,21 @@ public class SearchDocument {
         this.createdAt = createdAt;
         this.likeCount = 0;
         this.indexedAt = Instant.now();
+        this.aggregateVersion = 0;
     }
 
     public void replaceSnapshot(String authorUsername, String content, Instant createdAt) {
         this.authorUsername = authorUsername;
         this.content = content;
         this.createdAt = createdAt;
+        this.indexedAt = Instant.now();
+        this.deletedAt = null;
+    }
+
+    public void applyVersion(long version) { this.aggregateVersion = version; }
+    public void tombstone(long version, Instant when) {
+        this.aggregateVersion = version;
+        this.deletedAt = when;
         this.indexedAt = Instant.now();
     }
 
@@ -106,4 +121,7 @@ public class SearchDocument {
     public Instant getIndexedAt() {
         return indexedAt;
     }
+    public long getAggregateVersion() { return aggregateVersion; }
+    public Instant getDeletedAt() { return deletedAt; }
+    public boolean isDeleted() { return deletedAt != null; }
 }

@@ -14,11 +14,12 @@ import com.example.postsearch.model.SearchDocument;
 public interface SearchDocumentRepository extends JpaRepository<SearchDocument, Long> {
 
     Optional<SearchDocument> findByTargetTypeAndTargetId(String targetType, String targetId);
+    Optional<SearchDocument> findByTargetTypeAndTargetIdAndDeletedAtIsNull(String targetType, String targetId);
 
     @Query(value = """
             SELECT d.*
             FROM search_documents d
-            WHERE d.id IN (
+            WHERE d.deleted_at IS NULL AND d.id IN (
                 SELECT e.document_id
                 FROM search_term_entries e
                 WHERE e.term IN (:terms)
@@ -36,7 +37,7 @@ public interface SearchDocumentRepository extends JpaRepository<SearchDocument, 
     @Query(value = """
             SELECT d.*
             FROM search_documents d
-            WHERE d.id IN (
+            WHERE d.deleted_at IS NULL AND d.id IN (
                 SELECT e.document_id
                 FROM search_term_entries e
                 WHERE e.term IN (:terms)
@@ -57,7 +58,7 @@ public interface SearchDocumentRepository extends JpaRepository<SearchDocument, 
     @Query(value = """
             SELECT d.*
             FROM search_documents d
-            WHERE d.id IN (
+            WHERE d.deleted_at IS NULL AND d.id IN (
                 SELECT e.document_id
                 FROM search_term_entries e
                 WHERE e.term IN (:terms)
@@ -75,7 +76,7 @@ public interface SearchDocumentRepository extends JpaRepository<SearchDocument, 
     @Query(value = """
             SELECT d.*
             FROM search_documents d
-            WHERE d.id IN (
+            WHERE d.deleted_at IS NULL AND d.id IN (
                 SELECT e.document_id
                 FROM search_term_entries e
                 WHERE e.term IN (:terms)

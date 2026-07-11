@@ -27,6 +27,19 @@ All event types must be registered here before use. Payload schemas will live in
 | `leetcode.submission.judge.requested.v1` | leetcode-service | judge worker | per submission state | source code + hidden tests; restricted | 5 s queue-to-start |
 | `leetcode.submission.judge.completed.v1` | judge worker | leetcode-service | per submission state | result + bounded diagnostics | 5 s after execution |
 
+## Contract and Operations Registry
+
+| Event family | Payload schema | Retention | Dashboard | Recovery runbook |
+|---|---|---|---|---|
+| user lifecycle | `user-registered-v1.schema.json` (profile/deactivation schemas required before production) | 7 days broker; audit per auth policy | `identity-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| post lifecycle | `post-snapshot-v1.schema.json`, `post-deleted-v1.schema.json` | 7 days broker; projection-owned history | `post-projection-lag` | [messaging recovery](runbooks/messaging-recovery.md) |
+| follow lifecycle | `follow-changed-v1.schema.json` | 3 days broker | `social-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| comment lifecycle | `comment-created-v1.schema.json` (delete schema required before production) | 3 days broker | `comment-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| media lifecycle | `media-uploaded-v1.schema.json` (processing/delete schemas required before production) | 7 days broker | `media-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| booking lifecycle | schema required before implementation | 7 days broker | `booking-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| chat reactions | schema required before implementation | 24 hours broker | `chat-events` | [messaging recovery](runbooks/messaging-recovery.md) |
+| LeetCode judge | judge request/result schemas required before shared-contract cutover | 24 hours broker; submission DB authoritative | `leetcode-judge` | [messaging recovery](runbooks/messaging-recovery.md) |
+
 ## Registration Requirements
 
 Every new row must name a single producer, schema/version, consumers, required ordering, retention, data classification, freshness SLO, dashboard, and recovery runbook before production use. Passwords, hashes, bearer tokens, private keys, and unnecessary personal data are prohibited in every event.

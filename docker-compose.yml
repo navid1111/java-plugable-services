@@ -1,3 +1,6 @@
+include:
+  - ./platform/compose.messaging.yml
+
 services:
   # ---- Postgres: Kong's configuration store ----
   kong-database:
@@ -230,10 +233,15 @@ services:
     depends_on:
       post-search-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://post-search-db:5432/postsearchdb
       SPRING_DATASOURCE_USERNAME: postsearchuser
       SPRING_DATASOURCE_PASSWORD: postsearchpass
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
     expose:
       - "8080"
     healthcheck:
@@ -382,23 +390,6 @@ services:
       - kong-net
 
   # ---- Postgres for the leetcode service ----
-  rabbitmq:
-    image: rabbitmq:4.1-management-alpine
-    container_name: rabbitmq
-    profiles: ["leetcode"]
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-platform}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-platformpass}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-    networks:
-      - kong-net
-
   leetcode-db:
     image: postgres:16-alpine
     container_name: leetcode-db
@@ -482,7 +473,6 @@ volumes:
   chats_data:
   bookings_data:
   leetcode_data:
-  rabbitmq_data:
 
 networks:
   kong-net:

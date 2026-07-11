@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.tweeter.model.Post;
 import com.example.tweeter.repository.FollowRepository;
 import com.example.tweeter.repository.PostRepository;
+import com.example.platform.messaging.EventEnvelope;
+import com.example.platform.messaging.EventTypes;
+import com.example.platform.messaging.post.PostSnapshot;
+import com.example.platform.messaging.post.FollowChanged;
+import com.example.platform.messaging.support.OutboxMessage;
+import com.example.platform.messaging.support.OutboxMessageRepository;
+import com.example.platform.messaging.support.SafeEventSerializer;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PostService {
@@ -21,10 +31,15 @@ public class PostService {
 
     private final PostRepository posts;
     private final FollowRepository follows;
+    private final OutboxMessageRepository outbox;
+    private final SafeEventSerializer eventSerializer;
 
-    public PostService(PostRepository posts, FollowRepository follows) {
+    public PostService(PostRepository posts, FollowRepository follows,
+            OutboxMessageRepository outbox, ObjectMapper objectMapper) {
         this.posts = posts;
         this.follows = follows;
+        this.outbox = outbox;
+        this.eventSerializer = new SafeEventSerializer(objectMapper);
     }
 
     public record FeedPage(List<Post> items, String nextCursor) {
@@ -39,7 +54,74 @@ public class PostService {
         if (trimmed.length() > 280) {
             throw new IllegalArgumentException("content must be 280 characters or fewer");
         }
-        return posts.save(new Post(authorUsername, trimmed));
+        Post post = posts.saveAndFlush(new Post(authorUsername, trimmed));
+        emitSnapshot(EventTypes.POST_CREATED_V1, post);
+        return post;
+    }
+
+    @Transactional
+    public Post update(Long id, String actorUsername, String content, long expectedVersion) {
+        Post post = ownedActivePost(id, actorUsername);
+        requireVersion(post, expectedVersion);
+        String trimmed = requireText(content, "content");
+        if (trimmed.length() > 280) {
+            throw new IllegalArgumentException("content must be 280 characters or fewer");
+        }
+        post.updateContent(trimmed);
+        posts.flush();
+        emitSnapshot(EventTypes.POST_UPDATED_V1, post);
+        return post;
+    }
+
+    @Transactional
+    public Post delete(Long id, String actorUsername, long expectedVersion) {
+        Post post = ownedActivePost(id, actorUsername);
+        requireVersion(post, expectedVersion);
+        post.delete(Instant.now());
+        posts.flush();
+        emit(EventTypes.POST_DELETED_V1, post,
+                new com.example.platform.messaging.post.PostDeleted(
+                        post.getId().toString(), actorUsername, post.getDeletedAt()));
+        return post;
+    }
+
+    private Post ownedActivePost(Long id, String actorUsername) {
+        Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("post not found"));
+        if (!post.getAuthorUsername().equals(requireText(actorUsername, "username"))) {
+            throw new IllegalArgumentException("only the author may change this post");
+        }
+        if (post.isDeleted()) throw new IllegalArgumentException("post is deleted");
+        return post;
+    }
+
+    private void requireVersion(Post post, long expectedVersion) {
+        long currentVersion = post.getVersion() + 1;
+        if (expectedVersion != currentVersion) {
+            throw new org.springframework.dao.OptimisticLockingFailureException(
+                    "post version conflict: expected " + expectedVersion + ", current " + currentVersion);
+        }
+    }
+
+    private void emitSnapshot(String eventType, Post post) {
+        emit(eventType, post, new PostSnapshot(post.getId().toString(), null, post.getAuthorUsername(),
+                post.getContent(), "public", post.getCreatedAt(), post.getUpdatedAt()));
+    }
+
+    private void emit(String eventType, Post post, Object payload) {
+        EventEnvelope<Object> event = EventEnvelope.fact(
+                eventType, 1, "tweeter-service", "post", post.getId().toString(),
+                post.getVersion() + 1, UUID.randomUUID(), null, null, payload);
+        outbox.save(new OutboxMessage(event.eventId(), event.aggregateType(), event.aggregateId(),
+                event.eventType(), event.eventVersion(), eventSerializer.serialize(event), event.occurredAt()));
+    }
+
+    private void emitFollow(String eventType, String follower, String followee) {
+        String aggregateId = follower + "->" + followee;
+        EventEnvelope<FollowChanged> event = EventEnvelope.fact(eventType, 1, "tweeter-service",
+                "follow", aggregateId, 1, UUID.randomUUID(), null, null,
+                new FollowChanged("legacy:" + follower, "legacy:" + followee, Instant.now()));
+        outbox.save(new OutboxMessage(event.eventId(), event.aggregateType(), event.aggregateId(),
+                event.eventType(), event.eventVersion(), eventSerializer.serialize(event), event.occurredAt()));
     }
 
     @Transactional(readOnly = true)
@@ -59,14 +141,18 @@ public class PostService {
         if (follower.equals(followee)) {
             throw new IllegalArgumentException("cannot follow yourself");
         }
-        follows.insertIfMissing(follower, followee);
+        if (follows.insertIfMissing(follower, followee) == 1) {
+            emitFollow(EventTypes.FOLLOW_CREATED_V1, follower, followee);
+        }
     }
 
     @Transactional
     public void unfollow(String followerUsername, String followeeUsername) {
         String follower = requireText(followerUsername, "follower username");
         String followee = requireText(followeeUsername, "followee username");
-        follows.deleteByFollowerUsernameAndFolloweeUsername(follower, followee);
+        if (follows.deleteByFollowerUsernameAndFolloweeUsername(follower, followee) == 1) {
+            emitFollow(EventTypes.FOLLOW_DELETED_V1, follower, followee);
+        }
     }
 
     @Transactional(readOnly = true)

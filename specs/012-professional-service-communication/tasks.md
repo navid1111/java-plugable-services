@@ -12,22 +12,22 @@
 - [x] T004 Create `messaging-support` with outbox and inbox entities/migrations, sensitive-data-safe serialization, and retention configuration. **Verify:** reusable component test runs against PostgreSQL.
 - [x] T005 Implement safe concurrent outbox claiming, mandatory routing, persistent delivery, publisher confirms, exponential retry/jitter, and confirmed-only completion. **Verify:** two publisher instances never effectively publish one claimed row concurrently and broker recovery drains backlog.
 - [x] T006 Implement inbox deduplication and atomic consumer transaction helper. **Verify:** duplicate delivery produces one effective database change.
-- [ ] T007 Declare durable topic exchange, per-consumer quorum queues, bounded retry queues, and DLQs. **Verify:** topology recreates after broker data reset.
-- [ ] T008 Add unsupported-version, invalid-schema, deterministic, and transient error classification. **Verify:** each class reaches the expected ack/retry/DLQ outcome.
-- [ ] T009 Propagate `traceparent`, correlation, causation, event, aggregate, and user IDs through HTTP and AMQP. **Verify:** one E2E trace joins producer, broker, and consumer spans.
-- [ ] T010 Add standard Micrometer metrics and structured logging with code/token/password redaction tests. **Verify:** metrics expose outbox age, publish failures, processing latency, retries, projection lag, and DLQ count.
-- [ ] T011 Move RabbitMQ to a platform Compose definition with health check, durable volume, per-service credentials hooks, and TLS production hooks. **Verify:** all opted-in profiles reuse one broker without duplicated service definitions.
-- [ ] T012 Create the event catalog with producer owner, schema/version, consumers, ordering, retention, PII classification, SLO, and runbook link. **Verify:** CI rejects an unregistered event type.
+- [x] T007 Declare durable topic exchange, per-consumer quorum queues, bounded retry queues, and DLQs. **Verify:** topology recreates after broker data reset.
+- [x] T008 Add unsupported-version, invalid-schema, deterministic, and transient error classification. **Verify:** each class reaches the expected ack/retry/DLQ outcome.
+- [x] T009 Propagate `traceparent`, correlation, causation, event, aggregate, and user IDs through HTTP and AMQP. **Verify:** one E2E trace joins producer, broker, and consumer spans.
+- [x] T010 Add standard Micrometer metrics and structured logging with code/token/password redaction tests. **Verify:** metrics expose outbox age, publish failures, processing latency, retries, projection lag, and DLQ count.
+- [x] T011 Move RabbitMQ to a platform Compose definition with health check, durable volume, per-service credentials hooks, and TLS production hooks. **Verify:** all opted-in profiles reuse one broker without duplicated service definitions.
+- [x] T012 Create the event catalog with producer owner, schema/version, consumers, ordering, retention, PII classification, SLO, and runbook link. **Verify:** CI rejects an unregistered event type.
 
 ## Phase 2 — Posts to search
 
-- [ ] T013 Add post aggregate version and explicit created/updated/deleted lifecycle fields. **Verify:** migration works on both clean and existing post databases.
-- [ ] T014 Write `post.created.v1` to the tweeter outbox in the same transaction as post creation. **Verify:** forced rollback stores neither row; committed post always has an outbox row.
-- [ ] T015 Add post update and delete commands with `post.updated.v1` and `post.deleted.v1`. **Verify:** optimistic concurrency prevents lost updates and each committed version emits one event.
-- [ ] T016 Emit follow created/deleted events idempotently. **Verify:** repeated follow/unfollow commands produce correct state without duplicate effective events.
-- [ ] T017 Add post-search inbox and event consumer for post created/updated/deleted. **Verify:** projection and token index update atomically.
-- [ ] T018 Enforce per-post aggregate version in search. **Verify:** duplicate and out-of-order events cannot regress a document.
-- [ ] T019 Add search projection delete/tombstone behavior and retention policy. **Verify:** deleted posts disappear from queries within the defined SLO.
+- [x] T013 Add post aggregate version and explicit created/updated/deleted lifecycle fields. **Verify:** migration works on both clean and existing post databases.
+- [x] T014 Write `post.created.v1` to the tweeter outbox in the same transaction as post creation. **Verify:** forced rollback stores neither row; committed post always has an outbox row.
+- [x] T015 Add post update and delete commands with `post.updated.v1` and `post.deleted.v1`. **Verify:** optimistic concurrency prevents lost updates and each committed version emits one event.
+- [x] T016 Emit follow created/deleted events idempotently. **Verify:** repeated follow/unfollow commands produce correct state without duplicate effective events.
+- [x] T017 Add post-search inbox and event consumer for post created/updated/deleted. **Verify:** projection and token index update atomically.
+- [x] T018 Enforce per-post aggregate version in search. **Verify:** duplicate and out-of-order events cannot regress a document.
+- [x] T019 Add search projection delete/tombstone behavior and retention policy. **Verify:** deleted posts disappear from queries within the defined SLO.
 - [ ] T020 Add an authenticated internal post export/rebuild process with checkpointing. **Verify:** empty search DB rebuilds to match authoritative posts.
 - [ ] T021 Run event ingestion in shadow comparison mode against legacy client-written documents. **Verify:** mismatch report is empty or explicitly reconciled.
 - [ ] T022 Remove public search mutation and like-count endpoints plus client-side indexing after compatibility window. **Verify:** ordinary JWT clients receive 404/403 while search queries remain green.

@@ -36,6 +36,12 @@
       <artifactId>spring-rabbit</artifactId>
       <optional>true</optional>
     </dependency>
+    <!-- Metrics facade for MessagingMetrics; services already ship a registry via actuator. -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-core</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <!-- Component test: real PostgreSQL + Flyway migrations via Testcontainers. -->
     <dependency>

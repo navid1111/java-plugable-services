@@ -1,0 +1,28 @@
+name: Messaging contracts
+
+on:
+  pull_request:
+    paths:
+      - 'platform/messaging-contracts/**'
+      - 'platform/messaging-support/**'
+      - 'docs/architecture/event-catalog.md'
+      - 'platform/scripts/verify-event-catalog.sh'
+  push:
+    paths:
+      - 'platform/messaging-contracts/**'
+      - 'platform/messaging-support/**'
+      - 'docs/architecture/event-catalog.md'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: chmod +x platform/scripts/verify-event-catalog.sh
+      - run: platform/scripts/verify-event-catalog.sh
+      - run: mvn -B -pl platform/messaging-contracts,platform/messaging-support -am test

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,9 +44,46 @@ public class PostController {
             String content) {
     }
 
-    public record PostResponse(Long id, String authorUsername, String content, Instant createdAt) {
+    public record UpdatePostRequest(
+            @NotBlank @Size(max = 280) String content,
+            long expectedVersion) {
+    }
+
+    public record PostResponse(Long id, String authorUsername, String content, Instant createdAt,
+            Instant updatedAt, Instant deletedAt, long version) {
         static PostResponse from(Post post) {
-            return new PostResponse(post.getId(), post.getAuthorUsername(), post.getContent(), post.getCreatedAt());
+            return new PostResponse(post.getId(), post.getAuthorUsername(), post.getContent(),
+                    post.getCreatedAt(), post.getUpdatedAt(), post.getDeletedAt(), post.getVersion() + 1);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id, @Valid @RequestBody UpdatePostRequest body) {
+        try {
+            String username = jwtHelper.extractUsername(authorization);
+            return ResponseEntity.ok(PostResponse.from(
+                    posts.update(id, username, body.content(), body.expectedVersion())));
+        } catch (OptimisticLockingFailureException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id, @RequestParam long expectedVersion) {
+        try {
+            String username = jwtHelper.extractUsername(authorization);
+            posts.delete(id, username, expectedVersion);
+            return ResponseEntity.noContent().build();
+        } catch (OptimisticLockingFailureException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
         }
     }
 

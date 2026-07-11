@@ -9,7 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(
@@ -33,6 +35,16 @@ public class Post {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     protected Post() {
         // required by JPA
     }
@@ -47,7 +59,11 @@ public class Post {
         if (createdAt == null) {
             createdAt = Instant.now();
         }
+        if (updatedAt == null) updatedAt = createdAt;
     }
+
+    @PreUpdate
+    void onUpdate() { updatedAt = Instant.now(); }
 
     public Long getId() {
         return id;
@@ -63,5 +79,19 @@ public class Post {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getDeletedAt() { return deletedAt; }
+    public long getVersion() { return version; }
+    public boolean isDeleted() { return deletedAt != null; }
+
+    public void updateContent(String content) {
+        if (isDeleted()) throw new IllegalStateException("post is deleted");
+        this.content = content;
+    }
+
+    public void delete(Instant when) {
+        if (deletedAt == null) deletedAt = when;
     }
 }
