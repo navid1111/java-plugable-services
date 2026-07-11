@@ -35,10 +35,10 @@
 ## Phase 3 — Governed target lifecycle
 
 - [x] T023 Define registered target types and owner mapping; initially `post -> tweeter-service`. **Verify:** unknown target types are rejected.
-- [ ] T024 Add target projection tables/inbox consumers to comment-service and media-service from post lifecycle events. **Verify:** post create/delete produces matching target state idempotently.
-- [ ] T025 Require active target existence before comment creation. **Verify:** missing/deleted targets are rejected and existing targets succeed.
-- [ ] T026 Require active target existence and visibility/owner authorization before media attachment. **Verify:** cross-user and missing-target uploads are rejected.
-- [ ] T027 Define post deletion policy for comments and implement tombstone/delete processing. **Verify:** deletion is eventually reflected and replay is harmless.
+- [x] T024 Add target projection tables/inbox consumers to comment-service and media-service from post lifecycle events. **Verify:** post create/delete produces matching target state idempotently.
+- [x] T025 Require active target existence before comment creation. **Verify:** missing/deleted targets are rejected and existing targets succeed.
+- [x] T026 Require active target existence and visibility/owner authorization before media attachment. **Verify:** cross-user and missing-target uploads are rejected.
+- [x] T027 Define post deletion policy for comments and implement tombstone/delete processing. **Verify:** deletion is eventually reflected and replay is harmless.
 - [ ] T028 Define post deletion policy for media and enqueue durable external-object cleanup. **Verify:** metadata and Cloudinary cleanup converge after transient failure.
 - [ ] T029 Add target reconciliation comparing local projections to authoritative post export. **Verify:** injected missing/stale targets are repaired.
 - [ ] T030 Add comment/media count events or BFF summaries without cross-database reads. **Verify:** post detail counts converge and duplicate events do not inflate them.

@@ -18,6 +18,9 @@
 	</properties>
 
 	<dependencies>
+		<dependency><groupId>com.example.platform</groupId><artifactId>messaging-contracts</artifactId><version>1.0.0-SNAPSHOT</version></dependency>
+		<dependency><groupId>com.example.platform</groupId><artifactId>messaging-support</artifactId><version>1.0.0-SNAPSHOT</version></dependency>
+		<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-amqp</artifactId></dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>

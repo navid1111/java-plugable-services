@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.comment.model.Comment;
 import com.example.comment.repository.CommentRepository;
+import com.example.platform.messaging.support.TargetProjectionStore;
 
 @Service
 public class CommentService {
@@ -25,9 +26,11 @@ public class CommentService {
     private static final Pattern TARGET_ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.:-]*");
 
     private final CommentRepository comments;
+    private final TargetProjectionStore targets;
 
-    public CommentService(CommentRepository comments) {
+    public CommentService(CommentRepository comments, TargetProjectionStore targets) {
         this.comments = comments;
+        this.targets = targets;
     }
 
     public record CommentPage(List<Comment> items, String nextCursor) {
@@ -41,6 +44,7 @@ public class CommentService {
         String author = requireText(authorUsername, "author username");
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
+        targets.requireActive(type, id);
         String trimmed = requireText(content, "content");
         if (trimmed.length() > MAX_CONTENT_LENGTH) {
             throw new IllegalArgumentException("content must be 500 characters or fewer");
@@ -57,6 +61,7 @@ public class CommentService {
     public CommentPage findByTarget(String targetType, String targetId, String cursor, int requestedPageSize) {
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
+        targets.requireActive(type, id);
         int pageSize = clampPageSize(requestedPageSize);
         int fetchSize = pageSize + 1;
 

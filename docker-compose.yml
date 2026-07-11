@@ -147,11 +147,16 @@ services:
     depends_on:
       posts-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://posts-db:5432/postsdb
       SPRING_DATASOURCE_USERNAME: postsuser
       SPRING_DATASOURCE_PASSWORD: postspass
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
     expose:
       - "8080"
     healthcheck:
@@ -185,16 +190,21 @@ services:
   comment-service:
     profiles: ["comments"]
     build:
-      context: ./comment-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: comment-service/Dockerfile
     container_name: comment-service
     depends_on:
       comments-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://comments-db:5432/commentsdb
       SPRING_DATASOURCE_USERNAME: commentsuser
       SPRING_DATASOURCE_PASSWORD: commentspass
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
     expose:
       - "8080"
     healthcheck:
@@ -278,16 +288,21 @@ services:
   media-service:
     profiles: ["media"]
     build:
-      context: ./media-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: media-service/Dockerfile
     container_name: media-service
     depends_on:
       media-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://media-db:5432/${MEDIA_DB_NAME:-mediadb}
       SPRING_DATASOURCE_USERNAME: ${MEDIA_DB_USERNAME:-mediauser}
       SPRING_DATASOURCE_PASSWORD: ${MEDIA_DB_PASSWORD:-mediapass}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}

@@ -52,3 +52,7 @@ Every new row must name a single producer, schema/version, consumers, required o
 
 Unknown target types are rejected. Consumers use the executable `TargetTypeRegistry`
 from `messaging-contracts` rather than accepting arbitrary target strings.
+
+Comment deletion policy: comments are retained for audit/moderation, but become inaccessible
+through target queries as soon as the local post target projection is tombstoned. Replaying
+the same or an older deletion version is a no-op.

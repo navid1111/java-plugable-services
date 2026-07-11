@@ -34,11 +34,13 @@ class MessagingSupportComponentTest {
     @Autowired OutboxMessageRepository outbox;
     @Autowired InboxMessageRepository inbox;
     @Autowired JdbcTemplate jdbc;
+    @Autowired TargetProjectionRepository targets;
 
     @BeforeEach
     void clean() {
         jdbc.execute("truncate table outbox_messages");
         jdbc.execute("truncate table inbox_messages");
+        jdbc.execute("truncate table target_projections");
     }
 
     @Test
@@ -78,5 +80,22 @@ class MessagingSupportComponentTest {
         // A different consumer processing the same event is allowed (independent progress).
         assertDoesNotThrow(() -> inbox.save(
                 new InboxMessage("bff", eventId, "post.created.v1", Instant.now())));
+    }
+
+    @Test
+    void targetLifecycleIsIdempotentVersionedAndRejectsMissingTargets() {
+        TargetProjectionStore store = new TargetProjectionStore(targets);
+        assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "42"));
+        assertTrue(store.apply("post", "42", "alice", 1, true, Instant.now()));
+        assertFalse(store.apply("post", "42", "alice", 1, true, Instant.now()));
+        assertEquals("alice", store.requireActive("post", "42").getOwnerUsername());
+        assertEquals("alice", store.requireActiveOwnedBy("post", "42", "alice").getOwnerUsername());
+        assertThrows(IllegalArgumentException.class,
+                () -> store.requireActiveOwnedBy("post", "42", "mallory"));
+        assertTrue(store.apply("post", "42", null, 2, false, Instant.now()));
+        assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "42"));
+        assertFalse(store.apply("post", "42", "alice", 1, true, Instant.now()));
+        assertThrows(IllegalArgumentException.class,
+                () -> store.apply("unknown", "42", "alice", 1, true, Instant.now()));
     }
 }

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.platform.messaging.support.TargetProjectionStore;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.media.cloudinary.CloudinaryClient;
@@ -34,6 +35,7 @@ public class MediaService {
 
     private final MediaAssetRepository assets;
     private final CloudinaryClient cloudinary;
+    private final TargetProjectionStore targets;
     private final long maxImageBytes;
     private final long maxVideoBytes;
     private final Set<String> allowedImageFormats;
@@ -42,12 +44,14 @@ public class MediaService {
     public MediaService(
             MediaAssetRepository assets,
             CloudinaryClient cloudinary,
+            TargetProjectionStore targets,
             @Value("${MEDIA_MAX_IMAGE_BYTES:10485760}") long maxImageBytes,
             @Value("${MEDIA_MAX_VIDEO_BYTES:104857600}") long maxVideoBytes,
             @Value("${MEDIA_ALLOWED_IMAGE_FORMATS:jpg,jpeg,png,gif,webp}") String allowedImageFormats,
             @Value("${MEDIA_ALLOWED_VIDEO_FORMATS:mp4,mov,webm}") String allowedVideoFormats) {
         this.assets = assets;
         this.cloudinary = cloudinary;
+        this.targets = targets;
         this.maxImageBytes = maxImageBytes;
         this.maxVideoBytes = maxVideoBytes;
         this.allowedImageFormats = csvSet(allowedImageFormats);
@@ -74,6 +78,11 @@ public class MediaService {
         String uploader = requireText(uploaderUsername, "username");
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
+        try {
+            targets.requireActiveOwnedBy(type, id, uploader);
+        } catch (IllegalArgumentException denied) {
+            throw new ForbiddenException(denied.getMessage());
+        }
         String trimmedCaption = optionalText(caption, "caption", MAX_CAPTION_LENGTH);
         String trimmedAltText = optionalText(altText, "altText", MAX_ALT_TEXT_LENGTH);
         MediaType mediaType = validateFile(file);
@@ -116,6 +125,7 @@ public class MediaService {
     public MediaPage findByTarget(String targetType, String targetId, String cursor, int requestedPageSize) {
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
+        targets.requireActive(type, id);
         int pageSize = clampPageSize(requestedPageSize);
         int fetchSize = pageSize + 1;
 
