@@ -28,7 +28,7 @@
 - [x] T017 Add post-search inbox and event consumer for post created/updated/deleted. **Verify:** projection and token index update atomically.
 - [x] T018 Enforce per-post aggregate version in search. **Verify:** duplicate and out-of-order events cannot regress a document.
 - [x] T019 Add search projection delete/tombstone behavior and retention policy. **Verify:** deleted posts disappear from queries within the defined SLO.
-- [ ] T020 Add an authenticated internal post export/rebuild process with checkpointing. **Verify:** empty search DB rebuilds to match authoritative posts.
+- [x] T020 Add an authenticated internal post export/rebuild process with checkpointing. **Verify:** empty search DB rebuilds to match authoritative posts.
 - [ ] T021 Run event ingestion in shadow comparison mode against legacy client-written documents. **Verify:** mismatch report is empty or explicitly reconciled.
 - [ ] T022 Remove public search mutation and like-count endpoints plus client-side indexing after compatibility window. **Verify:** ordinary JWT clients receive 404/403 while search queries remain green.
 

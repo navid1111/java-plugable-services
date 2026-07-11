@@ -13,6 +13,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByAuthorUsernameOrderByCreatedAtDescIdDesc(String authorUsername);
 
+    @Query(value = "SELECT * FROM posts WHERE id > :afterId ORDER BY id ASC LIMIT :limit", nativeQuery = true)
+    List<Post> exportAfter(@Param("afterId") long afterId, @Param("limit") int limit);
+
     @Query(value = """
             SELECT p.*
             FROM posts p

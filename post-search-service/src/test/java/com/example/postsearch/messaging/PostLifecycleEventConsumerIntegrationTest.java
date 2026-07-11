@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +25,7 @@ import com.example.platform.messaging.post.PostSnapshot;
 import com.example.platform.messaging.support.InboxMessageRepository;
 import com.example.postsearch.repository.SearchDocumentRepository;
 import com.example.postsearch.repository.SearchTermEntryRepository;
+import com.example.postsearch.service.PostProjectionRebuildService;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -30,6 +34,7 @@ import tools.jackson.databind.ObjectMapper;
 class PostLifecycleEventConsumerIntegrationTest {
     @Container static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine");
+    static HttpServer exportServer;
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry registry) {
@@ -37,6 +42,7 @@ class PostLifecycleEventConsumerIntegrationTest {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("post-export.base-url", () -> startExportServer());
     }
 
     @Autowired PostLifecycleEventConsumer consumer;
@@ -44,6 +50,7 @@ class PostLifecycleEventConsumerIntegrationTest {
     @Autowired SearchTermEntryRepository terms;
     @Autowired InboxMessageRepository inbox;
     @Autowired ObjectMapper mapper;
+    @Autowired PostProjectionRebuildService rebuild;
 
     @BeforeEach
     void clear() {
@@ -78,6 +85,44 @@ class PostLifecycleEventConsumerIntegrationTest {
         assertThat(documents.findByTargetTypeAndTargetId("post", "42").orElseThrow().isDeleted()).isTrue();
         assertThat(documents.findByTargetTypeAndTargetIdAndDeletedAtIsNull("post", "42")).isEmpty();
         assertThat(terms.count()).isZero();
+    }
+
+    @Test
+    void emptyProjectionRebuildsFromAuthoritativeExportAndPersistsCheckpoint() {
+        rebuild.resetCheckpoint();
+        var result = rebuild.rebuild(10);
+
+        assertThat(result.complete()).isTrue();
+        assertThat(result.records()).isEqualTo(2);
+        assertThat(result.checkpoint()).isEqualTo(2);
+        assertThat(documents.count()).isEqualTo(2);
+        assertThat(rebuild.checkpoint()).isEqualTo(2);
+    }
+
+    private static synchronized String startExportServer() {
+        if (exportServer != null) return "http://localhost:" + exportServer.getAddress().getPort();
+        try {
+            exportServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+            exportServer.createContext("/internal/posts/export", exchange -> {
+                boolean second = exchange.getRequestURI().getQuery().contains("afterId=1");
+                String id = second ? "2" : "1";
+                String content = second ? "second authoritative post" : "first authoritative post";
+                String response = """
+                        {"items":[{"postId":"%s","authorUsername":"alice","content":"%s",
+                        "createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z",
+                        "deletedAt":null,"aggregateVersion":1}],"checkpoint":%s,"hasMore":%s}
+                        """.formatted(id, content, id, !second);
+                byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, bytes.length);
+                exchange.getResponseBody().write(bytes);
+                exchange.close();
+            });
+            exportServer.start();
+            return "http://localhost:" + exportServer.getAddress().getPort();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private String snapshot(String type, long version, String content) {

@@ -151,6 +151,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://posts-db:5432/postsdb
       SPRING_DATASOURCE_USERNAME: postsuser
       SPRING_DATASOURCE_PASSWORD: postspass
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
     expose:
       - "8080"
     healthcheck:
@@ -242,6 +243,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      POST_EXPORT_BASE_URL: http://tweeter-service:8080
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
     expose:
       - "8080"
     healthcheck:
