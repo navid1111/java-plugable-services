@@ -38,7 +38,7 @@ All event types must be registered here before use. Payload schemas will live in
 | media lifecycle | `media-uploaded-v1.schema.json` (processing/delete schemas required before production) | 7 days broker | `media-events` | [messaging recovery](runbooks/messaging-recovery.md) |
 | booking lifecycle | schema required before implementation | 7 days broker | `booking-events` | [messaging recovery](runbooks/messaging-recovery.md) |
 | chat reactions | schema required before implementation | 24 hours broker | `chat-events` | [messaging recovery](runbooks/messaging-recovery.md) |
-| LeetCode judge | judge request/result schemas required before shared-contract cutover | 24 hours broker; submission DB authoritative | `leetcode-judge` | [messaging recovery](runbooks/messaging-recovery.md) |
+| LeetCode judge | `leetcode-judge-requested-v1.schema.json`, `leetcode-judge-completed-v1.schema.json` | 24 hours broker; submission DB authoritative | `leetcode-judge` | [messaging recovery](runbooks/messaging-recovery.md) |
 
 ## Registration Requirements
 

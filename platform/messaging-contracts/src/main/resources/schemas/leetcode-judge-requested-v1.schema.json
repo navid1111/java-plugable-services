@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/leetcode-judge-requested-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["submissionId", "problemId", "language", "code", "testCasesJson", "timeoutSeconds"],
+  "properties": {
+    "submissionId": {"type": "integer", "minimum": 1},
+    "problemId": {"type": "string", "minLength": 1},
+    "language": {"enum": ["python", "javascript", "java"]},
+    "code": {"type": "string", "minLength": 1, "maxLength": 100000},
+    "testCasesJson": {"type": "string", "minLength": 2},
+    "timeoutSeconds": {"type": "integer", "minimum": 1, "maximum": 60}
+  }
+}

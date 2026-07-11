@@ -25,4 +25,6 @@ jobs:
           cache: maven
       - run: chmod +x platform/scripts/verify-event-catalog.sh
       - run: platform/scripts/verify-event-catalog.sh
+      - name: Reject incompatible published schema changes
+        run: mvn -B -pl platform/messaging-contracts -Dtest=SchemaCompatibilityTest test
       - run: mvn -B -pl platform/messaging-contracts,platform/messaging-support -am test

@@ -112,7 +112,11 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<?> byAuthor(@RequestParam String author) {
+    public ResponseEntity<?> byAuthor(@RequestParam(required = false) String author,
+            @RequestParam(required = false) String authorUserId) {
+        if (authorUserId != null && !authorUserId.isBlank()) {
+            return ResponseEntity.ok(posts.findByAuthorUserId(authorUserId.trim()).stream().map(PostResponse::from).toList());
+        }
         if (author == null || author.trim().isEmpty()) {
             return badRequest("author is required");
         }
@@ -155,8 +159,8 @@ public class PostController {
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int pageSize) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            PostService.FeedPage page = posts.feed(username, cursor, pageSize);
+            var identity = jwtHelper.extractIdentity(authorization);
+            PostService.FeedPage page = posts.feed(identity.userId(), identity.username(), cursor, pageSize);
             List<PostResponse> items = page.items().stream()
                     .map(PostResponse::from)
                     .toList();

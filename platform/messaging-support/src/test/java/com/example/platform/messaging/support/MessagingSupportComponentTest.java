@@ -17,6 +17,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Reusable component test for the shared outbox/inbox against a real PostgreSQL:
@@ -34,6 +39,7 @@ class MessagingSupportComponentTest {
     @Autowired OutboxMessageRepository outbox;
     @Autowired InboxMessageRepository inbox;
     @Autowired JdbcTemplate jdbc;
+    @Autowired org.springframework.transaction.PlatformTransactionManager transactionManager;
     @Autowired TargetProjectionRepository targets;
 
     @BeforeEach
@@ -116,5 +122,28 @@ class MessagingSupportComponentTest {
         assertEquals("new-owner", store.requireActive("post", "stale").getOwnerUsername());
         assertEquals("bob", store.requireActive("post", "missing").getOwnerUsername());
         assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "orphan"));
+    }
+
+    @Test
+    void auditedIdentityBackfillReportsUpdatedAndUnresolvedRows() throws Exception {
+        jdbc.execute("CREATE TABLE IF NOT EXISTS identity_test(username VARCHAR(100), user_id VARCHAR(36))");
+        jdbc.execute("TRUNCATE TABLE identity_test");
+        jdbc.update("INSERT INTO identity_test(username) VALUES ('alice')");
+        HttpServer server=HttpServer.create(new InetSocketAddress("localhost",0),0);
+        server.createContext("/internal/users/export",exchange->{
+            byte[] body=("{\"items\":[{\"rowId\":1,\"userId\":\""+UUID.randomUUID()+
+                    "\",\"username\":\"alice\",\"active\":true}],\"checkpoint\":1,\"hasMore\":false}")
+                    .getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type","application/json"); exchange.sendResponseHeaders(200,body.length);
+            exchange.getResponseBody().write(body); exchange.close();
+        }); server.start();
+        try {
+            UserIdentityBackfill backfill=new UserIdentityBackfill("http://localhost:"+server.getAddress().getPort(),
+                    "token",new ObjectMapper(),jdbc,new TransactionTemplate(transactionManager),java.util.List.of(
+                    new UserIdentityBackfill.Target("UPDATE identity_test SET user_id=? WHERE username=? AND user_id IS NULL",
+                            "SELECT COUNT(*) FROM identity_test WHERE user_id IS NULL")));
+            var report=backfill.run();
+            assertEquals(1,report.exportedUsers()); assertEquals(1,report.updatedRows()); assertEquals(0,report.unresolvedRows());
+        } finally { server.stop(0); }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/leetcode-judge-completed-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["submissionId", "status", "passedCount", "totalCount", "executionTimeMs", "errorMessage"],
+  "properties": {
+    "submissionId": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["ACCEPTED", "WRONG_ANSWER", "COMPILE_ERROR", "RUNTIME_ERROR", "TIME_LIMIT_EXCEEDED", "MEMORY_LIMIT_EXCEEDED", "SYSTEM_ERROR"]},
+    "passedCount": {"type": "integer", "minimum": 0},
+    "totalCount": {"type": "integer", "minimum": 0},
+    "executionTimeMs": {"type": "integer", "minimum": 0},
+    "errorMessage": {"type": ["string", "null"], "maxLength": 4000}
+  }
+}

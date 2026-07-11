@@ -52,7 +52,7 @@
 - [x] T035 Add immutable UUID/ULID `userId` to auth and place it in JWT `sub`; retain username as display claim. **Verify:** login/me contracts expose stable ID and username.
 - [x] T036 Add user registered/profile-updated/deactivated events without credentials or tokens. **Verify:** schema and log tests prove sensitive fields never leave auth.
 - [x] T037 Add nullable `userId` columns to service tables and dual-write during migration. **Verify:** new records contain stable ID while old tokens remain temporarily compatible.
-- [ ] T038 Backfill username references using an audited auth export and switch reads/contracts to user ID. **Verify:** row counts and unresolved-reference report pass.
+- [x] T038 Backfill username references using an audited auth export and switch reads/contracts to user ID. **Verify:** row counts and unresolved-reference report pass.
 - [ ] T039 Remove username as relational identity after compatibility period. **Verify:** username rename requires no cross-service database updates.
 
 ## Phase 5 — Workload security, BFF, and remaining events
@@ -68,7 +68,7 @@
 
 ## Phase 6 — Tests, operations, and cutover
 
-- [ ] T048 Add producer/consumer contract compatibility checks to CI. **Verify:** incompatible schema change fails the build.
+- [x] T048 Add producer/consumer contract compatibility checks to CI. **Verify:** incompatible schema change fails the build.
 - [ ] T049 Add Testcontainers component suites for every outbox/inbox flow. **Verify:** tests use real PostgreSQL and RabbitMQ.
 - [ ] T050 Add broker-down, publisher-confirm-timeout, consumer-crash-before/after-commit, poison-message, duplicate, and out-of-order tests. **Verify:** no committed fact is lost and no side effect is duplicated.
 - [ ] T051 Add E2E post create/update/delete test asserting search, comment target, media target, and BFF convergence. **Verify:** test passes from clean volumes.

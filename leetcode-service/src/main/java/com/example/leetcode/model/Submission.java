@@ -39,6 +39,7 @@ public class Submission {
     private Instant completedAt;
     private String idempotencyKey;
 
+    @jakarta.persistence.Version
     private Long version;
 
     // Getters and Setters

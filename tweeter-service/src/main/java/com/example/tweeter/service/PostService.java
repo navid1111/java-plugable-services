@@ -138,6 +138,10 @@ public class PostService {
     public List<Post> findByAuthor(String authorUsername) {
         return posts.findByAuthorUsernameOrderByCreatedAtDescIdDesc(authorUsername);
     }
+    @Transactional(readOnly = true)
+    public List<Post> findByAuthorUserId(String authorUserId) {
+        return posts.findByAuthorUserIdOrderByCreatedAtDescIdDesc(authorUserId);
+    }
 
     @Transactional
     public void follow(String followerUsername, String followeeUsername) {
@@ -167,16 +171,21 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public FeedPage feed(String username, String cursor, int requestedPageSize) {
+        return feed(null, username, cursor, requestedPageSize);
+    }
+
+    @Transactional(readOnly = true)
+    public FeedPage feed(String userId, String username, String cursor, int requestedPageSize) {
         String follower = requireText(username, "username");
         int pageSize = clampPageSize(requestedPageSize);
         int fetchSize = pageSize + 1;
 
         List<Post> fetched;
         if (cursor == null || cursor.isBlank()) {
-            fetched = posts.findFeedFirstPage(follower, fetchSize);
+            fetched = posts.findFeedFirstPage(userId, follower, fetchSize);
         } else {
             FeedCursor parsed = decodeCursor(cursor);
-            fetched = posts.findFeedAfterCursor(follower, parsed.createdAt(), parsed.id(), fetchSize);
+            fetched = posts.findFeedAfterCursor(userId, follower, parsed.createdAt(), parsed.id(), fetchSize);
         }
 
         boolean hasMore = fetched.size() > pageSize;

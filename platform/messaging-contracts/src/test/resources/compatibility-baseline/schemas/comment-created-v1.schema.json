@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/comment-created-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["commentId","targetType","targetId","authorUserId","content","createdAt"],
+  "properties": {
+    "commentId":{"type":"string","minLength":1},
+    "targetType":{"enum":["post"]},
+    "targetId":{"type":"string","minLength":1},
+    "authorUserId":{"type":"string","minLength":1},
+    "content":{"type":"string","minLength":1,"maxLength":1000},
+    "createdAt":{"type":"string","format":"date-time"}
+  }
+}

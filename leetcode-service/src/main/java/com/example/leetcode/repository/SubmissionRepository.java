@@ -3,6 +3,9 @@ package com.example.leetcode.repository;
 import com.example.leetcode.model.Submission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +14,13 @@ import java.util.Optional;
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findByCompetitionIdAndStatus(String competitionId, String status);
     Optional<Submission> findByUsernameAndIdempotencyKey(String username, String idempotencyKey);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query(
+            "select s from Submission s where s.status = 'QUEUED' and s.updatedAt < :cutoff order by s.updatedAt")
+    List<Submission> findStaleQueued(
+            @org.springframework.data.repository.query.Param("cutoff") java.time.Instant cutoff,
+            Pageable pageable);
 
     @org.springframework.data.jpa.repository.Query(
         "SELECT s.username AS username, COUNT(DISTINCT s.problemId) AS solvedCount, MAX(s.submittedAt) AS lastSolveTime " +
