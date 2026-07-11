@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface CompetitionProblemRepository extends JpaRepository<CompetitionProblem, CompetitionProblemId> {
     List<CompetitionProblem> findByCompetitionIdOrderByProblemOrderAsc(String competitionId);
+    boolean existsByCompetitionIdAndProblemId(String competitionId, String problemId);
 }

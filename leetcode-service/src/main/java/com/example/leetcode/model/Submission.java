@@ -34,6 +34,12 @@ public class Submission {
 
     private String competitionId;
     private Instant submittedAt;
+    private Instant updatedAt;
+    private Instant startedAt;
+    private Instant completedAt;
+    private String idempotencyKey;
+
+    private Long version;
 
     // Getters and Setters
 
@@ -72,4 +78,13 @@ public class Submission {
 
     public Instant getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(Instant submittedAt) { this.submittedAt = submittedAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Instant getStartedAt() { return startedAt; }
+    public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
+    public Instant getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+    public Long getVersion() { return version; }
 }

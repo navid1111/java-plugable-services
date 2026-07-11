@@ -11,7 +11,8 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
-# Install docker-cli so this container can spawn siblings
+# The same image runs in API or worker mode. Only the worker deployment receives
+# the Docker socket; the API has no access to the daemon.
 RUN apk update && apk add --no-cache docker-cli
 
 # We must run as a user that can access the mounted /var/run/docker.sock

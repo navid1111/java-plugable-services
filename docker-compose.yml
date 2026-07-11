@@ -382,6 +382,23 @@ services:
       - kong-net
 
   # ---- Postgres for the leetcode service ----
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    container_name: rabbitmq
+    profiles: ["leetcode"]
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-platform}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-platformpass}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - kong-net
+
   leetcode-db:
     image: postgres:16-alpine
     container_name: leetcode-db
@@ -410,13 +427,16 @@ services:
     depends_on:
       leetcode-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://leetcode-db:5432/leetcodedb
       SPRING_DATASOURCE_USERNAME: leetcodeuser
       SPRING_DATASOURCE_PASSWORD: leetcodepass
-    volumes:
-      # Mount the Docker daemon socket so the container can spawn sibling containers
-      - /var/run/docker.sock:/var/run/docker.sock
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-platformpass}
+      LEETCODE_ROLE: api
     expose:
       - "8080"
     healthcheck:
@@ -424,6 +444,31 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kong-net
+
+  leetcode-judge-worker:
+    profiles: ["leetcode"]
+    build:
+      context: ./leetcode-service
+      dockerfile: Dockerfile
+    container_name: leetcode-judge-worker
+    depends_on:
+      leetcode-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://leetcode-db:5432/leetcodedb
+      SPRING_DATASOURCE_USERNAME: leetcodeuser
+      SPRING_DATASOURCE_PASSWORD: leetcodepass
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-platformpass}
+      LEETCODE_ROLE: worker
+      SERVER_PORT: "8081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - kong-net
 
@@ -437,6 +482,7 @@ volumes:
   chats_data:
   bookings_data:
   leetcode_data:
+  rabbitmq_data:
 
 networks:
   kong-net:

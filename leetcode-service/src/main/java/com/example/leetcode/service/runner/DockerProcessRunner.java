@@ -1,106 +1,27 @@
 package com.example.leetcode.service.runner;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.*;
 import java.io.*;
-import java.util.concurrent.TimeUnit;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.JsonNode;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
 
 @Component
 public class DockerProcessRunner {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final int TIMEOUT_SECONDS = 5;
-
-    public ExecutionResult executeInDocker(String image, String commandArgs, String stdinContent) {
-        String[] cmd = {
-            "sh", "-c", 
-            "docker run --rm -i --network none --cpus=0.5 -m 128m " + image + " " + commandArgs
-        };
-
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        try {
-            Process process = pb.start();
-
-            // Write stdin
-            try (OutputStream os = process.getOutputStream();
-                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
-                writer.write(stdinContent);
-                writer.flush();
-            }
-
-            boolean finished = process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            if (!finished) {
-                process.destroyForcibly();
-                return new ExecutionResult("TIME_LIMIT_EXCEEDED", 0, 0, TIMEOUT_SECONDS * 1000, "Process timed out after " + TIMEOUT_SECONDS + " seconds.");
-            }
-
-            String stdout = readStream(process.getInputStream());
-            String stderr = readStream(process.getErrorStream());
-
-            if (process.exitValue() != 0) {
-                return new ExecutionResult("RUNTIME_ERROR", 0, 0, 0, stderr.isEmpty() ? "Non-zero exit code: " + process.exitValue() : stderr);
-            }
-
-            return parseOutput(stdout, stderr);
-        } catch (Exception e) {
-            return new ExecutionResult("RUNTIME_ERROR", 0, 0, 0, "Execution failed: " + e.getMessage());
-        }
+    private final ObjectMapper mapper=new ObjectMapper(); private final int timeout;
+    public DockerProcessRunner(@Value("${leetcode.runner.timeout-seconds:5}") int timeout){this.timeout=timeout;}
+    public ExecutionResult executeInDocker(String image,String commandArgs,String input){
+        String name="leetcode-run-"+UUID.randomUUID(); List<String> cmd=new ArrayList<>(List.of("docker","run","--rm","--name",name,"-i","--network","none","--cpus","0.5","--memory","128m","--pids-limit","64","--read-only","--tmpfs","/tmp:rw,noexec,nosuid,size=16m","--cap-drop","ALL","--security-opt","no-new-privileges",image));
+        cmd.addAll(Arrays.asList(commandArgs.trim().split("\\s+"))); long started=System.nanoTime();
+        try{Process process=new ProcessBuilder(cmd).start();ExecutorService io=Executors.newFixedThreadPool(2);Future<String> out=io.submit(()->read(process.getInputStream()));Future<String> err=io.submit(()->read(process.getErrorStream()));
+            try(OutputStream os=process.getOutputStream()){os.write(input.getBytes(StandardCharsets.UTF_8));}
+            if(!process.waitFor(timeout,TimeUnit.SECONDS)){new ProcessBuilder("docker","rm","-f",name).start().waitFor(2,TimeUnit.SECONDS);process.destroyForcibly();io.shutdownNow();return new ExecutionResult("TIME_LIMIT_EXCEEDED",0,0,timeout*1000,"Execution timed out");}
+            String stdout=out.get(1,TimeUnit.SECONDS),stderr=err.get(1,TimeUnit.SECONDS);io.shutdownNow();if(process.exitValue()!=0)return new ExecutionResult(stderr.contains("COMPILE_ERROR")?"COMPILE_ERROR":"RUNTIME_ERROR",0,0,elapsed(started),bounded(stderr));return parse(stdout,stderr,started);
+        }catch(Exception e){try{new ProcessBuilder("docker","rm","-f",name).start().waitFor(2,TimeUnit.SECONDS);}catch(Exception ignored){}return new ExecutionResult("SYSTEM_ERROR",0,0,elapsed(started),bounded(e.getMessage()));}
     }
-
-    private String readStream(InputStream is) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-        }
-        return sb.toString().trim();
-    }
-
-    private ExecutionResult parseOutput(String stdout, String stderr) {
-        try {
-            // Find JSON array in stdout (runner outputs it as a JSON array of results)
-            int jsonStart = stdout.indexOf('[');
-            if (jsonStart == -1) {
-                return new ExecutionResult("RUNTIME_ERROR", 0, 0, 0, "No JSON result found. Output: " + stdout + "\\n" + stderr);
-            }
-            String jsonOutput = stdout.substring(jsonStart);
-            JsonNode results = objectMapper.readTree(jsonOutput);
-            
-            if (!results.isArray()) {
-                return new ExecutionResult("RUNTIME_ERROR", 0, 0, 0, "Output is not a valid result array.");
-            }
-
-            int passed = 0;
-            int total = results.size();
-            int maxTime = 0;
-            String errorMsg = "";
-
-            for (JsonNode res : results) {
-                if (res.has("passed") && res.get("passed").asBoolean()) {
-                    passed++;
-                } else if (res.has("error")) {
-                    errorMsg = res.get("error").asText();
-                } else if (res.has("output") && res.has("expected")) {
-                    if (errorMsg.isEmpty()) {
-                        errorMsg = "Expected " + res.get("expected") + " but got " + res.get("output");
-                    }
-                }
-                
-                if (res.has("runTimeMs")) {
-                    maxTime = Math.max(maxTime, res.get("runTimeMs").asInt());
-                }
-            }
-
-            if (passed == total && total > 0) {
-                return new ExecutionResult("ACCEPTED", passed, total, maxTime, "");
-            } else {
-                return new ExecutionResult("WRONG_ANSWER", passed, total, maxTime, errorMsg);
-            }
-        } catch (Exception e) {
-            return new ExecutionResult("RUNTIME_ERROR", 0, 0, 0, "Failed to parse runner output: " + e.getMessage() + "\\nRaw Output: " + stdout);
-        }
-    }
+    private String read(InputStream in)throws IOException{byte[] bytes=in.readNBytes(65537);if(bytes.length>65536)throw new IOException("Output limit exceeded");return new String(bytes,StandardCharsets.UTF_8).trim();}
+    private ExecutionResult parse(String stdout,String stderr,long started){try{int at=stdout.indexOf('[');if(at<0)return new ExecutionResult("RUNTIME_ERROR",0,0,elapsed(started),"No result payload");JsonNode a=mapper.readTree(stdout.substring(at));int passed=0;String error="";for(JsonNode r:a){if(r.path("passed").asBoolean())passed++;else if(r.has("error"))error=r.get("error").asText();else if(error.isEmpty())error="Output did not match expected result";}return new ExecutionResult(passed==a.size()&&a.size()>0?"ACCEPTED":"WRONG_ANSWER",passed,a.size(),elapsed(started),bounded(error));}catch(Exception e){return new ExecutionResult("RUNTIME_ERROR",0,0,elapsed(started),"Invalid runner output: "+bounded(e.getMessage()));}}
+    private int elapsed(long start){return (int)TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start);}private String bounded(String v){if(v==null)return null;return v.substring(0,Math.min(v.length(),4000));}
 }

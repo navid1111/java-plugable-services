@@ -71,9 +71,18 @@ In generated JS, define `const GATEWAY = "http://localhost:18000";` and build ev
   - `GET /chat/chats/{id}/messages`
   - `POST /chat/chats`
 
+### LeetCode Service (`leetcode-service`)
+- Gateway path(s): /leetcode
+- Endpoints (call as `GATEWAY + <path>`):
+  - `GET /leetcode/problems`
+  - `GET /leetcode/problems/{id}`
+  - `POST /leetcode/problems/{id}/submit`
+  - `GET /leetcode/submissions/{id}`
+  - `POST /leetcode/competitions`
+  - `GET /leetcode/competitions/{id}/leaderboard`
+
 ## Not ready (DEVELOPING — placeholder only)
 
-- `leetcode-service` — no complete plug kit yet; render a disabled placeholder.
 
 ## Composition pattern
 

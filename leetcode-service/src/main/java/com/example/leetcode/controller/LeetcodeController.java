@@ -1,106 +1,36 @@
 package com.example.leetcode.controller;
 
-import com.example.leetcode.model.Problem;
-import com.example.leetcode.model.Submission;
-import com.example.leetcode.repository.ProblemRepository;
-import com.example.leetcode.repository.SubmissionRepository;
+import com.example.leetcode.model.*;
+import com.example.leetcode.repository.*;
 import com.example.leetcode.security.JwtHelper;
-import com.example.leetcode.service.runner.CodeRunner;
-import com.example.leetcode.service.runner.ExecutionResult;
-import org.springframework.data.domain.Page;
+import com.example.leetcode.service.SubmissionService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.time.Instant;
-import java.util.List;
+import java.net.URI;
 import java.util.Map;
-import java.util.HashMap;
 
-@RestController
-@RequestMapping("/leetcode")
+@RestController @RequestMapping("/leetcode")
 public class LeetcodeController {
-
-    private final ProblemRepository problemRepository;
-    private final SubmissionRepository submissionRepository;
-    private final List<CodeRunner> runners;
-    private final JwtHelper jwtHelper;
-
-    public LeetcodeController(ProblemRepository problemRepository,
-                              SubmissionRepository submissionRepository,
-                              List<CodeRunner> runners,
-                              JwtHelper jwtHelper) {
-        this.problemRepository = problemRepository;
-        this.submissionRepository = submissionRepository;
-        this.runners = runners;
-        this.jwtHelper = jwtHelper;
-    }
-
+    private final ProblemRepository problems; private final SubmissionRepository submissions; private final SubmissionService service; private final JwtHelper jwt;
+    public LeetcodeController(ProblemRepository p,SubmissionRepository s,SubmissionService service,JwtHelper jwt){problems=p;submissions=s;this.service=service;this.jwt=jwt;}
     @GetMapping("/problems")
-    public Map<String, Object> getProblems(@RequestParam(defaultValue = "1") int page,
-                                           @RequestParam(defaultValue = "100") int limit) {
-        Page<Problem> problemsPage = problemRepository.findAll(PageRequest.of(Math.max(0, page - 1), limit));
-        
-        List<Map<String, Object>> items = problemsPage.getContent().stream().map(p -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", p.getId());
-            map.put("title", p.getTitle());
-            map.put("difficulty", p.getDifficulty());
-            // Tags is JSON, so we just return the raw string or leave it out.
-            // Ideally we parse it but for the partial list it's fine.
-            return map;
-        }).toList();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("items", items);
-        response.put("total", problemsPage.getTotalElements());
-        response.put("page", page);
-        return response;
+    public Map<String,Object> list(@RequestParam(defaultValue="1") @Min(1) int page,@RequestParam(defaultValue="100") @Min(1) @Max(100) int limit){
+        var r=problems.findAll(PageRequest.of(page-1,limit)); var items=r.getContent().stream().map(p->new ProblemSummary(p.getId(),p.getTitle(),p.getDifficulty(),p.getTags())).toList();
+        return Map.of("items",items,"total",r.getTotalElements(),"page",page);
     }
-
-    @GetMapping("/problems/{id}")
-    public Problem getProblem(@PathVariable String id) {
-        return problemRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
+    @GetMapping("/problems/{id}") public ProblemDetail detail(@PathVariable String id){Problem p=problems.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Problem not found"));return new ProblemDetail(p.getId(),p.getTitle(),p.getDescription(),p.getDifficulty(),p.getTags(),p.getCodeStubs());}
+    @PostMapping("/problems/{id}/submit") public ResponseEntity<SubmissionView> submit(@PathVariable String id,@RequestHeader("Authorization") String auth,@RequestHeader(value="Idempotency-Key",required=false) String key,@RequestParam(required=false) String competitionId,@Valid @RequestBody SubmitRequest request){
+        if(key!=null&&key.length()>255) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Idempotency-Key is too long");
+        Submission s=service.submit(jwt.extractUsername(auth),id,competitionId,request.language(),request.code(),key);
+        return ResponseEntity.accepted().location(URI.create("/leetcode/submissions/"+s.getId())).body(SubmissionView.of(s));
     }
-
-    @PostMapping("/problems/{id}/submit")
-    public Submission submitCode(@PathVariable String id,
-                                 @RequestHeader("Authorization") String authHeader,
-                                 @RequestParam(required = false) String competitionId,
-                                 @RequestBody SubmitRequest request) {
-        
-        String username = jwtHelper.extractUsername(authHeader);
-        
-        Problem problem = problemRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
-
-        CodeRunner runner = runners.stream()
-                .filter(r -> r.supports(request.language))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Language not supported"));
-
-        ExecutionResult execResult = runner.runCode(request.code, problem.getTestCases());
-
-        Submission submission = new Submission();
-        submission.setProblemId(problem.getId());
-        submission.setUsername(username);
-        submission.setCode(request.code);
-        submission.setLanguage(request.language);
-        submission.setStatus(execResult.getStatus());
-        submission.setPassedCount(execResult.getPassedCount());
-        submission.setTotalCount(execResult.getTotalCount());
-        submission.setExecutionTimeMs(execResult.getExecutionTimeMs());
-        submission.setErrorMessage(execResult.getErrorMessage());
-        submission.setCompetitionId(competitionId);
-        submission.setSubmittedAt(Instant.now());
-
-        return submissionRepository.save(submission);
-    }
-
-    public static class SubmitRequest {
-        public String code;
-        public String language;
-    }
+    @GetMapping("/submissions/{id}") public SubmissionView submission(@PathVariable Long id,@RequestHeader("Authorization") String auth){String user=jwt.extractUsername(auth);Submission s=submissions.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found"));if(!user.equals(s.getUsername()))throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found");return SubmissionView.of(s);}
+    public record SubmitRequest(@NotBlank @Size(max=65536) String code,@NotBlank String language){}
+    public record ProblemSummary(String id,String title,String difficulty,String tags){}
+    public record ProblemDetail(String id,String title,String description,String difficulty,String tags,String codeStubs){}
+    public record SubmissionView(Long id,String problemId,String language,String status,Integer passedCount,Integer totalCount,Integer executionTimeMs,String errorMessage,String competitionId,java.time.Instant submittedAt,java.time.Instant completedAt){static SubmissionView of(Submission s){return new SubmissionView(s.getId(),s.getProblemId(),s.getLanguage(),s.getStatus(),s.getPassedCount(),s.getTotalCount(),s.getExecutionTimeMs(),s.getErrorMessage(),s.getCompetitionId(),s.getSubmittedAt(),s.getCompletedAt());}}
 }

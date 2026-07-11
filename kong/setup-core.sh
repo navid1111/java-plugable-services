@@ -35,6 +35,7 @@ if curl -fsS "${ADMIN}/plugins/app-builder-cors" >/dev/null 2>&1; then
     --data "config.headers=Authorization" \
     --data "config.headers=Content-Type" \
     --data "config.headers=Accept" \
+    --data "config.headers=Idempotency-Key" \
     --data "config.credentials=false" >/dev/null
 else
   curl -fsS -X PUT "${ADMIN}/plugins/app-builder-cors" \
@@ -49,6 +50,7 @@ else
     --data "config.headers=Authorization" \
     --data "config.headers=Content-Type" \
     --data "config.headers=Accept" \
+    --data "config.headers=Idempotency-Key" \
     --data "config.credentials=false" >/dev/null
 fi
 
