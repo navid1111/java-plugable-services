@@ -43,3 +43,12 @@ All event types must be registered here before use. Payload schemas will live in
 ## Registration Requirements
 
 Every new row must name a single producer, schema/version, consumers, required ordering, retention, data classification, freshness SLO, dashboard, and recovery runbook before production use. Passwords, hashes, bearer tokens, private keys, and unnecessary personal data are prohibited in every event.
+
+## Governed Target Types
+
+| Target type | Authoritative owner | Lifecycle events |
+|---|---|---|
+| `post` | tweeter-service | `post.created.v1`, `post.updated.v1`, `post.deleted.v1` |
+
+Unknown target types are rejected. Consumers use the executable `TargetTypeRegistry`
+from `messaging-contracts` rather than accepting arbitrary target strings.

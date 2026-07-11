@@ -29,12 +29,12 @@
 - [x] T018 Enforce per-post aggregate version in search. **Verify:** duplicate and out-of-order events cannot regress a document.
 - [x] T019 Add search projection delete/tombstone behavior and retention policy. **Verify:** deleted posts disappear from queries within the defined SLO.
 - [x] T020 Add an authenticated internal post export/rebuild process with checkpointing. **Verify:** empty search DB rebuilds to match authoritative posts.
-- [ ] T021 Run event ingestion in shadow comparison mode against legacy client-written documents. **Verify:** mismatch report is empty or explicitly reconciled.
-- [ ] T022 Remove public search mutation and like-count endpoints plus client-side indexing after compatibility window. **Verify:** ordinary JWT clients receive 404/403 while search queries remain green.
+- [x] T021 Run event ingestion in shadow comparison mode against legacy client-written documents. **Verify:** mismatch report is empty or explicitly reconciled.
+- [x] T022 Remove public search mutation and like-count endpoints plus client-side indexing after compatibility window. **Verify:** ordinary JWT clients receive 404/403 while search queries remain green.
 
 ## Phase 3 — Governed target lifecycle
 
-- [ ] T023 Define registered target types and owner mapping; initially `post -> tweeter-service`. **Verify:** unknown target types are rejected.
+- [x] T023 Define registered target types and owner mapping; initially `post -> tweeter-service`. **Verify:** unknown target types are rejected.
 - [ ] T024 Add target projection tables/inbox consumers to comment-service and media-service from post lifecycle events. **Verify:** post create/delete produces matching target state idempotently.
 - [ ] T025 Require active target existence before comment creation. **Verify:** missing/deleted targets are rejected and existing targets succeed.
 - [ ] T026 Require active target existence and visibility/owner authorization before media attachment. **Verify:** cross-user and missing-target uploads are rejected.

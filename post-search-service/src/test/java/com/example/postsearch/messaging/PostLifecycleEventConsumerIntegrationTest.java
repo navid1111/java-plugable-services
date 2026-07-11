@@ -12,6 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -26,10 +30,13 @@ import com.example.platform.messaging.support.InboxMessageRepository;
 import com.example.postsearch.repository.SearchDocumentRepository;
 import com.example.postsearch.repository.SearchTermEntryRepository;
 import com.example.postsearch.service.PostProjectionRebuildService;
+import com.example.postsearch.service.SearchShadowComparisonService;
+import com.example.postsearch.repository.LegacySearchDocumentRepository;
 
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(properties = "spring.rabbitmq.listener.simple.auto-startup=false")
+@AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
 class PostLifecycleEventConsumerIntegrationTest {
     @Container static final PostgreSQLContainer<?> POSTGRES =
@@ -51,12 +58,16 @@ class PostLifecycleEventConsumerIntegrationTest {
     @Autowired InboxMessageRepository inbox;
     @Autowired ObjectMapper mapper;
     @Autowired PostProjectionRebuildService rebuild;
+    @Autowired SearchShadowComparisonService shadow;
+    @Autowired LegacySearchDocumentRepository legacy;
+    @Autowired MockMvc mvc;
 
     @BeforeEach
     void clear() {
         inbox.deleteAll();
         terms.deleteAll();
         documents.deleteAll();
+        legacy.deleteAll();
     }
 
     @Test
@@ -97,6 +108,31 @@ class PostLifecycleEventConsumerIntegrationTest {
         assertThat(result.checkpoint()).isEqualTo(2);
         assertThat(documents.count()).isEqualTo(2);
         assertThat(rebuild.checkpoint()).isEqualTo(2);
+    }
+
+    @Test
+    void shadowReportDetectsAndReconcilesLegacyMismatch() {
+        Instant createdAt = Instant.parse("2026-01-01T00:00:00Z");
+        shadow.observeLegacyWrite("post", "42", "alice", "legacy expected content", createdAt);
+        consumer.process(snapshot(EventTypes.POST_CREATED_V1, 1, "different event content"));
+        assertThat(shadow.compare().mismatches()).singleElement()
+                .extracting(SearchShadowComparisonService.Mismatch::reason)
+                .isEqualTo("snapshot differs");
+
+        consumer.process(snapshot(EventTypes.POST_UPDATED_V1, 2, "legacy expected content"));
+        assertThat(shadow.compare().reconciled()).isTrue();
+    }
+
+    @Test
+    void ordinaryClientsCannotCallRemovedSearchMutationRoutes() throws Exception {
+        mvc.perform(put("/post-search/documents/post/42")
+                        .header("Authorization", "Bearer e30.eyJzdWIiOiJhbGljZSJ9.")
+                        .contentType("application/json")
+                        .content("{\"content\":\"client write\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(put("/post-search/documents/post/42/like-count")
+                        .header("Authorization", "Bearer e30.eyJzdWIiOiJhbGljZSJ9."))
+                .andExpect(status().isNotFound());
     }
 
     private static synchronized String startExportServer() {
