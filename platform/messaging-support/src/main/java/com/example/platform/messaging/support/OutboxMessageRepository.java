@@ -16,6 +16,20 @@ public interface OutboxMessageRepository extends JpaRepository<OutboxMessage, UU
     List<OutboxMessage> findByPublishedAtIsNullAndAvailableAtLessThanEqualOrderByCreatedAtAsc(
             Instant now, Pageable pageable);
 
+    /**
+     * Atomically claim a batch of due, unpublished rows for the current transaction.
+     * {@code FOR UPDATE SKIP LOCKED} lets competing publisher instances drain disjoint
+     * rows without blocking each other, so a single row is never published twice. The
+     * rows stay locked until the caller's transaction commits, so this must be invoked
+     * inside a transaction that spans the publish + mark-published.
+     */
+    @Query(value = "select * from outbox_messages where published_at is null "
+            + "and available_at <= :now order by created_at asc limit :limit "
+            + "for update skip locked", nativeQuery = true)
+    List<OutboxMessage> claimBatch(@Param("now") Instant now, @Param("limit") int limit);
+
+    long countByPublishedAtIsNull();
+
     /** Retention: purge already-published rows older than the cutoff. */
     @Modifying
     @Transactional

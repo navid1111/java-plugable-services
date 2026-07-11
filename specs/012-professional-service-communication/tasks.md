@@ -10,8 +10,8 @@
 - [x] T002 Create a Maven reactor or independently versioned `messaging-contracts` module containing the standard envelope and event metadata without domain/JPA dependencies. **Verify:** both producer and consumer services compile against it.
 - [x] T003 Add JSON Schemas for envelope and initial post/target/media/user events. **Verify:** valid fixtures pass and breaking fixtures fail schema tests.
 - [x] T004 Create `messaging-support` with outbox and inbox entities/migrations, sensitive-data-safe serialization, and retention configuration. **Verify:** reusable component test runs against PostgreSQL.
-- [ ] T005 Implement safe concurrent outbox claiming, mandatory routing, persistent delivery, publisher confirms, exponential retry/jitter, and confirmed-only completion. **Verify:** two publisher instances never effectively publish one claimed row concurrently and broker recovery drains backlog.
-- [ ] T006 Implement inbox deduplication and atomic consumer transaction helper. **Verify:** duplicate delivery produces one effective database change.
+- [x] T005 Implement safe concurrent outbox claiming, mandatory routing, persistent delivery, publisher confirms, exponential retry/jitter, and confirmed-only completion. **Verify:** two publisher instances never effectively publish one claimed row concurrently and broker recovery drains backlog.
+- [x] T006 Implement inbox deduplication and atomic consumer transaction helper. **Verify:** duplicate delivery produces one effective database change.
 - [ ] T007 Declare durable topic exchange, per-consumer quorum queues, bounded retry queues, and DLQs. **Verify:** topology recreates after broker data reset.
 - [ ] T008 Add unsupported-version, invalid-schema, deterministic, and transient error classification. **Verify:** each class reaches the expected ack/retry/DLQ outcome.
 - [ ] T009 Propagate `traceparent`, correlation, causation, event, aggregate, and user IDs through HTTP and AMQP. **Verify:** one E2E trace joins producer, broker, and consumer spans.

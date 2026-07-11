@@ -30,6 +30,12 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
       <optional>true</optional>
     </dependency>
+    <!-- Needed only by RabbitEventPublisher; optional so non-AMQP consumers are unaffected. -->
+    <dependency>
+      <groupId>org.springframework.amqp</groupId>
+      <artifactId>spring-rabbit</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <!-- Component test: real PostgreSQL + Flyway migrations via Testcontainers. -->
     <dependency>
@@ -50,6 +56,17 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Real-broker integration test for RabbitEventPublisher. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-amqp</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-rabbitmq</artifactId>
       <scope>test</scope>
     </dependency>
     <!-- Spring Boot 4 keeps Flyway autoconfiguration in its own module. -->
