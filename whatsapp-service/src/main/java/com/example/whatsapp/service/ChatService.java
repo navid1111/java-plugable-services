@@ -38,16 +38,19 @@ public class ChatService {
     private final ChatParticipantRepository participants;
     private final MessageRepository messages;
     private final InboxEntryRepository inboxEntries;
+    private final com.example.whatsapp.messaging.ChatEventPublisher events;
 
     public ChatService(
             ChatRepository chats,
             ChatParticipantRepository participants,
             MessageRepository messages,
-            InboxEntryRepository inboxEntries) {
+            InboxEntryRepository inboxEntries,
+            com.example.whatsapp.messaging.ChatEventPublisher events) {
         this.chats = chats;
         this.participants = participants;
         this.messages = messages;
         this.inboxEntries = inboxEntries;
+        this.events = events;
     }
 
     public record ChatView(Long id, String name, List<String> participants, Instant createdAt) {
@@ -154,6 +157,11 @@ public class ChatService {
                 .map(recipient -> new InboxEntry(message.getId(), recipient))
                 .toList());
 
+        // External-reaction event (push/moderation/analytics); DB + WebSocket stay the
+        // delivery source of truth. Same transaction as the message: never lost, never
+        // published for a message that rolled back.
+        events.messageCreated(message, recipients.size());
+
         return new Delivery(MessageView.from(message), recipients);
     }
 
@@ -164,7 +172,13 @@ public class ChatService {
             return;
         }
         Optional<InboxEntry> maybeEntry = inboxEntries.findByMessageIdAndRecipientUsername(messageId, recipient);
-        maybeEntry.filter(entry -> !entry.isDelivered()).ifPresent(InboxEntry::markDelivered);
+        Optional<InboxEntry> undelivered = maybeEntry.filter(entry -> !entry.isDelivered());
+        undelivered.ifPresent(entry -> {
+            entry.markDelivered();
+            // Emit only on the first read transition, so repeated acks stay idempotent.
+            Long chatId = messages.findById(messageId).map(Message::getChatId).orElse(null);
+            events.messageRead(messageId, chatId, recipient);
+        });
     }
 
     @Transactional(readOnly = true)

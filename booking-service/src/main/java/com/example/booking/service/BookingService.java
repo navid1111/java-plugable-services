@@ -25,11 +25,14 @@ public class BookingService {
     private final ResourceRepository resources;
     private final SlotRepository slots;
     private final BookingRepository bookings;
+    private final com.example.booking.messaging.BookingEventPublisher events;
 
-    public BookingService(ResourceRepository resources, SlotRepository slots, BookingRepository bookings) {
+    public BookingService(ResourceRepository resources, SlotRepository slots, BookingRepository bookings,
+            com.example.booking.messaging.BookingEventPublisher events) {
         this.resources = resources;
         this.slots = slots;
         this.bookings = bookings;
+        this.events = events;
     }
 
     public record ResourceView(Long id, String name, String location, List<SlotView> slots) {
@@ -97,6 +100,8 @@ public class BookingService {
             Booking booking = bookings.saveAndFlush(new Booking(slot.getId(), currentUser));
             Resource resource = resources.findById(slot.getResourceId())
                     .orElseThrow(() -> new NotFoundException("resource not found"));
+            // Same transaction as the booking: the event commits atomically or not at all.
+            events.bookingCreated(booking, slot, resource.getId());
             return toView(booking, slot, resource);
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("slot already booked");
@@ -122,7 +127,15 @@ public class BookingService {
         if (!booking.getUsername().equals(currentUser)) {
             throw new ForbiddenException("cannot cancel another user's booking");
         }
+        // Emit only on the active -> cancelled transition, so repeated cancels stay idempotent.
+        boolean wasActive = booking.isActive();
         booking.cancel();
+        if (wasActive) {
+            Long resourceId = slots.findById(booking.getSlotId())
+                    .map(Slot::getResourceId)
+                    .orElse(null);
+            events.bookingCancelled(booking, resourceId);
+        }
     }
 
     private List<BookingView> enrich(List<Booking> bookingRows) {

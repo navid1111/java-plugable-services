@@ -62,8 +62,8 @@
 - [ ] T042 Create a BFF/API-composer service behind Kong with strict deadlines, bounded parallelism, tracing, and RFC 9457 errors. **Verify:** dependency failure follows documented partial-response policy.
 - [ ] T043 Implement composed post-detail endpoint with post, author projection, media, comment summary, and visibility checks. **Verify:** one client call returns the documented contract without DB sharing.
 - [ ] T044 Implement composed feed endpoint or event-built feed detail projection based on load test results. **Verify:** latency SLO and freshness SLO pass.
-- [ ] T045 Add booking created/cancelled/availability events while keeping slot locking local. **Verify:** concurrent no-double-booking tests remain green and notifications are idempotent.
-- [ ] T046 Add chat message-created/read events for external reactions only; retain DB/WebSocket delivery source of truth. **Verify:** broker outage does not break message persistence or later event delivery.
+- [x] T045 Add booking created/cancelled/availability events while keeping slot locking local. **Verify:** concurrent no-double-booking tests remain green and notifications are idempotent.
+- [x] T046 Add chat message-created/read events for external reactions only; retain DB/WebSocket delivery source of truth. **Verify:** broker outage does not break message persistence or later event delivery.
 - [ ] T047 Align LeetCode commands/results with shared contracts/support, persistent inbox, retry/DLQ, confirmed results, and stale-job reconciliation. **Verify:** crash/redelivery test converges to one terminal result.
 
 ## Phase 6 — Tests, operations, and cutover
