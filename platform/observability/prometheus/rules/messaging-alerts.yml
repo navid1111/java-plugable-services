@@ -1,0 +1,88 @@
+groups:
+  - name: messaging-outbox
+    rules:
+      - alert: OutboxBacklogAgeHigh
+        # Oldest unpublished outbox row is stale — the relay cannot publish (broker down,
+        # confirms failing, or a stuck row). Committed facts are safe but not propagating.
+        expr: messaging_outbox_age_seconds > 60
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Outbox backlog aging on {{ $labels.service }}"
+          description: "Oldest unpublished outbox row is {{ $value | humanizeDuration }} old (threshold 60s). Runbook: messaging-recovery#backlog-or-broker-outage"
+      - alert: OutboxPublishFailing
+        expr: rate(messaging_publish_failures_total[5m]) > 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "Outbox publishes failing on {{ $labels.service }}"
+          description: "{{ $value | printf \"%.2f\" }} publish failures/s over 5m. Check broker health and publisher confirms."
+
+  - name: messaging-consumers
+    rules:
+      - alert: DeadLetterQueueNotEmpty
+        expr: messaging_dlq_count > 0
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Messages parked in DLQ on {{ $labels.service }}"
+          description: "{{ $value }} message(s) in the dead-letter queue. Runbook: messaging-recovery#dlq-inspection-and-redrive"
+      - alert: ConsumerRetriesHigh
+        expr: rate(messaging_consumer_retries_total[5m]) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer retrying frequently on {{ $labels.service }}"
+          description: "{{ $value | printf \"%.2f\" }} retries/s over 5m — a transient dependency may be degraded before messages reach the DLQ."
+      - alert: ProjectionLagHigh
+        expr: messaging_projection_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Projection lag beyond SLO on {{ $labels.service }}"
+          description: "Projection is {{ $value | humanizeDuration }} behind event time (SLO 30s). Runbook: messaging-recovery#projection-rebuild-and-reconciliation"
+
+  - name: broker-queues
+    rules:
+      - alert: QueueDepthHigh
+        # Requires the built-in rabbitmq_prometheus plugin (metrics on :15692).
+        expr: rabbitmq_queue_messages_ready > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue depth high: {{ $labels.queue }}"
+          description: "{{ $value }} ready messages on {{ $labels.queue }} — consumers are not keeping up."
+      - alert: QueueBacklogAgeHigh
+        expr: (time() - rabbitmq_queue_head_message_timestamp / 1000) > 300 and rabbitmq_queue_messages_ready > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Oldest message aging on {{ $labels.queue }}"
+          description: "Head message on {{ $labels.queue }} is older than 5m."
+
+  - name: resilience-and-bff
+    rules:
+      - alert: CircuitBreakerOpen
+        # Resilience4j via Micrometer: state gauge is 1 for the active state.
+        expr: resilience4j_circuitbreaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "Circuit breaker OPEN: {{ $labels.name }} on {{ $labels.service }}"
+          description: "Breaker {{ $labels.name }} is open — a downstream dependency is failing."
+      - alert: BffPartialResponsesHigh
+        expr: rate(bff_partial_responses_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BFF serving degraded partial responses"
+          description: "{{ $value | printf \"%.2f\" }} partial responses/s over 5m — a composed dependency is unhealthy."

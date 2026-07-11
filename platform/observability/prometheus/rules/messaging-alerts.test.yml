@@ -1,0 +1,87 @@
+# promtool unit tests for messaging-alerts.yml — the T052 verify.
+# Run: docker run --rm -v "$PWD/platform/observability/prometheus/rules":/w \
+#        prom/prometheus promtool test rules /w/messaging-alerts.test.yml
+rule_files:
+  - messaging-alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  # Synthetic failure: DLQ has a parked message -> DeadLetterQueueNotEmpty fires after 5m.
+  - interval: 1m
+    input_series:
+      - series: 'messaging_dlq_count{service="post-search"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: DeadLetterQueueNotEmpty
+        exp_alerts: []          # not yet: needs to hold for 5m
+      - eval_time: 6m
+        alertname: DeadLetterQueueNotEmpty
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              service: post-search
+            exp_annotations:
+              summary: "Messages parked in DLQ on post-search"
+              description: "1 message(s) in the dead-letter queue. Runbook: messaging-recovery#dlq-inspection-and-redrive"
+
+  # Healthy DLQ (0) must NOT alert — proves the rule discriminates.
+  - interval: 1m
+    input_series:
+      - series: 'messaging_dlq_count{service="post-search"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: DeadLetterQueueNotEmpty
+        exp_alerts: []
+
+  # Synthetic failure: oldest outbox row aging -> OutboxBacklogAgeHigh fires.
+  - interval: 1m
+    input_series:
+      - series: 'messaging_outbox_age_seconds{service="leetcode-service"}'
+        values: '120x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: OutboxBacklogAgeHigh
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              service: leetcode-service
+            exp_annotations:
+              summary: "Outbox backlog aging on leetcode-service"
+              description: "Oldest unpublished outbox row is 2m 0s old (threshold 60s). Runbook: messaging-recovery#backlog-or-broker-outage"
+
+  # Synthetic failure: publish failures accruing -> OutboxPublishFailing fires.
+  - interval: 1m
+    input_series:
+      - series: 'messaging_publish_failures_total{service="tweeter-service"}'
+        values: '0+1x15'
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: OutboxPublishFailing
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              service: tweeter-service
+            exp_annotations:
+              summary: "Outbox publishes failing on tweeter-service"
+              description: "0.02 publish failures/s over 5m. Check broker health and publisher confirms."
+
+  # Synthetic failure: circuit breaker opens -> CircuitBreakerOpen fires within 1m.
+  - interval: 1m
+    input_series:
+      - series: 'resilience4j_circuitbreaker_state{state="open",name="postClient",service="bff"}'
+        values: '1x5'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: CircuitBreakerOpen
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              state: open
+              name: postClient
+              service: bff
+            exp_annotations:
+              summary: "Circuit breaker OPEN: postClient on bff"
+              description: "Breaker postClient is open — a downstream dependency is failing."

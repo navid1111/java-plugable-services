@@ -1,0 +1,39 @@
+name: Platform guards
+
+# Isolated guards for client-orchestration removal (T054) and alerting rules (T052).
+on:
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'platform/observability/**'
+      - 'platform/scripts/verify-no-client-orchestration.sh'
+      - '.github/workflows/platform-guards.yml'
+  push:
+    paths:
+      - 'examples/**'
+      - 'platform/observability/**'
+      - 'platform/scripts/verify-no-client-orchestration.sh'
+
+jobs:
+  no-client-orchestration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No client-side search/media dual writes (T054)
+        run: |
+          chmod +x platform/scripts/verify-no-client-orchestration.sh
+          platform/scripts/verify-no-client-orchestration.sh
+      - name: Standalone smoke scripts parse
+        run: |
+          bash -n examples/post-search-standalone/smoke.sh
+          bash -n examples/media-standalone/smoke.sh
+
+  alert-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool test rules — synthetic failure fires expected alert (T052)
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/platform/observability/prometheus/rules":/w \
+            prom/prometheus test rules /w/messaging-alerts.test.yml

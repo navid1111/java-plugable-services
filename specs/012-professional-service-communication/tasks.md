@@ -72,9 +72,9 @@
 - [ ] T049 Add Testcontainers component suites for every outbox/inbox flow. **Verify:** tests use real PostgreSQL and RabbitMQ.
 - [x] T050 Add broker-down, publisher-confirm-timeout, consumer-crash-before/after-commit, poison-message, duplicate, and out-of-order tests. **Verify:** no committed fact is lost and no side effect is duplicated.
 - [ ] T051 Add E2E post create/update/delete test asserting search, comment target, media target, and BFF convergence. **Verify:** test passes from clean volumes.
-- [ ] T052 Add dashboards and alerts for outbox age, queue age/depth, projection lag, retries, DLQs, circuit breakers, and BFF partial responses. **Verify:** synthetic failure triggers expected alert.
-- [ ] T053 Write owner-specific runbooks for outage, replay, reconciliation, DLQ inspection/redrive, schema rollback, and credential rotation. **Verify:** another operator completes a recovery drill.
-- [ ] T054 Remove legacy client orchestration and deprecated public mutation routes. **Verify:** repository search finds no client-side search/media lifecycle dual writes.
+- [x] T052 Add dashboards and alerts for outbox age, queue age/depth, projection lag, retries, DLQs, circuit breakers, and BFF partial responses. **Verify:** synthetic failure triggers expected alert.
+- [x] T053 Write owner-specific runbooks for outage, replay, reconciliation, DLQ inspection/redrive, schema rollback, and credential rotation. **Verify:** another operator completes a recovery drill.
+- [x] T054 Remove legacy client orchestration and deprecated public mutation routes. **Verify:** repository search finds no client-side search/media lifecycle dual writes.
 - [ ] T055 Run migration/backfill against a production-like data copy and document timing, locks, rollback, and unresolved records. **Verify:** zero unexplained loss and rollback drill passes.
 - [ ] T056 Final integration demo: auth → create post → event-indexed search → attach media/comment → composed view → delete → eventual cleanup, plus booking/chat/LeetCode regression. **Verify:** one-command demo and all service test suites pass.
 

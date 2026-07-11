@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/messaging-alerts.yml
+
+# Services expose Micrometer metrics at /actuator/prometheus (needs
+# io.micrometer:micrometer-registry-prometheus + actuator on the classpath and
+# management.endpoints.web.exposure.include=health,info,metrics,prometheus).
+scrape_configs:
+  - job_name: platform-services
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["tweeter-service:8080"]
+        labels: { service: tweeter-service }
+      - targets: ["post-search-service:8080"]
+        labels: { service: post-search }
+      - targets: ["comment-service:8080"]
+        labels: { service: comment-service }
+      - targets: ["media-service:8080"]
+        labels: { service: media-service }
+      - targets: ["booking-service:8080"]
+        labels: { service: booking-service }
+      - targets: ["whatsapp-service:8080"]
+        labels: { service: whatsapp-service }
+      - targets: ["leetcode-service:8080"]
+        labels: { service: leetcode-service }
+      - targets: ["auth-service:8080"]
+        labels: { service: auth-service }
+      - targets: ["bff:8080"]
+        labels: { service: bff }
+
+  # RabbitMQ's built-in Prometheus plugin (management image) exposes queue metrics.
+  - job_name: rabbitmq
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["rabbitmq:15692"]

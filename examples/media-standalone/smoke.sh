@@ -49,16 +49,25 @@ create_comment() {
     -d "{\"content\":\"${content}\"}"
 }
 
-index_post() {
+# Search is populated by post.created.v1 events (event-driven projection), not by the
+# client. Poll the authoritative search endpoint until the projection has caught up.
+wait_for_search() {
   local token="$1"
-  local post_id="$2"
-  local author="$3"
-  local content="$4"
-  local created_at="$5"
-  curl -fsS -X PUT "${BASE}/post-search/documents/${POST_TARGET_TYPE}/${post_id}" \
-    -H "Authorization: Bearer ${token}" \
-    -H 'Content-Type: application/json' \
-    -d "{\"authorUsername\":\"${author}\",\"content\":\"${content}\",\"createdAt\":\"${created_at}\"}"
+  local query="$2"
+  local needle="$3"
+  local label="$4"
+  local deadline=$(( $(date +%s) + 30 ))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    local res
+    res="$(curl -fsS "${BASE}/post-search?q=${query}&pageSize=10" \
+      -H "Authorization: Bearer ${token}" || true)"
+    if printf '%s' "$res" | grep -F "$needle" >/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Timed out waiting for ${label} to appear in event-indexed search"
+  exit 1
 }
 
 upload_media() {
@@ -158,8 +167,8 @@ if [ -z "$COMMENT_ID" ]; then
 fi
 require_contains "$COMMENT_BODY" "$COMMENT_CONTENT" "created comment"
 
-echo "[7/11] Indexing the post into post-search-service..."
-index_post "$ALICE_TOKEN" "$POST_ID" "$ALICE" "$POST_CONTENT" "$POST_CREATED_AT" >/dev/null
+echo "[7/11] Waiting for the event-driven search projection to index the post..."
+wait_for_search "$ALICE_TOKEN" "java%20media%20${STAMP}" "$POST_CONTENT" "post"
 
 echo "[8/11] Uploading media to the post and the comment..."
 POST_MEDIA_CAPTION="post media ${STAMP}"

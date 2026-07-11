@@ -42,26 +42,25 @@ create_comment() {
     -d "{\"content\":\"${content}\"}"
 }
 
-index_post() {
+# Search is populated by post.created.v1 events (event-driven projection), not by the
+# client. Poll the authoritative search endpoint until the projection has caught up.
+wait_for_search() {
   local token="$1"
-  local post_id="$2"
-  local author="$3"
-  local content="$4"
-  local created_at="$5"
-  curl -fsS -X PUT "${BASE}/post-search/documents/${TARGET_TYPE}/${post_id}" \
-    -H "Authorization: Bearer ${token}" \
-    -H 'Content-Type: application/json' \
-    -d "{\"authorUsername\":\"${author}\",\"content\":\"${content}\",\"createdAt\":\"${created_at}\"}"
-}
-
-update_likes() {
-  local token="$1"
-  local post_id="$2"
-  local like_count="$3"
-  curl -fsS -X PUT "${BASE}/post-search/documents/${TARGET_TYPE}/${post_id}/like-count" \
-    -H "Authorization: Bearer ${token}" \
-    -H 'Content-Type: application/json' \
-    -d "{\"likeCount\":${like_count}}"
+  local query="$2"
+  local needle="$3"
+  local label="$4"
+  local deadline=$(( $(date +%s) + 30 ))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    local res
+    res="$(curl -fsS "${BASE}/post-search?q=${query}&pageSize=10" \
+      -H "Authorization: Bearer ${token}" || true)"
+    if printf '%s' "$res" | grep -F "$needle" >/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Timed out waiting for ${label} to appear in event-indexed search"
+  exit 1
 }
 
 require_contains() {
@@ -87,11 +86,11 @@ parse_string_field() {
   printf '%s' "$json" | sed -n "s/.*\"${field}\":\"\\([^\"]*\\)\".*/\\1/p"
 }
 
-echo "[1/9] Registering users..."
+echo "[1/8] Registering users..."
 register "$ALICE"
 register "$BOB"
 
-echo "[2/9] Logging in..."
+echo "[2/8] Logging in..."
 ALICE_TOKEN="$(login "$ALICE")"
 BOB_TOKEN="$(login "$BOB")"
 
@@ -100,14 +99,14 @@ if [ -z "$ALICE_TOKEN" ] || [ -z "$BOB_TOKEN" ]; then
   exit 1
 fi
 
-echo "[3/9] Verifying Kong rejects unauthenticated search..."
+echo "[3/8] Verifying Kong rejects unauthenticated search..."
 HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/post-search?q=java")"
 if [ "$HTTP_CODE" != "401" ]; then
   echo "Expected 401 for unauthenticated /post-search, got ${HTTP_CODE}"
   exit 1
 fi
 
-echo "[4/9] Creating two posts through tweeter-service..."
+echo "[4/8] Creating two posts through tweeter-service..."
 LOW_CONTENT="java search low ${STAMP}"
 HIGH_CONTENT="java search high ${STAMP}"
 LOW_POST="$(create_post "$ALICE_TOKEN" "$LOW_CONTENT")"
@@ -126,7 +125,7 @@ if [ -z "$LOW_POST_ID" ] || [ -z "$HIGH_POST_ID" ] || [ -z "$LOW_CREATED_AT" ] |
   exit 1
 fi
 
-echo "[5/9] Commenting on the high-ranked post through comment-service..."
+echo "[5/8] Commenting on the high-ranked post through comment-service..."
 COMMENT_CONTENT="comment on searchable post ${STAMP}"
 COMMENT_BODY="$(create_comment "$ALICE_TOKEN" "$HIGH_POST_ID" "$COMMENT_CONTENT")"
 require_contains "$COMMENT_BODY" "$COMMENT_CONTENT" "created comment"
@@ -136,15 +135,11 @@ COMMENTS="$(curl -fsS "${BASE}/comments/targets/${TARGET_TYPE}/${HIGH_POST_ID}" 
   -H "Authorization: Bearer ${BOB_TOKEN}")"
 require_contains "$COMMENTS" "$COMMENT_CONTENT" "post comments"
 
-echo "[6/9] Indexing post snapshots into post-search-service..."
-index_post "$ALICE_TOKEN" "$LOW_POST_ID" "$ALICE" "$LOW_CONTENT" "$LOW_CREATED_AT" >/dev/null
-index_post "$BOB_TOKEN" "$HIGH_POST_ID" "$BOB" "$HIGH_CONTENT" "$HIGH_CREATED_AT" >/dev/null
+echo "[6/8] Waiting for the event-driven search projection to index both posts..."
+wait_for_search "$ALICE_TOKEN" "java%20search%20${STAMP}" "$LOW_CONTENT" "low post"
+wait_for_search "$ALICE_TOKEN" "java%20search%20${STAMP}" "$HIGH_CONTENT" "high post"
 
-echo "[7/9] Updating like counts for ranking..."
-update_likes "$ALICE_TOKEN" "$LOW_POST_ID" 1 >/dev/null
-update_likes "$BOB_TOKEN" "$HIGH_POST_ID" 42 >/dev/null
-
-echo "[8/9] Searching by recency..."
+echo "[7/8] Searching by recency..."
 RECENCY="$(curl -fsS "${BASE}/post-search?q=java%20search%20${STAMP}&sort=recency&pageSize=2" \
   -H "Authorization: Bearer ${ALICE_TOKEN}")"
 require_contains "$RECENCY" "$HIGH_CONTENT" "recency search"
@@ -158,7 +153,7 @@ case "$RECENCY" in
     ;;
 esac
 
-echo "[9/9] Searching by likes..."
+echo "[8/8] Searching by likes (equal like counts fall back to recency order)..."
 LIKES="$(curl -fsS "${BASE}/post-search?q=java%20search%20${STAMP}&sort=likes&pageSize=2" \
   -H "Authorization: Bearer ${ALICE_TOKEN}")"
 require_contains "$LIKES" "$HIGH_CONTENT" "likes search"
