@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/post-deleted-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["postId","deletedByUserId","deletedAt"],
+  "properties": {
+    "postId":{"type":"string","minLength":1},
+    "deletedByUserId":{"type":"string","minLength":1},
+    "deletedAt":{"type":"string","format":"date-time"}
+  }
+}

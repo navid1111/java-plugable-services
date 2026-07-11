@@ -1,0 +1,19 @@
+{
+  "eventId": "00000000-0000-0000-0000-000000000051",
+  "eventType": "comment.created.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T05:00:00Z",
+  "producer": "comment-service",
+  "aggregateType": "comment",
+  "aggregateId": "comment-7",
+  "aggregateVersion": 1,
+  "correlationId": "00000000-0000-0000-0000-000000000052",
+  "payload": {
+    "commentId": "comment-7",
+    "targetType": "user",
+    "targetId": "user-2",
+    "authorUserId": "user-2",
+    "content": "nice post",
+    "createdAt": "2026-07-11T05:00:00Z"
+  }
+}

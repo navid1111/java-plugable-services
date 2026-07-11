@@ -1,0 +1,18 @@
+{
+  "eventId": "00000000-0000-0000-0000-000000000011",
+  "eventType": "post.deleted.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T01:00:00Z",
+  "producer": "tweeter-service",
+  "aggregateType": "post",
+  "aggregateId": "42",
+  "aggregateVersion": 3,
+  "correlationId": "00000000-0000-0000-0000-000000000012",
+  "causationId": "00000000-0000-0000-0000-000000000001",
+  "traceparent": null,
+  "payload": {
+    "postId": "42",
+    "deletedByUserId": "user-1",
+    "deletedAt": "2026-07-11T01:00:00Z"
+  }
+}

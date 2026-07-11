@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/media-uploaded-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mediaId","ownerUserId","targetType","targetId","contentType","bytes","url","uploadedAt"],
+  "properties": {
+    "mediaId":{"type":"string","minLength":1},
+    "ownerUserId":{"type":"string","minLength":1},
+    "targetType":{"enum":["post","comment"]},
+    "targetId":{"type":"string","minLength":1},
+    "contentType":{"type":"string","minLength":1},
+    "bytes":{"type":"integer","minimum":0},
+    "url":{"type":"string","minLength":1},
+    "uploadedAt":{"type":"string","format":"date-time"}
+  }
+}

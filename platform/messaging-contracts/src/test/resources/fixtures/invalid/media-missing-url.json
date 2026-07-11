@@ -1,0 +1,20 @@
+{
+  "eventId": "00000000-0000-0000-0000-000000000041",
+  "eventType": "media.uploaded.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T04:00:00Z",
+  "producer": "media-service",
+  "aggregateType": "media",
+  "aggregateId": "media-9",
+  "aggregateVersion": 1,
+  "correlationId": "00000000-0000-0000-0000-000000000042",
+  "payload": {
+    "mediaId": "media-9",
+    "ownerUserId": "user-1",
+    "targetType": "post",
+    "targetId": "42",
+    "contentType": "image/png",
+    "bytes": 20480,
+    "uploadedAt": "2026-07-11T04:00:00Z"
+  }
+}

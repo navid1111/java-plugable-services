@@ -1,0 +1,21 @@
+{
+  "eventId": "00000000-0000-0000-0000-000000000001",
+  "eventType": "post.created.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T00:00:00Z",
+  "producer": "tweeter-service",
+  "aggregateType": "post",
+  "aggregateId": "42",
+  "aggregateVersion": 1,
+  "correlationId": "00000000-0000-0000-0000-000000000002",
+  "password": "hunter2",
+  "payload": {
+    "postId": "42",
+    "authorUserId": "user-1",
+    "authorUsername": "alice",
+    "content": "hello world",
+    "visibility": "PUBLIC",
+    "createdAt": "2026-07-11T00:00:00Z",
+    "updatedAt": "2026-07-11T00:00:00Z"
+  }
+}

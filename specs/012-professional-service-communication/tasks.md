@@ -8,8 +8,8 @@
 
 - [x] T001 Record ADR for HTTP commands/queries, RabbitMQ facts/jobs, and BFF composition. **Verify:** architecture review checklist names owner and consistency model for every flow.
 - [x] T002 Create a Maven reactor or independently versioned `messaging-contracts` module containing the standard envelope and event metadata without domain/JPA dependencies. **Verify:** both producer and consumer services compile against it.
-- [ ] T003 Add JSON Schemas for envelope and initial post/target/media/user events. **Verify:** valid fixtures pass and breaking fixtures fail schema tests.
-- [ ] T004 Create `messaging-support` with outbox and inbox entities/migrations, sensitive-data-safe serialization, and retention configuration. **Verify:** reusable component test runs against PostgreSQL.
+- [x] T003 Add JSON Schemas for envelope and initial post/target/media/user events. **Verify:** valid fixtures pass and breaking fixtures fail schema tests.
+- [x] T004 Create `messaging-support` with outbox and inbox entities/migrations, sensitive-data-safe serialization, and retention configuration. **Verify:** reusable component test runs against PostgreSQL.
 - [ ] T005 Implement safe concurrent outbox claiming, mandatory routing, persistent delivery, publisher confirms, exponential retry/jitter, and confirmed-only completion. **Verify:** two publisher instances never effectively publish one claimed row concurrently and broker recovery drains backlog.
 - [ ] T006 Implement inbox deduplication and atomic consumer transaction helper. **Verify:** duplicate delivery produces one effective database change.
 - [ ] T007 Declare durable topic exchange, per-consumer quorum queues, bounded retry queues, and DLQs. **Verify:** topology recreates after broker data reset.

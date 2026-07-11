@@ -1,0 +1,22 @@
+{
+  "eventId": "00000000-0000-0000-0000-000000000001",
+  "eventType": "post.created.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T00:00:00Z",
+  "producer": "tweeter-service",
+  "aggregateType": "post",
+  "aggregateId": "42",
+  "aggregateVersion": 1,
+  "correlationId": "00000000-0000-0000-0000-000000000002",
+  "causationId": null,
+  "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+  "payload": {
+    "postId": "42",
+    "authorUserId": "user-1",
+    "authorUsername": "alice",
+    "content": "hello world",
+    "visibility": "PUBLIC",
+    "createdAt": "2026-07-11T00:00:00Z",
+    "updatedAt": "2026-07-11T00:00:00Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/user-registered-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["userId","username","registeredAt"],
+  "properties": {
+    "userId":{"type":"string","minLength":1},
+    "username":{"type":"string","minLength":1},
+    "displayName":{"type":["string","null"]},
+    "registeredAt":{"type":"string","format":"date-time"}
+  }
+}

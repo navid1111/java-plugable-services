@@ -8,6 +8,7 @@
   <packaging>pom</packaging>
   <modules>
     <module>platform/messaging-contracts</module>
+    <module>platform/messaging-support</module>
     <module>tweeter-service</module>
     <module>post-search-service</module>
   </modules>
