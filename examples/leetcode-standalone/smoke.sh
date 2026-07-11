@@ -38,29 +38,62 @@ curl -fsS -X GET "$HOST/leetcode/problems" \
 echo
 echo "4. Create Competition"
 COMP_ID="comp-$(date +%s)"
+START_TIME="$(date -u -d '1 minute ago' +%Y-%m-%dT%H:%M:%SZ)"
+END_TIME="$(date -u -d '30 minutes' +%Y-%m-%dT%H:%M:%SZ)"
 curl -fsS -X POST "$HOST/leetcode/competitions" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"id\": \"$COMP_ID\", \"title\": \"Weekly Contest 1\"}"
+  -d "{\"id\":\"$COMP_ID\",\"title\":\"Weekly Contest 1\",\"startTime\":\"$START_TIME\",\"endTime\":\"$END_TIME\",\"problemIds\":[\"two-sum\",\"reverse-string\"]}" >/dev/null
+
+poll_submission() {
+  local submission_id="$1"
+  local expected="$2"
+  local result status
+  for _ in $(seq 1 40); do
+    result="$(curl -fsS "$HOST/leetcode/submissions/$submission_id" -H "Authorization: Bearer $TOKEN")"
+    status="$(printf '%s' "$result" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')"
+    case "$status" in
+      QUEUED|RUNNING) sleep 0.5 ;;
+      "$expected") return 0 ;;
+      *) echo "Expected $expected, got $status: $result" >&2; return 1 ;;
+    esac
+  done
+  echo "Submission $submission_id did not finish before timeout" >&2
+  return 1
+}
 
 echo
 echo "5. Submit Python Solution to Two-Sum"
-curl -fsS -X POST "$HOST/leetcode/problems/two-sum/submit?competitionId=$COMP_ID" \
+TWO_SUM="$(curl -fsS -X POST "$HOST/leetcode/problems/two-sum/submit?competitionId=$COMP_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"language": "python", "code": "class Solution:\n    def twoSum(self, nums, target):\n        for i in range(len(nums)):\n            for j in range(i+1, len(nums)):\n                if nums[i] + nums[j] == target:\n                    return [i, j]"}'
+  -d '{"language": "python", "code": "class Solution:\n    def twoSum(self, nums, target):\n        for i in range(len(nums)):\n            for j in range(i+1, len(nums)):\n                if nums[i] + nums[j] == target:\n                    return [i, j]"}')"
+TWO_SUM_ID="$(printf '%s' "$TWO_SUM" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')"
+test -n "$TWO_SUM_ID" || { echo "Missing submission id: $TWO_SUM" >&2; exit 1; }
+poll_submission "$TWO_SUM_ID" ACCEPTED
 
 echo
 echo "6. Submit Javascript Solution to Reverse-String"
-curl -fsS -X POST "$HOST/leetcode/problems/reverse-string/submit?competitionId=$COMP_ID" \
+REVERSE="$(curl -fsS -X POST "$HOST/leetcode/problems/reverse-string/submit?competitionId=$COMP_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"language": "javascript", "code": "var reverseString = function(s) { return s.reverse(); };"}'
+  -d '{"language": "javascript", "code": "var reverseString = function(s) { return s.reverse(); };"}')"
+REVERSE_ID="$(printf '%s' "$REVERSE" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')"
+test -n "$REVERSE_ID" || { echo "Missing submission id: $REVERSE" >&2; exit 1; }
+poll_submission "$REVERSE_ID" ACCEPTED
 
 echo
 echo "7. Fetch Leaderboard"
-curl -fsS -X GET "$HOST/leetcode/competitions/$COMP_ID/leaderboard" \
-  -H "Authorization: Bearer $TOKEN"
+LEADERBOARD="$(curl -fsS -X GET "$HOST/leetcode/competitions/$COMP_ID/leaderboard" \
+  -H "Authorization: Bearer $TOKEN")"
+printf '%s' "$LEADERBOARD" | grep -F "\"username\":\"$USER\"" >/dev/null || {
+  echo "Leaderboard does not contain $USER: $LEADERBOARD" >&2
+  exit 1
+}
+printf '%s' "$LEADERBOARD" | grep -F '"solvedCount":2' >/dev/null || {
+  echo "Leaderboard does not show two solved problems: $LEADERBOARD" >&2
+  exit 1
+}
 
 echo
 echo "Smoke test completed successfully."

@@ -70,6 +70,13 @@
   - [x] Competitions & Leaderboards (T018-T021)
   - [x] Plug Kit (T022-T024)
   - [x] Integration Demo auth + leetcode (T025-T029)
+- [ ] **012 professional service communication** — [tasks](specs/012-professional-service-communication/tasks.md)
+  - [ ] Shared contracts, outbox/inbox, retry/DLQ, telemetry (T001-T012)
+  - [ ] Posts → event-driven search projection (T013-T022)
+  - [ ] Governed comment/media target lifecycle (T023-T030)
+  - [ ] Durable media lifecycle and immutable user identity (T031-T039)
+  - [ ] BFF/API composition and remaining domain events (T040-T047)
+  - [ ] Failure tests, operations, migration cleanup, final demo (T048-T056)
 
 ## Done (pre-plan foundation)
 

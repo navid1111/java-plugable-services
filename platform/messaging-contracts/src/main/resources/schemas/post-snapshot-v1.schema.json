@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/post-snapshot-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["postId","authorUserId","authorUsername","content","visibility","createdAt","updatedAt"],
+  "properties": {
+    "postId":{"type":"string","minLength":1},
+    "authorUserId":{"type":"string","minLength":1},
+    "authorUsername":{"type":"string","minLength":1},
+    "content":{"type":"string","minLength":1,"maxLength":280},
+    "visibility":{"enum":["PUBLIC","FOLLOWERS","PRIVATE"]},
+    "createdAt":{"type":"string","format":"date-time"},
+    "updatedAt":{"type":"string","format":"date-time"}
+  }
+}

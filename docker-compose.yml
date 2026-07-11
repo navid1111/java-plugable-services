@@ -138,8 +138,8 @@ services:
   tweeter-service:
     profiles: ["tweeter"]
     build:
-      context: ./tweeter-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: tweeter-service/Dockerfile
     container_name: tweeter-service
     depends_on:
       posts-db:
@@ -224,8 +224,8 @@ services:
   post-search-service:
     profiles: ["post-search"]
     build:
-      context: ./post-search-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: post-search-service/Dockerfile
     container_name: post-search-service
     depends_on:
       post-search-db:
