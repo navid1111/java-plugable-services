@@ -29,6 +29,9 @@ public class Post {
     @Column(name = "author_username", nullable = false, length = 100)
     private String authorUsername;
 
+    @Column(name = "author_user_id")
+    private String authorUserId;
+
     @Column(nullable = false, length = 280)
     private String content;
 
@@ -49,10 +52,13 @@ public class Post {
         // required by JPA
     }
 
-    public Post(String authorUsername, String content) {
+    public Post(String authorUserId, String authorUsername, String content) {
+        this.authorUserId = authorUserId;
         this.authorUsername = authorUsername;
         this.content = content;
     }
+
+    public Post(String authorUsername, String content) { this(null, authorUsername, content); }
 
     @PrePersist
     void onCreate() {
@@ -72,6 +78,7 @@ public class Post {
     public String getAuthorUsername() {
         return authorUsername;
     }
+    public String getAuthorUserId() { return authorUserId; }
 
     public String getContent() {
         return content;

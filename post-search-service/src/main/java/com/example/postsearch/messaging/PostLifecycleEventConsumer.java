@@ -47,7 +47,7 @@ public class PostLifecycleEventConsumer {
         String postId = requiredText(payload, "postId");
         switch (eventType) {
             case EventTypes.POST_CREATED_V1, EventTypes.POST_UPDATED_V1 ->
-                    search.applyPostSnapshot(postId, requiredText(payload, "authorUsername"),
+                    search.applyPostSnapshot(postId, optionalText(payload, "authorUserId"), requiredText(payload, "authorUsername"),
                             requiredText(payload, "content"),
                             Instant.parse(requiredText(payload, "createdAt")), version);
             case EventTypes.POST_DELETED_V1 ->
@@ -61,5 +61,8 @@ public class PostLifecycleEventConsumer {
         String value = node.path(field).asText();
         if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " is required");
         return value;
+    }
+    private String optionalText(JsonNode node, String field) {
+        String value = node.path(field).asText(); return value == null || value.isBlank() ? null : value;
     }
 }

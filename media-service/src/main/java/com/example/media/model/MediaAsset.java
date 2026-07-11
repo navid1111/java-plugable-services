@@ -37,6 +37,9 @@ public class MediaAsset {
     @Column(name = "uploader_username", nullable = false, length = 100)
     private String uploaderUsername;
 
+    @Column(name = "uploader_user_id")
+    private String uploaderUserId;
+
     @Column(name = "public_id", nullable = false, length = 500)
     private String publicId;
 
@@ -114,6 +117,8 @@ public class MediaAsset {
         this.altText = altText;
     }
 
+    public void assignUploaderUserId(String userId) { this.uploaderUserId = userId; }
+
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
@@ -140,6 +145,7 @@ public class MediaAsset {
     public String getUploaderUsername() {
         return uploaderUsername;
     }
+    public String getUploaderUserId() { return uploaderUserId; }
 
     public String getPublicId() {
         return publicId;

@@ -11,6 +11,7 @@ public class MediaUploadIntent {
     public enum Status { PENDING, COMPLETED, FAILED, EXPIRED }
     @Id private UUID id;
     private String ownerUsername;
+    private String ownerUserId;
     private String targetType;
     private String targetId;
     private String idempotencyKey;
@@ -28,6 +29,8 @@ public class MediaUploadIntent {
         this.resourceType=resourceType; this.format=format; this.maxBytes=maxBytes;
         this.publicId=publicId; this.expiresAt=expiresAt; status=Status.PENDING;
     }
+    public void assignOwnerUserId(String userId) { ownerUserId = userId; }
+    public String getOwnerUserId(){return ownerUserId;}
     public UUID getId(){return id;} public String getOwnerUsername(){return ownerUsername;}
     public String getTargetType(){return targetType;} public String getTargetId(){return targetId;}
     public String getResourceType(){return resourceType;} public String getFormat(){return format;}

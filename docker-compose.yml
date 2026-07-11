@@ -92,11 +92,13 @@ services:
   auth-service:
     profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media"]
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: auth-service/Dockerfile
     container_name: auth-service
     depends_on:
       users-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       # Datasource -> the app's own Postgres
@@ -108,6 +110,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_EXPIRATION_MINUTES: "60"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
     expose:
       - "8080"   # reachable only inside kong-net, via Kong
     healthcheck:

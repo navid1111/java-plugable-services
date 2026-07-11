@@ -49,6 +49,12 @@ public class MediaUploadIntentService {
     @Transactional
     public IntentResult create(String owner, String type, String targetId, String idempotencyKey,
             String resourceType, String format, long requestedBytes) {
+        return create(null, owner, type, targetId, idempotencyKey, resourceType, format, requestedBytes);
+    }
+
+    @Transactional
+    public IntentResult create(String ownerUserId, String owner, String type, String targetId, String idempotencyKey,
+            String resourceType, String format, long requestedBytes) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) throw new IllegalArgumentException("idempotencyKey is required");
         var existing = intents.findByOwnerUsernameAndIdempotencyKey(owner, idempotencyKey.trim());
         if (existing.isPresent()) return result(existing.get());
@@ -63,6 +69,7 @@ public class MediaUploadIntentService {
         UUID id = UUID.randomUUID();
         MediaUploadIntent intent = new MediaUploadIntent(id, owner, type, targetId, idempotencyKey.trim(),
                 resource, normalizedFormat, limit, "intent-" + id, Instant.now().plus(Duration.ofMinutes(15)));
+        intent.assignOwnerUserId(ownerUserId);
         intents.save(intent); return result(intent);
     }
 
@@ -82,6 +89,7 @@ public class MediaUploadIntentService {
         MediaAsset asset = assets.saveAndFlush(new MediaAsset(intent.getTargetType(), intent.getTargetId(), owner,
                 result.publicId(), result.resourceType(), result.format(), result.secureUrl(), result.secureUrl(),
                 result.originalFilename(), result.bytes(), result.width(), result.height(), result.durationSeconds(), null, null));
+        asset.assignUploaderUserId(intent.getOwnerUserId());
         intent.complete(asset.getId()); intents.save(intent);
         emitCompletedLifecycle(asset);
         return asset;
@@ -101,7 +109,8 @@ public class MediaUploadIntentService {
     private void emitCompletedLifecycle(MediaAsset asset) {
         String id = asset.getId().toString();
         write(EventTypes.MEDIA_UPLOADED_V1, "media", id, 1,
-                new MediaUploaded(id, "legacy:" + asset.getUploaderUsername(), asset.getTargetType(),
+                new MediaUploaded(id, asset.getUploaderUserId() == null
+                        ? "legacy:" + asset.getUploaderUsername() : asset.getUploaderUserId(), asset.getTargetType(),
                         asset.getTargetId(), asset.getResourceType() + "/" + asset.getFormat(),
                         asset.getBytes(), asset.getSecureUrl(), asset.getCreatedAt()));
         write(EventTypes.MEDIA_PROCESSING_COMPLETED_V1, "media", id, 2,

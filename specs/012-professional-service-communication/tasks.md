@@ -50,8 +50,8 @@
 - [x] T033 Publish media uploaded/processed/failed/deleted events transactionally. **Verify:** consumers observe one effective lifecycle per media ID.
 - [x] T034 Implement durable media delete worker for Cloudinary with retry/DLQ and reconciliation. **Verify:** provider outage followed by recovery removes the object exactly effectively once.
 - [x] T035 Add immutable UUID/ULID `userId` to auth and place it in JWT `sub`; retain username as display claim. **Verify:** login/me contracts expose stable ID and username.
-- [ ] T036 Add user registered/profile-updated/deactivated events without credentials or tokens. **Verify:** schema and log tests prove sensitive fields never leave auth.
-- [ ] T037 Add nullable `userId` columns to service tables and dual-write during migration. **Verify:** new records contain stable ID while old tokens remain temporarily compatible.
+- [x] T036 Add user registered/profile-updated/deactivated events without credentials or tokens. **Verify:** schema and log tests prove sensitive fields never leave auth.
+- [x] T037 Add nullable `userId` columns to service tables and dual-write during migration. **Verify:** new records contain stable ID while old tokens remain temporarily compatible.
 - [ ] T038 Backfill username references using an audited auth export and switch reads/contracts to user ID. **Verify:** row counts and unresolved-reference report pass.
 - [ ] T039 Remove username as relational identity after compatibility period. **Verify:** username rename requires no cross-service database updates.
 

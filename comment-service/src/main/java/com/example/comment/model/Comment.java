@@ -33,6 +33,9 @@ public class Comment {
     @Column(name = "author_username", nullable = false, length = 100)
     private String authorUsername;
 
+    @Column(name = "author_user_id")
+    private String authorUserId;
+
     @Column(nullable = false, length = 500)
     private String content;
 
@@ -43,11 +46,15 @@ public class Comment {
         // required by JPA
     }
 
-    public Comment(String targetType, String targetId, String authorUsername, String content) {
+    public Comment(String targetType, String targetId, String authorUserId, String authorUsername, String content) {
         this.targetType = targetType;
         this.targetId = targetId;
+        this.authorUserId = authorUserId;
         this.authorUsername = authorUsername;
         this.content = content;
+    }
+    public Comment(String targetType, String targetId, String authorUsername, String content) {
+        this(targetType, targetId, null, authorUsername, content);
     }
 
     @PrePersist
@@ -72,6 +79,7 @@ public class Comment {
     public String getAuthorUsername() {
         return authorUsername;
     }
+    public String getAuthorUserId() { return authorUserId; }
 
     public String getContent() {
         return content;

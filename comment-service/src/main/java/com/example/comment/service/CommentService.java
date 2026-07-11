@@ -41,6 +41,11 @@ public class CommentService {
 
     @Transactional
     public Comment create(String authorUsername, String targetType, String targetId, String content) {
+        return create(null, authorUsername, targetType, targetId, content);
+    }
+
+    @Transactional
+    public Comment create(String authorUserId, String authorUsername, String targetType, String targetId, String content) {
         String author = requireText(authorUsername, "author username");
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
@@ -49,7 +54,7 @@ public class CommentService {
         if (trimmed.length() > MAX_CONTENT_LENGTH) {
             throw new IllegalArgumentException("content must be 500 characters or fewer");
         }
-        return comments.save(new Comment(type, id, author, trimmed));
+        return comments.save(new Comment(type, id, authorUserId, author, trimmed));
     }
 
     @Transactional(readOnly = true)

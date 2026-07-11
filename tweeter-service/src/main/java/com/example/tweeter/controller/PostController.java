@@ -95,8 +95,8 @@ public class PostController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody CreatePostRequest body) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            Post post = posts.create(username, body.content().trim());
+            var identity = jwtHelper.extractIdentity(authorization);
+            Post post = posts.create(identity.userId(), identity.username(), body.content().trim());
             return ResponseEntity.status(HttpStatus.CREATED).body(PostResponse.from(post));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
@@ -128,9 +128,9 @@ public class PostController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable String username) {
         try {
-            String follower = jwtHelper.extractUsername(authorization);
-            posts.follow(follower, username);
-            return ResponseEntity.ok(Map.of("followerUsername", follower, "followeeUsername", username));
+            var identity = jwtHelper.extractIdentity(authorization);
+            posts.follow(identity.userId(), identity.username(), username);
+            return ResponseEntity.ok(Map.of("followerUsername", identity.username(), "followeeUsername", username));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
         }

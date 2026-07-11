@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.Version;
 import java.util.UUID;
 
 /**
@@ -30,6 +31,13 @@ public class User {
     /** BCrypt hash — never the plaintext password. */
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     protected User() {
         // required by JPA
@@ -60,4 +68,8 @@ public class User {
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
+    public boolean isActive() { return active; }
+    public void rename(String username) { this.username = username; }
+    public void deactivate() { this.active = false; }
+    public long getVersion() { return version; }
 }

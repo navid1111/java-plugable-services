@@ -81,8 +81,8 @@ public class CommentController {
             @PathVariable String targetId,
             @Valid @RequestBody CreateCommentRequest body) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            Comment comment = comments.create(username, targetType, targetId, body.content());
+            var identity = jwtHelper.extractIdentity(authorization);
+            Comment comment = comments.create(identity.userId(), identity.username(), targetType, targetId, body.content());
             return ResponseEntity.status(HttpStatus.CREATED).body(CommentResponse.from(comment));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());

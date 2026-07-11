@@ -50,11 +50,16 @@ public class PostService {
 
     @Transactional
     public Post create(String authorUsername, String content) {
+        return create(null, authorUsername, content);
+    }
+
+    @Transactional
+    public Post create(String authorUserId, String authorUsername, String content) {
         String trimmed = requireText(content, "content");
         if (trimmed.length() > 280) {
             throw new IllegalArgumentException("content must be 280 characters or fewer");
         }
-        Post post = posts.saveAndFlush(new Post(authorUsername, trimmed));
+        Post post = posts.saveAndFlush(new Post(authorUserId, authorUsername, trimmed));
         emitSnapshot(EventTypes.POST_CREATED_V1, post);
         return post;
     }
@@ -103,7 +108,7 @@ public class PostService {
     }
 
     private void emitSnapshot(String eventType, Post post) {
-        emit(eventType, post, new PostSnapshot(post.getId().toString(), null, post.getAuthorUsername(),
+        emit(eventType, post, new PostSnapshot(post.getId().toString(), post.getAuthorUserId(), post.getAuthorUsername(),
                 post.getContent(), "public", post.getCreatedAt(), post.getUpdatedAt()));
     }
 
@@ -136,12 +141,17 @@ public class PostService {
 
     @Transactional
     public void follow(String followerUsername, String followeeUsername) {
+        follow(null, followerUsername, followeeUsername);
+    }
+
+    @Transactional
+    public void follow(String followerUserId, String followerUsername, String followeeUsername) {
         String follower = requireText(followerUsername, "follower username");
         String followee = requireText(followeeUsername, "followee username");
         if (follower.equals(followee)) {
             throw new IllegalArgumentException("cannot follow yourself");
         }
-        if (follows.insertIfMissing(follower, followee) == 1) {
+        if (follows.insertIfMissing(followerUserId, follower, followee) == 1) {
             emitFollow(EventTypes.FOLLOW_CREATED_V1, follower, followee);
         }
     }

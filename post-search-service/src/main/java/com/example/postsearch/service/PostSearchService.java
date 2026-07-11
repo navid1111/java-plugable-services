@@ -116,9 +116,16 @@ public class PostSearchService {
     @Transactional
     public boolean applyPostSnapshot(String postId, String authorUsername, String content,
             Instant createdAt, long aggregateVersion) {
+        return applyPostSnapshot(postId, null, authorUsername, content, createdAt, aggregateVersion);
+    }
+
+    @Transactional
+    public boolean applyPostSnapshot(String postId, String authorUserId, String authorUsername, String content,
+            Instant createdAt, long aggregateVersion) {
         SearchDocument existing = documents.findByTargetTypeAndTargetId("post", postId).orElse(null);
         if (existing != null && aggregateVersion <= existing.getAggregateVersion()) return false;
         SearchDocument document = upsertDocument("post", postId, authorUsername, content, createdAt);
+        document.assignAuthorUserId(authorUserId);
         document.applyVersion(aggregateVersion);
         documents.save(document);
         return true;

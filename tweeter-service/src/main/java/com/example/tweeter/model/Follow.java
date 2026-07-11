@@ -31,8 +31,14 @@ public class Follow {
     @Column(name = "follower_username", nullable = false, length = 100)
     private String followerUsername;
 
+    @Column(name = "follower_user_id")
+    private String followerUserId;
+
     @Column(name = "followee_username", nullable = false, length = 100)
     private String followeeUsername;
+
+    @Column(name = "followee_user_id")
+    private String followeeUserId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -60,6 +66,8 @@ public class Follow {
     public String getFollowerUsername() {
         return followerUsername;
     }
+    public String getFollowerUserId() { return followerUserId; }
+    public String getFolloweeUserId() { return followeeUserId; }
 
     public String getFolloweeUsername() {
         return followeeUsername;

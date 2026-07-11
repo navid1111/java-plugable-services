@@ -30,7 +30,7 @@ public class PostProjectionRebuildService {
         this.token = token;
     }
 
-    public record ExportedPost(String postId, String authorUsername, String content,
+    public record ExportedPost(String postId, String authorUserId, String authorUsername, String content,
             Instant createdAt, Instant updatedAt, Instant deletedAt, long aggregateVersion) {}
     public record ExportPage(List<ExportedPost> items, long checkpoint, boolean hasMore) {}
     public record RebuildResult(long checkpoint, int pages, int records, boolean complete) {}
@@ -66,7 +66,7 @@ public class PostProjectionRebuildService {
         transactions.executeWithoutResult(status -> {
             for (ExportedPost post : page.items()) {
                 if (post.deletedAt() == null) {
-                    search.applyPostSnapshot(post.postId(), post.authorUsername(), post.content(),
+                    search.applyPostSnapshot(post.postId(), post.authorUserId(), post.authorUsername(), post.content(),
                             post.createdAt(), post.aggregateVersion());
                 } else {
                     search.deletePostProjection(post.postId(), post.aggregateVersion(), post.deletedAt());

@@ -2,7 +2,7 @@ services:
   rabbitmq:
     image: rabbitmq:4.1-management-alpine
     container_name: rabbitmq
-    profiles: ["leetcode", "tweeter", "post-search", "comments", "media", "chat", "booking"]
+    profiles: ["auth", "leetcode", "tweeter", "post-search", "comments", "media", "chat", "booking"]
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_ADMIN_USERNAME:-platform}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}

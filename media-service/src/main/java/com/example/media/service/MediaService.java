@@ -78,6 +78,13 @@ public class MediaService {
             MultipartFile file,
             String caption,
             String altText) {
+        return upload(null, uploaderUsername, targetType, targetId, file, caption, altText);
+    }
+
+    @Transactional
+    public MediaAsset upload(
+            String uploaderUserId, String uploaderUsername, String targetType, String targetId,
+            MultipartFile file, String caption, String altText) {
         String uploader = requireText(uploaderUsername, "username");
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
@@ -108,6 +115,7 @@ public class MediaService {
                     upload.durationSeconds(),
                     trimmedCaption,
                     trimmedAltText);
+            asset.assignUploaderUserId(uploaderUserId);
             return assets.save(asset);
         } catch (RuntimeException e) {
             try {

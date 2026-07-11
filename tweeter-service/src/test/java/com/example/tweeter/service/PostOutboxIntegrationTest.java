@@ -21,7 +21,7 @@ import com.example.platform.messaging.support.OutboxMessageRepository;
 import com.example.tweeter.repository.PostRepository;
 import com.example.tweeter.repository.FollowRepository;
 
-@SpringBootTest
+@SpringBootTest(properties = "platform.messaging.outbox.scheduling-enabled=false")
 @Testcontainers(disabledWithoutDocker = true)
 class PostOutboxIntegrationTest {
 
@@ -52,13 +52,15 @@ class PostOutboxIntegrationTest {
 
     @Test
     void committedPostAlwaysHasCreatedEventInOutbox() {
-        var post = posts.create("alice", "hello from a transaction");
+        String userId = java.util.UUID.randomUUID().toString();
+        var post = posts.create(userId, "alice", "hello from a transaction");
 
         assertThat(postRepository.findById(post.getId())).isPresent();
+        assertThat(post.getAuthorUserId()).isEqualTo(userId);
         assertThat(outboxRepository.findAll()).singleElement().satisfies(message -> {
             assertThat(message.getEventType()).isEqualTo(EventTypes.POST_CREATED_V1);
             assertThat(message.getAggregateId()).isEqualTo(post.getId().toString());
-            assertThat(message.getPayload()).contains("hello from a transaction", "alice");
+            assertThat(message.getPayload()).contains("hello from a transaction", "alice", userId);
         });
     }
 

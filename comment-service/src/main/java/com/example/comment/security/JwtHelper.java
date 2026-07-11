@@ -1,37 +1,10 @@
 package com.example.comment.security;
-
-import java.util.Base64;
-
 import org.springframework.stereotype.Component;
-
-import tools.jackson.databind.JsonNode;
+import com.example.platform.messaging.support.JwtIdentity;
 import tools.jackson.databind.ObjectMapper;
-
-@Component
-public class JwtHelper {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    public String extractUsername(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        String[] chunks = token.split("\\.");
-        if (chunks.length < 2) {
-            throw new IllegalArgumentException("Invalid JWT format");
-        }
-
-        try {
-            String payload = new String(Base64.getUrlDecoder().decode(chunks[1]));
-            JsonNode jsonNode = objectMapper.readTree(payload);
-            JsonNode subject = jsonNode.get("sub");
-            if (subject == null || subject.asText().isBlank()) {
-                throw new IllegalArgumentException("Missing subject claim");
-            }
-            return subject.asText();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to parse JWT payload", e);
-        }
-    }
+@Component public class JwtHelper {
+    private final ObjectMapper mapper;
+    public JwtHelper(ObjectMapper mapper) { this.mapper = mapper; }
+    public JwtIdentity extractIdentity(String authorization) { return JwtIdentity.parse(authorization, mapper); }
+    public String extractUsername(String authorization) { return extractIdentity(authorization).username(); }
 }

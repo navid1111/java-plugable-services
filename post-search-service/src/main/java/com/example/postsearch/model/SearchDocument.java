@@ -37,6 +37,9 @@ public class SearchDocument {
     @Column(name = "author_username", nullable = false, length = 100)
     private String authorUsername;
 
+    @Column(name = "author_user_id")
+    private String authorUserId;
+
     @Column(nullable = false, length = 2000)
     private String content;
 
@@ -77,6 +80,7 @@ public class SearchDocument {
         this.indexedAt = Instant.now();
         this.deletedAt = null;
     }
+    public void assignAuthorUserId(String userId) { this.authorUserId = userId; }
 
     public void applyVersion(long version) { this.aggregateVersion = version; }
     public void tombstone(long version, Instant when) {
@@ -105,6 +109,7 @@ public class SearchDocument {
     public String getAuthorUsername() {
         return authorUsername;
     }
+    public String getAuthorUserId() { return authorUserId; }
 
     public String getContent() {
         return content;

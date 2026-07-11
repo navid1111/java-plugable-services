@@ -96,8 +96,8 @@ public class MediaController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestBody CreateIntentRequest body) {
         try {
-            String owner = jwtHelper.extractUsername(authorization);
-            return ResponseEntity.status(HttpStatus.CREATED).body(intents.create(owner, body.targetType(),
+            var identity = jwtHelper.extractIdentity(authorization);
+            return ResponseEntity.status(HttpStatus.CREATED).body(intents.create(identity.userId(), identity.username(), body.targetType(),
                     body.targetId(), body.idempotencyKey(), body.resourceType(), body.format(), body.bytes()));
         } catch (IllegalArgumentException e) { return badRequest(e.getMessage()); }
     }
@@ -144,8 +144,8 @@ public class MediaController {
             @RequestParam(required = false) String caption,
             @RequestParam(required = false) String altText) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            MediaAsset asset = media.upload(username, targetType, targetId, file, caption, altText);
+            var identity = jwtHelper.extractIdentity(authorization);
+            MediaAsset asset = media.upload(identity.userId(), identity.username(), targetType, targetId, file, caption, altText);
             return ResponseEntity.status(HttpStatus.CREATED).body(MediaAssetResponse.from(asset));
         } catch (MediaService.PayloadTooLargeException e) {
             return error(HttpStatus.PAYLOAD_TOO_LARGE, e.getMessage());

@@ -29,10 +29,10 @@ public class InternalPostExportController {
         this.expectedToken = expectedToken.getBytes(StandardCharsets.UTF_8);
     }
 
-    public record ExportedPost(String postId, String authorUsername, String content,
+    public record ExportedPost(String postId, String authorUserId, String authorUsername, String content,
             Instant createdAt, Instant updatedAt, Instant deletedAt, long aggregateVersion) {
         static ExportedPost from(Post post) {
-            return new ExportedPost(post.getId().toString(), post.getAuthorUsername(), post.getContent(),
+            return new ExportedPost(post.getId().toString(), post.getAuthorUserId(), post.getAuthorUsername(), post.getContent(),
                     post.getCreatedAt(), post.getUpdatedAt(), post.getDeletedAt(), post.getVersion() + 1);
         }
     }
