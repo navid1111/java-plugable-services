@@ -18,6 +18,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class TargetMessagingConfiguration {
     static final String CONSUMER = "media-service.post-target.v1";
     @Bean TargetProjectionStore targetProjectionStore(TargetProjectionRepository repository) { return new TargetProjectionStore(repository); }
+    @Bean TransactionalEventWriter transactionalEventWriter(OutboxMessageRepository repository, ObjectMapper mapper) {
+        return new TransactionalEventWriter(repository, mapper);
+    }
     @Bean InboxIdempotency inboxIdempotency(InboxMessageRepository repository, TransactionOperations tx) { return new InboxIdempotency(repository, tx); }
     @Bean PostTargetEventProcessor targetProcessor(ObjectMapper mapper, InboxIdempotency inbox,
             TargetProjectionStore store, MediaDeletionService deletion) {

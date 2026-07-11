@@ -14,6 +14,7 @@ public class MediaDeletionJob {
     private int attempts;
     private Instant nextAttemptAt;
     private Instant completedAt;
+    private Instant deadLetteredAt;
     private String lastError;
     protected MediaDeletionJob() {}
     public MediaDeletionJob(MediaAsset asset, Instant now) {
@@ -25,6 +26,9 @@ public class MediaDeletionJob {
     public String getResourceType() { return resourceType; }
     public int getAttempts() { return attempts; }
     public Instant getCompletedAt() { return completedAt; }
+    public Instant getDeadLetteredAt() { return deadLetteredAt; }
     public void complete(Instant now) { completedAt = now; lastError = null; }
     public void retry(Instant at, String error) { attempts++; nextAttemptAt = at; lastError = error; }
+    public void deadLetter(Instant now, String error) { attempts++; deadLetteredAt = now; lastError = error; }
+    public void redrive(Instant now) { deadLetteredAt = null; nextAttemptAt = now; }
 }

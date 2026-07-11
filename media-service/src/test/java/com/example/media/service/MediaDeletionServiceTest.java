@@ -11,6 +11,7 @@ import com.example.media.model.MediaAsset;
 import com.example.media.model.MediaDeletionJob;
 import com.example.media.repository.MediaAssetRepository;
 import com.example.media.repository.MediaDeletionJobRepository;
+import com.example.platform.messaging.support.TransactionalEventWriter;
 
 class MediaDeletionServiceTest {
     @Test
@@ -25,13 +26,15 @@ class MediaDeletionServiceTest {
         when(asset.getDeletedAt()).thenReturn(Instant.now());
         when(jobs.existsById(7L)).thenReturn(false, true);
 
-        MediaDeletionService service = new MediaDeletionService(assets, jobs, cloudinary);
+        TransactionalEventWriter events = mock(TransactionalEventWriter.class);
+        MediaDeletionService service = new MediaDeletionService(assets, jobs, cloudinary, events);
         service.enqueue(asset);
         service.enqueue(asset);
         verify(jobs, times(1)).save(any(MediaDeletionJob.class));
+        verify(events, times(1)).write(any());
 
         MediaDeletionJob job = new MediaDeletionJob(asset, Instant.now());
-        when(jobs.findTop50ByCompletedAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(any()))
+        when(jobs.findTop50ByCompletedAtIsNullAndDeadLetteredAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(any()))
                 .thenReturn(List.of(job));
         doThrow(new RuntimeException("provider unavailable")).doNothing()
                 .when(cloudinary).destroy("cloud-id", "image");

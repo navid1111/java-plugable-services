@@ -10,22 +10,34 @@ import com.example.media.model.MediaAsset;
 import com.example.media.model.MediaDeletionJob;
 import com.example.media.repository.MediaAssetRepository;
 import com.example.media.repository.MediaDeletionJobRepository;
+import com.example.platform.messaging.support.TransactionalEventWriter;
+import com.example.platform.messaging.EventEnvelope;
+import com.example.platform.messaging.EventTypes;
+import com.example.platform.messaging.media.MediaDeleted;
+import java.util.UUID;
 
 @Service
 public class MediaDeletionService {
     private final MediaAssetRepository assets;
     private final MediaDeletionJobRepository jobs;
     private final CloudinaryClient cloudinary;
+    private final TransactionalEventWriter events;
     public MediaDeletionService(MediaAssetRepository assets, MediaDeletionJobRepository jobs,
-            CloudinaryClient cloudinary) {
-        this.assets = assets; this.jobs = jobs; this.cloudinary = cloudinary;
+            CloudinaryClient cloudinary, TransactionalEventWriter events) {
+        this.assets = assets; this.jobs = jobs; this.cloudinary = cloudinary; this.events = events;
     }
 
     @Transactional
     public void enqueue(MediaAsset asset) {
         if (asset.getDeletedAt() == null) asset.markDeleted();
         assets.save(asset);
-        if (!jobs.existsById(asset.getId())) jobs.save(new MediaDeletionJob(asset, Instant.now()));
+        if (!jobs.existsById(asset.getId())) {
+            jobs.save(new MediaDeletionJob(asset, Instant.now()));
+            events.write(EventEnvelope.fact(EventTypes.MEDIA_DELETED_V1, 1, "media-service", "media",
+                    asset.getId().toString(), 3, UUID.randomUUID(), null, null,
+                    new MediaDeleted(asset.getId().toString(), asset.getTargetType(), asset.getTargetId(),
+                            asset.getDeletedAt())));
+        }
     }
 
     @Transactional
@@ -38,15 +50,16 @@ public class MediaDeletionService {
     @Transactional
     public void drain() {
         for (MediaDeletionJob job : jobs
-                .findTop50ByCompletedAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(Instant.now())) {
+                .findTop50ByCompletedAtIsNullAndDeadLetteredAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(Instant.now())) {
             try {
                 cloudinary.destroy(job.getPublicId(), job.getResourceType());
                 job.complete(Instant.now());
             } catch (RuntimeException failure) {
                 long seconds = Math.min(3600, 1L << Math.min(job.getAttempts(), 11));
                 String message = failure.getMessage() == null ? failure.getClass().getSimpleName() : failure.getMessage();
-                job.retry(Instant.now().plus(Duration.ofSeconds(seconds)),
-                        message.substring(0, Math.min(500, message.length())));
+                String bounded = message.substring(0, Math.min(500, message.length()));
+                if (job.getAttempts() >= 9) job.deadLetter(Instant.now(), bounded);
+                else job.retry(Instant.now().plus(Duration.ofSeconds(seconds)), bounded);
             }
         }
     }
@@ -61,5 +74,12 @@ public class MediaDeletionService {
             }
         }
         return created;
+    }
+
+    @Transactional
+    public int redriveDeadLetters() {
+        var failed = jobs.findByDeadLetteredAtIsNotNull();
+        failed.forEach(job -> job.redrive(Instant.now()));
+        return failed.size();
     }
 }

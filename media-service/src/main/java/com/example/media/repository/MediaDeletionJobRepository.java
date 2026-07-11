@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.media.model.MediaDeletionJob;
 
 public interface MediaDeletionJobRepository extends JpaRepository<MediaDeletionJob, Long> {
-    List<MediaDeletionJob> findTop50ByCompletedAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(Instant now);
+    List<MediaDeletionJob> findTop50ByCompletedAtIsNullAndDeadLetteredAtIsNullAndNextAttemptAtLessThanEqualOrderByNextAttemptAt(Instant now);
+    List<MediaDeletionJob> findByDeadLetteredAtIsNotNull();
 }

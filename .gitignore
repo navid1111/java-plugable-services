@@ -38,3 +38,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Generated Graphify indexes, reports, visualizations, and caches
+graphify-out/

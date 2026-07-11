@@ -60,6 +60,20 @@ public class CloudinaryClient {
             Double durationSeconds) {
     }
 
+    public record DirectUploadAuthorization(String uploadUrl, String apiKey, long timestamp,
+            String signature, String publicId, String folder) {}
+
+    public DirectUploadAuthorization authorizeDirectUpload(String resourceType, String publicId) {
+        requireConfigured();
+        long timestamp = Instant.now().getEpochSecond();
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("public_id", publicId);
+        params.put("timestamp", String.valueOf(timestamp));
+        if (!uploadFolder.isBlank()) params.put("folder", uploadFolder);
+        return new DirectUploadAuthorization(API_BASE + "/" + urlEncodePath(cloudName) + "/"
+                + resourceType + "/upload", apiKey, timestamp, sign(params), publicId, uploadFolder);
+    }
+
     public UploadResult upload(MultipartFile file, String resourceType) {
         requireConfigured();
         String boundary = "media-service-" + UUID.randomUUID();

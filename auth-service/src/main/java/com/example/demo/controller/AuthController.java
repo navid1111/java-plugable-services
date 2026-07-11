@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,11 +65,12 @@ public class AuthController {
         return users.findByUsername(body.username())
                 .filter(u -> passwordEncoder.matches(body.password(), u.getPasswordHash()))
                 .map(u -> {
-                    String token = jwtService.issueToken(u.getUsername());
+                    String token = jwtService.issueToken(u);
                     return ResponseEntity.ok(Map.of(
                             "access_token", token,
                             "token_type", "Bearer",
-                            "expires_in_minutes", jwtService.getExpirationMinutes()));
+                            "expires_in_minutes", jwtService.getExpirationMinutes(),
+                            "userId", u.getUserId().toString(), "username", u.getUsername()));
                 })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "invalid username or password")));
@@ -81,12 +83,18 @@ public class AuthController {
         }
         try {
             String token = authorization.substring(7);
-            String username = jwtService.extractUsername(token);
-            return users.findByUsername(username)
-                    .map(u -> ResponseEntity.ok(Map.of("id", u.getId(), "username", u.getUsername())))
+            JwtService.Identity identity = jwtService.extractIdentity(token);
+            var user = findIdentity(identity);
+            return user
+                    .map(u -> ResponseEntity.ok(Map.of("userId", u.getUserId().toString(), "username", u.getUsername())))
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "user not found")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "invalid or expired token"));
         }
+    }
+
+    private java.util.Optional<User> findIdentity(JwtService.Identity identity) {
+        try { return users.findByUserId(UUID.fromString(identity.subject())); }
+        catch (IllegalArgumentException legacyToken) { return users.findByUsername(identity.subject()); }
     }
 }

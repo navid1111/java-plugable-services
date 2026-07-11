@@ -15,13 +15,16 @@ public final class EventTypes {
     public static final String COMMENT_CREATED_V1 = "comment.created.v1";
     public static final String COMMENT_DELETED_V1 = "comment.deleted.v1";
     public static final String MEDIA_UPLOADED_V1 = "media.uploaded.v1";
+    public static final String MEDIA_PROCESSING_COMPLETED_V1 = "media.processing-completed.v1";
+    public static final String MEDIA_PROCESSING_FAILED_V1 = "media.processing-failed.v1";
     public static final String MEDIA_DELETED_V1 = "media.deleted.v1";
 
     public static final Set<String> REGISTERED = Set.of(
             POST_CREATED_V1, POST_UPDATED_V1, POST_DELETED_V1,
             POST_LIKE_COUNT_CHANGED_V1, FOLLOW_CREATED_V1, FOLLOW_DELETED_V1,
             USER_REGISTERED_V1, USER_PROFILE_UPDATED_V1, USER_DEACTIVATED_V1,
-            COMMENT_CREATED_V1, COMMENT_DELETED_V1, MEDIA_UPLOADED_V1, MEDIA_DELETED_V1);
+            COMMENT_CREATED_V1, COMMENT_DELETED_V1, MEDIA_UPLOADED_V1,
+            MEDIA_PROCESSING_COMPLETED_V1, MEDIA_PROCESSING_FAILED_V1, MEDIA_DELETED_V1);
 
     private EventTypes() {}
 }
