@@ -1,0 +1,1477 @@
+{
+  ".github/modernize/java-upgrade/hooks/scripts/recordToolUse.ps1": {
+    "mtime": 1783776321.3040588,
+    "ast_hash": "9ecf230451dfd20ff4e0a2a01e80a4e6",
+    "semantic_hash": "9ecf230451dfd20ff4e0a2a01e80a4e6"
+  },
+  ".github/modernize/java-upgrade/hooks/scripts/recordToolUse.sh": {
+    "mtime": 1783776321.3055532,
+    "ast_hash": "e25ae501603ce6bf738198f5ce32ba83",
+    "semantic_hash": "e25ae501603ce6bf738198f5ce32ba83"
+  },
+  "app-builder/agent-backend/app/__init__.py": {
+    "mtime": 1783618671.7921894,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "app-builder/agent-backend/app/agent.py": {
+    "mtime": 1783641065.2566082,
+    "ast_hash": "91b730763cff8e8efeae06c7104c2e3e",
+    "semantic_hash": "91b730763cff8e8efeae06c7104c2e3e"
+  },
+  "app-builder/agent-backend/app/catalog.py": {
+    "mtime": 1783625752.2756896,
+    "ast_hash": "5e67a3889c6de456a0212c85e2ceb9b5",
+    "semantic_hash": "5e67a3889c6de456a0212c85e2ceb9b5"
+  },
+  "app-builder/agent-backend/app/chat_store.py": {
+    "mtime": 1783641065.2566082,
+    "ast_hash": "bb3df760ec04e2fb035d54b562295c74",
+    "semantic_hash": "bb3df760ec04e2fb035d54b562295c74"
+  },
+  "app-builder/agent-backend/app/config.py": {
+    "mtime": 1783623965.5258157,
+    "ast_hash": "1a33dba0b88c598a8a614c8f0bf78bb8",
+    "semantic_hash": "1a33dba0b88c598a8a614c8f0bf78bb8"
+  },
+  "app-builder/agent-backend/app/events.py": {
+    "mtime": 1783618551.453198,
+    "ast_hash": "0d8cb7cb5a2cd7c39caf64ce83b15b4c",
+    "semantic_hash": "0d8cb7cb5a2cd7c39caf64ce83b15b4c"
+  },
+  "app-builder/agent-backend/app/main.py": {
+    "mtime": 1783620604.132053,
+    "ast_hash": "74ef75ffe408e4fb6dfe2ed7c0c18b36",
+    "semantic_hash": "74ef75ffe408e4fb6dfe2ed7c0c18b36"
+  },
+  "app-builder/agent-backend/app/routes.py": {
+    "mtime": 1783641065.2566082,
+    "ast_hash": "4b46125715ea92f2727bb6deb568e0a3",
+    "semantic_hash": "4b46125715ea92f2727bb6deb568e0a3"
+  },
+  "app-builder/agent-backend/app/sessions.py": {
+    "mtime": 1783641065.2566082,
+    "ast_hash": "3a9cfba06ca42bb0ffc950f907d80faa",
+    "semantic_hash": "3a9cfba06ca42bb0ffc950f907d80faa"
+  },
+  "app-builder/agent-backend/app/ui.py": {
+    "mtime": 1783641065.2566082,
+    "ast_hash": "54ff1c5c21b11e02dffd227e35a4c1c9",
+    "semantic_hash": "54ff1c5c21b11e02dffd227e35a4c1c9"
+  },
+  "app-builder/agent-backend/app/workspace.py": {
+    "mtime": 1783625669.5256953,
+    "ast_hash": "df695d35cba996dc2de032c6125ed790",
+    "semantic_hash": "df695d35cba996dc2de032c6125ed790"
+  },
+  "app-builder/agent-backend/workspaces/lets-make-a-small-leetcode-like-608e/verify-backend.sh": {
+    "mtime": 1783751673.5977988,
+    "ast_hash": "5328de9d6061e09a7e43562336907390",
+    "semantic_hash": "5328de9d6061e09a7e43562336907390"
+  },
+  "app-builder/agent-backend/workspaces/make-me-a-platform-like-leetcode-7747/verify-backend.sh": {
+    "mtime": 1783641065.2578645,
+    "ast_hash": "78d7f46efb6f31e3c3c67b0e3aff348b",
+    "semantic_hash": "78d7f46efb6f31e3c3c67b0e3aff348b"
+  },
+  "app-builder/agent-backend/workspaces/make-me-a-platform-like-leetcode-f71d/app.js": {
+    "mtime": 1783641065.258411,
+    "ast_hash": "c8d23267b72991521111b65d9c30124e",
+    "semantic_hash": "c8d23267b72991521111b65d9c30124e"
+  },
+  "app-builder/agent-backend/workspaces/make-me-a-platform-like-leetcode-f71d/verify-backend.sh": {
+    "mtime": 1783641065.2586083,
+    "ast_hash": "78d7f46efb6f31e3c3c67b0e3aff348b",
+    "semantic_hash": "78d7f46efb6f31e3c3c67b0e3aff348b"
+  },
+  "app-builder/agent-backend/workspaces/make-me-a-social-media-app-like-8447/verify-backend.sh": {
+    "mtime": 1783625897.003963,
+    "ast_hash": "78d7f46efb6f31e3c3c67b0e3aff348b",
+    "semantic_hash": "78d7f46efb6f31e3c3c67b0e3aff348b"
+  },
+  "app-builder/agent-backend/workspaces/make-me-a-youtube-clone-d726/verify-backend.sh": {
+    "mtime": 1783625756.852027,
+    "ast_hash": "78d7f46efb6f31e3c3c67b0e3aff348b",
+    "semantic_hash": "78d7f46efb6f31e3c3c67b0e3aff348b"
+  },
+  "app-builder/agent-backend/workspaces/verify-scaffold-grounding-bd21/verify-backend.sh": {
+    "mtime": 1783625825.0424116,
+    "ast_hash": "78d7f46efb6f31e3c3c67b0e3aff348b",
+    "semantic_hash": "78d7f46efb6f31e3c3c67b0e3aff348b"
+  },
+  "app-builder/pom.xml": {
+    "mtime": 1783618417.7532074,
+    "ast_hash": "f21d4915e3b322c9e0cc4124c31c9370",
+    "semantic_hash": "f21d4915e3b322c9e0cc4124c31c9370"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/AppBuilderApplication.java": {
+    "mtime": 1783614708.0944693,
+    "ast_hash": "ecd6e32f38c12e78920dae571947d726",
+    "semantic_hash": "ecd6e32f38c12e78920dae571947d726"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/CapabilityAssessment.java": {
+    "mtime": 1783614708.0964692,
+    "ast_hash": "e406fe0467b8a4e9efcf15fd30d397e1",
+    "semantic_hash": "e406fe0467b8a4e9efcf15fd30d397e1"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/CapabilityAssessmentRequest.java": {
+    "mtime": 1783616172.5513659,
+    "ast_hash": "55a57aef12f0cf05154ab7ec36498b8f",
+    "semantic_hash": "55a57aef12f0cf05154ab7ec36498b8f"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/EndpointScanner.java": {
+    "mtime": 1783618430.2002065,
+    "ast_hash": "c0718388fdb4a8233c9be4a8cc2a143d",
+    "semantic_hash": "c0718388fdb4a8233c9be4a8cc2a143d"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/PlugCatalogController.java": {
+    "mtime": 1783618442.3882055,
+    "ast_hash": "19d45e4a99932f412ebd65f547d59c04",
+    "semantic_hash": "19d45e4a99932f412ebd65f547d59c04"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/PlugCatalogService.java": {
+    "mtime": 1783641065.2356083,
+    "ast_hash": "7d0b0724243ad167becb6cb28b15f2fe",
+    "semantic_hash": "7d0b0724243ad167becb6cb28b15f2fe"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/PlugDescriptor.java": {
+    "mtime": 1783614708.0954692,
+    "ast_hash": "d259e72865fac5da396c88ae1202780b",
+    "semantic_hash": "d259e72865fac5da396c88ae1202780b"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/catalog/PlugStatus.java": {
+    "mtime": 1783614708.0954692,
+    "ast_hash": "6beb594b0616e1d5ab5fd5368c3d3b4b",
+    "semantic_hash": "6beb594b0616e1d5ab5fd5368c3d3b4b"
+  },
+  "app-builder/src/main/java/com/example/appbuilder/ui/UiController.java": {
+    "mtime": 1783641065.2356083,
+    "ast_hash": "42e588b5c4eec2dfbaa7e382a1845e94",
+    "semantic_hash": "42e588b5c4eec2dfbaa7e382a1845e94"
+  },
+  "app-builder/src/test/java/com/example/appbuilder/catalog/PlugCatalogApiTest.java": {
+    "mtime": 1783641065.2586083,
+    "ast_hash": "de0a59c4017af10d1643b699ba958f35",
+    "semantic_hash": "de0a59c4017af10d1643b699ba958f35"
+  },
+  "app-builder/src/test/java/com/example/appbuilder/catalog/PlugCatalogControllerTest.java": {
+    "mtime": 1783641065.2586083,
+    "ast_hash": "a7a7b5b499be0a357d1172425bf8fcb6",
+    "semantic_hash": "a7a7b5b499be0a357d1172425bf8fcb6"
+  },
+  "app-builder/src/test/java/com/example/appbuilder/catalog/PlugCatalogServiceTest.java": {
+    "mtime": 1783641065.2366083,
+    "ast_hash": "73d31abfc5a6006a08c8b2ee5da0bece",
+    "semantic_hash": "73d31abfc5a6006a08c8b2ee5da0bece"
+  },
+  "app-builder/src/test/java/com/example/appbuilder/ui/UiControllerTest.java": {
+    "mtime": 1783616086.5343719,
+    "ast_hash": "f23c75acea0d3dff9f2256c9d579494b",
+    "semantic_hash": "f23c75acea0d3dff9f2256c9d579494b"
+  },
+  "auth-service/mvnw": {
+    "mtime": 1783071953.0,
+    "ast_hash": "ab50dd89da7da2346b28003352eeeeeb",
+    "semantic_hash": "ab50dd89da7da2346b28003352eeeeeb"
+  },
+  "auth-service/plug/kong-setup.sh": {
+    "mtime": 1783625573.873702,
+    "ast_hash": "82ee20902dc7ac3cfb2749c8ca467b31",
+    "semantic_hash": "82ee20902dc7ac3cfb2749c8ca467b31"
+  },
+  "auth-service/plug/smoke.sh": {
+    "mtime": 1783416284.5154788,
+    "ast_hash": "a8b73b83b510f63351859bf925982502",
+    "semantic_hash": "a8b73b83b510f63351859bf925982502"
+  },
+  "auth-service/pom.xml": {
+    "mtime": 1783641065.2366083,
+    "ast_hash": "353d600bf90b4be492d4cc2e4b90a557",
+    "semantic_hash": "353d600bf90b4be492d4cc2e4b90a557"
+  },
+  "auth-service/src/main/java/com/example/demo/DemoApplication.java": {
+    "mtime": 1783071953.0,
+    "ast_hash": "a1c20030818c18f9e87eab4b82da3583",
+    "semantic_hash": "a1c20030818c18f9e87eab4b82da3583"
+  },
+  "auth-service/src/main/java/com/example/demo/config/SecurityConfig.java": {
+    "mtime": 1783194095.0831501,
+    "ast_hash": "6a0c513aaf940fd9a1e680ef5bcd0b71",
+    "semantic_hash": "6a0c513aaf940fd9a1e680ef5bcd0b71"
+  },
+  "auth-service/src/main/java/com/example/demo/controller/AuthController.java": {
+    "mtime": 1783416028.9774969,
+    "ast_hash": "fe002a7d00926bdf11ff5f65bb46d02d",
+    "semantic_hash": "fe002a7d00926bdf11ff5f65bb46d02d"
+  },
+  "auth-service/src/main/java/com/example/demo/controller/HealthController.java": {
+    "mtime": 1783194104.4340389,
+    "ast_hash": "109cb842e0a52a16981938d100cc6770",
+    "semantic_hash": "109cb842e0a52a16981938d100cc6770"
+  },
+  "auth-service/src/main/java/com/example/demo/model/User.java": {
+    "mtime": 1783194082.5220273,
+    "ast_hash": "423e3b666adce25306c9b335a4a46e9b",
+    "semantic_hash": "423e3b666adce25306c9b335a4a46e9b"
+  },
+  "auth-service/src/main/java/com/example/demo/repository/UserRepository.java": {
+    "mtime": 1783194085.37784,
+    "ast_hash": "12decf99245d5985efa094f66bdb1412",
+    "semantic_hash": "12decf99245d5985efa094f66bdb1412"
+  },
+  "auth-service/src/main/java/com/example/demo/service/JwtService.java": {
+    "mtime": 1783416030.9844966,
+    "ast_hash": "4a8b7e12d7b6c840587438c993249258",
+    "semantic_hash": "4a8b7e12d7b6c840587438c993249258"
+  },
+  "auth-service/src/test/java/com/example/demo/DemoApplicationTests.java": {
+    "mtime": 1783071953.0,
+    "ast_hash": "6488f76a9be66ad2a78982e34b4aa6ca",
+    "semantic_hash": "6488f76a9be66ad2a78982e34b4aa6ca"
+  },
+  "booking-service/plug/kong-setup.sh": {
+    "mtime": 1783641065.2376165,
+    "ast_hash": "edc58106f29da8f13b036b9110fb0378",
+    "semantic_hash": "edc58106f29da8f13b036b9110fb0378"
+  },
+  "booking-service/plug/smoke.sh": {
+    "mtime": 1783641065.2377386,
+    "ast_hash": "555711a67158a65100ad83e3cf190cdf",
+    "semantic_hash": "555711a67158a65100ad83e3cf190cdf"
+  },
+  "booking-service/pom.xml": {
+    "mtime": 1783778981.9589396,
+    "ast_hash": "ef0168e7ac5c3c611ba280256ed24a75",
+    "semantic_hash": "ef0168e7ac5c3c611ba280256ed24a75"
+  },
+  "booking-service/src/main/java/com/example/booking/BookingApplication.java": {
+    "mtime": 1783641065.238116,
+    "ast_hash": "267a6d5cbe972a4a4a4aea684f352741",
+    "semantic_hash": "267a6d5cbe972a4a4a4aea684f352741"
+  },
+  "booking-service/src/main/java/com/example/booking/config/BookingDataInitializer.java": {
+    "mtime": 1783641065.238274,
+    "ast_hash": "4ba5de0b9edea8a668de05a65c688930",
+    "semantic_hash": "4ba5de0b9edea8a668de05a65c688930"
+  },
+  "booking-service/src/main/java/com/example/booking/config/BookingMessagingConfig.java": {
+    "mtime": 1783779234.386957,
+    "ast_hash": "375a6a28dbb2e45f6039b33c9d793b3a",
+    "semantic_hash": "375a6a28dbb2e45f6039b33c9d793b3a"
+  },
+  "booking-service/src/main/java/com/example/booking/config/BookingOutboxRelayConfig.java": {
+    "mtime": 1783779115.090496,
+    "ast_hash": "46d972d97e912a3c7f682ee14022efea",
+    "semantic_hash": "46d972d97e912a3c7f682ee14022efea"
+  },
+  "booking-service/src/main/java/com/example/booking/controller/BookingController.java": {
+    "mtime": 1783641065.238274,
+    "ast_hash": "2436978b6ba61d298cae32b90f4ff099",
+    "semantic_hash": "2436978b6ba61d298cae32b90f4ff099"
+  },
+  "booking-service/src/main/java/com/example/booking/controller/HealthController.java": {
+    "mtime": 1783641065.2385664,
+    "ast_hash": "b519f11cd1c9709d9e12077bf6dcd1f2",
+    "semantic_hash": "b519f11cd1c9709d9e12077bf6dcd1f2"
+  },
+  "booking-service/src/main/java/com/example/booking/messaging/BookingEventPayloads.java": {
+    "mtime": 1783779003.4848692,
+    "ast_hash": "c6b773fd15c5aabcf2ce0b7eb2b514cf",
+    "semantic_hash": "c6b773fd15c5aabcf2ce0b7eb2b514cf"
+  },
+  "booking-service/src/main/java/com/example/booking/messaging/BookingEventPublisher.java": {
+    "mtime": 1783779020.794695,
+    "ast_hash": "e3b25821e4e94d65ae6199c47e04dffb",
+    "semantic_hash": "e3b25821e4e94d65ae6199c47e04dffb"
+  },
+  "booking-service/src/main/java/com/example/booking/messaging/BookingEventTypes.java": {
+    "mtime": 1783778995.6863015,
+    "ast_hash": "a80ba30121c5c9cb5c64fdca4549ed51",
+    "semantic_hash": "a80ba30121c5c9cb5c64fdca4549ed51"
+  },
+  "booking-service/src/main/java/com/example/booking/model/Booking.java": {
+    "mtime": 1783641065.2386084,
+    "ast_hash": "31a1b3d1c604d7cab7d43490f9fe7fa3",
+    "semantic_hash": "31a1b3d1c604d7cab7d43490f9fe7fa3"
+  },
+  "booking-service/src/main/java/com/example/booking/model/Resource.java": {
+    "mtime": 1783641065.2387853,
+    "ast_hash": "07186def86379351813314d6d78e0313",
+    "semantic_hash": "07186def86379351813314d6d78e0313"
+  },
+  "booking-service/src/main/java/com/example/booking/model/Slot.java": {
+    "mtime": 1783641065.2387853,
+    "ast_hash": "69618e239d50e32db1965cb880a3be1c",
+    "semantic_hash": "69618e239d50e32db1965cb880a3be1c"
+  },
+  "booking-service/src/main/java/com/example/booking/repository/BookingRepository.java": {
+    "mtime": 1783641065.2387853,
+    "ast_hash": "f15ca51e99ba84a24d097a76e6127d59",
+    "semantic_hash": "f15ca51e99ba84a24d097a76e6127d59"
+  },
+  "booking-service/src/main/java/com/example/booking/repository/ResourceRepository.java": {
+    "mtime": 1783641065.2390394,
+    "ast_hash": "429b89b580df3ac78ab41048b8118115",
+    "semantic_hash": "429b89b580df3ac78ab41048b8118115"
+  },
+  "booking-service/src/main/java/com/example/booking/repository/SlotRepository.java": {
+    "mtime": 1783641065.2390394,
+    "ast_hash": "c561e0a18709b1a9361408de77de3c4d",
+    "semantic_hash": "c561e0a18709b1a9361408de77de3c4d"
+  },
+  "booking-service/src/main/java/com/example/booking/security/JwtHelper.java": {
+    "mtime": 1783641065.2390394,
+    "ast_hash": "9be2c0b9f80703465c070de58198d85b",
+    "semantic_hash": "9be2c0b9f80703465c070de58198d85b"
+  },
+  "booking-service/src/main/java/com/example/booking/service/BookingService.java": {
+    "mtime": 1783779049.4656122,
+    "ast_hash": "0bd7651c20de3219ba064a29a470bbdb",
+    "semantic_hash": "0bd7651c20de3219ba064a29a470bbdb"
+  },
+  "booking-service/src/test/java/com/example/booking/BookingEventsComponentTest.java": {
+    "mtime": 1783779179.914857,
+    "ast_hash": "1a362eb820429d1ef300612503a82d1e",
+    "semantic_hash": "1a362eb820429d1ef300612503a82d1e"
+  },
+  "comment-service/plug/kong-setup.sh": {
+    "mtime": 1783625574.099553,
+    "ast_hash": "3814ead11ebc9b3e1799a73ee06e17c3",
+    "semantic_hash": "3814ead11ebc9b3e1799a73ee06e17c3"
+  },
+  "comment-service/plug/smoke.sh": {
+    "mtime": 1783584485.906603,
+    "ast_hash": "ae00e8f72c4dfe64a8bea634fb1bf147",
+    "semantic_hash": "ae00e8f72c4dfe64a8bea634fb1bf147"
+  },
+  "comment-service/pom.xml": {
+    "mtime": 1783777531.6289732,
+    "ast_hash": "f0f2d033570da05ff2fd57e79ec3adb5",
+    "semantic_hash": "f0f2d033570da05ff2fd57e79ec3adb5"
+  },
+  "comment-service/src/main/java/com/example/comment/CommentApplication.java": {
+    "mtime": 1783778012.6539392,
+    "ast_hash": "431c236c33e230d941d49716f097291f",
+    "semantic_hash": "431c236c33e230d941d49716f097291f"
+  },
+  "comment-service/src/main/java/com/example/comment/controller/CommentController.java": {
+    "mtime": 1783778106.6149328,
+    "ast_hash": "c5554cb882e1fae78fe5af1998213368",
+    "semantic_hash": "c5554cb882e1fae78fe5af1998213368"
+  },
+  "comment-service/src/main/java/com/example/comment/controller/HealthController.java": {
+    "mtime": 1783584401.466609,
+    "ast_hash": "8cb26a241c062811cb7b1907ae311e2f",
+    "semantic_hash": "8cb26a241c062811cb7b1907ae311e2f"
+  },
+  "comment-service/src/main/java/com/example/comment/messaging/TargetMessagingConfiguration.java": {
+    "mtime": 1783778012.6539392,
+    "ast_hash": "119762f67f76fe4934711909e254dc2a",
+    "semantic_hash": "119762f67f76fe4934711909e254dc2a"
+  },
+  "comment-service/src/main/java/com/example/comment/model/Comment.java": {
+    "mtime": 1783584401.749609,
+    "ast_hash": "d6df00cc7e0a5f77dc83ef47b1af1f84",
+    "semantic_hash": "d6df00cc7e0a5f77dc83ef47b1af1f84"
+  },
+  "comment-service/src/main/java/com/example/comment/repository/CommentRepository.java": {
+    "mtime": 1783778106.6129327,
+    "ast_hash": "8dc9431af62dded62d4466b780515d65",
+    "semantic_hash": "8dc9431af62dded62d4466b780515d65"
+  },
+  "comment-service/src/main/java/com/example/comment/security/JwtHelper.java": {
+    "mtime": 1783584401.607609,
+    "ast_hash": "74e99da457b53ecbd0eb586de464c8c0",
+    "semantic_hash": "74e99da457b53ecbd0eb586de464c8c0"
+  },
+  "comment-service/src/main/java/com/example/comment/service/CommentService.java": {
+    "mtime": 1783778106.6139326,
+    "ast_hash": "02f9505cb5906520ea8595bc34706879",
+    "semantic_hash": "02f9505cb5906520ea8595bc34706879"
+  },
+  "examples/facebook/server.mjs": {
+    "mtime": 1783448257.6192214,
+    "ast_hash": "9a43704aeb39fbfc3f68da14e3ff38a3",
+    "semantic_hash": "9a43704aeb39fbfc3f68da14e3ff38a3"
+  },
+  "examples/facebook/smoke.sh": {
+    "mtime": 1783641065.2406085,
+    "ast_hash": "03ac77a5e813fddc32b4557a69995691",
+    "semantic_hash": "03ac77a5e813fddc32b4557a69995691"
+  },
+  "examples/facebook/ws-send.mjs": {
+    "mtime": 1783448168.8272276,
+    "ast_hash": "3232e42eb72862b86eea3da15b1dc841",
+    "semantic_hash": "3232e42eb72862b86eea3da15b1dc841"
+  },
+  "examples/leetcode-standalone/smoke.sh": {
+    "mtime": 1783753475.5626717,
+    "ast_hash": "d76bb2bbf15ccaf43a2354858c865f40",
+    "semantic_hash": "d76bb2bbf15ccaf43a2354858c865f40"
+  },
+  "examples/media-standalone/smoke.sh": {
+    "mtime": 1783591755.6670897,
+    "ast_hash": "64ef1925700054b22b074ea2ce0145e0",
+    "semantic_hash": "64ef1925700054b22b074ea2ce0145e0"
+  },
+  "examples/post-search-standalone/smoke.sh": {
+    "mtime": 1783587940.8503592,
+    "ast_hash": "d0e862a674d474a1a3d4bedcdad51f6a",
+    "semantic_hash": "d0e862a674d474a1a3d4bedcdad51f6a"
+  },
+  "graphify-out.old/.graphify_detect.json": {
+    "mtime": 1783641065.2414014,
+    "ast_hash": "bba99e7e3baee319a2e7890c3e6e3ff7",
+    "semantic_hash": "bba99e7e3baee319a2e7890c3e6e3ff7"
+  },
+  "graphify-out.old/cache/stat-index.json": {
+    "mtime": 1783788145.133224,
+    "ast_hash": "19faff83131f19f3c494cbe3e1958e18",
+    "semantic_hash": "19faff83131f19f3c494cbe3e1958e18"
+  },
+  "kong/setup-booking.sh": {
+    "mtime": 1783641065.2416084,
+    "ast_hash": "331df45c2cfd2b12e3e39b3907c5c780",
+    "semantic_hash": "331df45c2cfd2b12e3e39b3907c5c780"
+  },
+  "kong/setup-chat.sh": {
+    "mtime": 1783625575.219702,
+    "ast_hash": "77ce1f701459c77383e77ea63586baa1",
+    "semantic_hash": "77ce1f701459c77383e77ea63586baa1"
+  },
+  "kong/setup-comments.sh": {
+    "mtime": 1783625574.776702,
+    "ast_hash": "4f05107bbe692c6193a7a2de4a3ee32b",
+    "semantic_hash": "4f05107bbe692c6193a7a2de4a3ee32b"
+  },
+  "kong/setup-core.sh": {
+    "mtime": 1783751673.5977988,
+    "ast_hash": "47e853c5cb8ffe7e9c2cdc1064c0ca20",
+    "semantic_hash": "47e853c5cb8ffe7e9c2cdc1064c0ca20"
+  },
+  "kong/setup-leetcode.sh": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "2e3856c31fa5b6efaafc971888093601",
+    "semantic_hash": "2e3856c31fa5b6efaafc971888093601"
+  },
+  "kong/setup-media.sh": {
+    "mtime": 1783625574.888702,
+    "ast_hash": "65795e3779c09e59d3561ded8b076272",
+    "semantic_hash": "65795e3779c09e59d3561ded8b076272"
+  },
+  "kong/setup-post-search.sh": {
+    "mtime": 1783625575.000702,
+    "ast_hash": "f83ba5d568ecdfed516ce6a30411b9f5",
+    "semantic_hash": "f83ba5d568ecdfed516ce6a30411b9f5"
+  },
+  "kong/setup-tweeter.sh": {
+    "mtime": 1783625574.664702,
+    "ast_hash": "369b174a12d2e0eb5cf64a4e2fbf047d",
+    "semantic_hash": "369b174a12d2e0eb5cf64a4e2fbf047d"
+  },
+  "leetcode-service/plug/kong-setup.sh": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "2a8e82ba32435e4f24095196d2f6660b",
+    "semantic_hash": "2a8e82ba32435e4f24095196d2f6660b"
+  },
+  "leetcode-service/pom.xml": {
+    "mtime": 1783787368.6671457,
+    "ast_hash": "a6fa46950611733fb044d3f47a5572b9",
+    "semantic_hash": "a6fa46950611733fb044d3f47a5572b9"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/LeetcodeApplication.java": {
+    "mtime": 1783750168.4389052,
+    "ast_hash": "f094a4e2c5b541eeabfb871d8db2ba55",
+    "semantic_hash": "f094a4e2c5b541eeabfb871d8db2ba55"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/config/LeetcodeMessagingConfig.java": {
+    "mtime": 1783787531.5391667,
+    "ast_hash": "e0fdcfae9ffa78698a8361fbe7b874ee",
+    "semantic_hash": "e0fdcfae9ffa78698a8361fbe7b874ee"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/controller/CompetitionController.java": {
+    "mtime": 1783750462.9878845,
+    "ast_hash": "9e37983d84ea043a306187156d90ab24",
+    "semantic_hash": "9e37983d84ea043a306187156d90ab24"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/controller/LeetcodeController.java": {
+    "mtime": 1783750187.7669039,
+    "ast_hash": "9e22babd157bc13d8c103810e00bc094",
+    "semantic_hash": "9e22babd157bc13d8c103810e00bc094"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/EventEnvelope.java": {
+    "mtime": 1783750078.5709116,
+    "ast_hash": "328e2b0ff83b5817b7d8b5d448d3068b",
+    "semantic_hash": "328e2b0ff83b5817b7d8b5d448d3068b"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/JudgeCompleted.java": {
+    "mtime": 1783750078.9549115,
+    "ast_hash": "a1d56d6337fa359bbd53a65c2a9ac460",
+    "semantic_hash": "a1d56d6337fa359bbd53a65c2a9ac460"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/JudgeRequested.java": {
+    "mtime": 1783750078.7639115,
+    "ast_hash": "257146896743e60fc0e3ebca8a481541",
+    "semantic_hash": "257146896743e60fc0e3ebca8a481541"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/JudgeResultListener.java": {
+    "mtime": 1783750228.031901,
+    "ast_hash": "42655bf38f697d41d4d71edd45f26748",
+    "semantic_hash": "42655bf38f697d41d4d71edd45f26748"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/JudgeWorkerListener.java": {
+    "mtime": 1783750227.832901,
+    "ast_hash": "a8c602b8cc4a343f72c66f3a8b54916d",
+    "semantic_hash": "a8c602b8cc4a343f72c66f3a8b54916d"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/MessagingConfig.java": {
+    "mtime": 1783787571.420046,
+    "ast_hash": "0269df73648f4ecace74c6dddfd4557c",
+    "semantic_hash": "0269df73648f4ecace74c6dddfd4557c"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/messaging/OutboxPublisher.java": {
+    "mtime": 1783750168.818905,
+    "ast_hash": "86b1f0e3329a64517e6a54d16a5095a5",
+    "semantic_hash": "86b1f0e3329a64517e6a54d16a5095a5"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/Competition.java": {
+    "mtime": 1783599940.571512,
+    "ast_hash": "9882025ad51bb70b7257522872a87c25",
+    "semantic_hash": "9882025ad51bb70b7257522872a87c25"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/CompetitionProblem.java": {
+    "mtime": 1783599951.9045112,
+    "ast_hash": "8a2d10ddd076c579206a73acf0403762",
+    "semantic_hash": "8a2d10ddd076c579206a73acf0403762"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/CompetitionProblemId.java": {
+    "mtime": 1783599953.921511,
+    "ast_hash": "5860c6f37413765329956a6f41f4e136",
+    "semantic_hash": "5860c6f37413765329956a6f41f4e136"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/OutboxEvent.java": {
+    "mtime": 1783750079.1519115,
+    "ast_hash": "aea9053081d49a251c6c09ca8e8a26ab",
+    "semantic_hash": "aea9053081d49a251c6c09ca8e8a26ab"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/Problem.java": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "d4361e81e3c390be9163931d08f4e459",
+    "semantic_hash": "d4361e81e3c390be9163931d08f4e459"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/model/Submission.java": {
+    "mtime": 1783751155.1298356,
+    "ast_hash": "b62d609c62f789830c8b84ec8d647af7",
+    "semantic_hash": "b62d609c62f789830c8b84ec8d647af7"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/repository/CompetitionProblemRepository.java": {
+    "mtime": 1783750168.2479053,
+    "ast_hash": "a2850efcf0ec27d3ff6815ffa0a8e4c4",
+    "semantic_hash": "a2850efcf0ec27d3ff6815ffa0a8e4c4"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/repository/CompetitionRepository.java": {
+    "mtime": 1783599973.7135096,
+    "ast_hash": "171435cf8fc9df70eeba3f14a1bba0d8",
+    "semantic_hash": "171435cf8fc9df70eeba3f14a1bba0d8"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/repository/OutboxEventRepository.java": {
+    "mtime": 1783750079.3439114,
+    "ast_hash": "3d778903c36840b28ac4ca824ad8b2ef",
+    "semantic_hash": "3d778903c36840b28ac4ca824ad8b2ef"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/repository/ProblemRepository.java": {
+    "mtime": 1783599966.1425102,
+    "ast_hash": "aa7e4752471701df4e8588de3470b848",
+    "semantic_hash": "aa7e4752471701df4e8588de3470b848"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/repository/SubmissionRepository.java": {
+    "mtime": 1783750168.0509052,
+    "ast_hash": "6c64ca54e2d68315b8169bb29e4b8c66",
+    "semantic_hash": "6c64ca54e2d68315b8169bb29e4b8c66"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/security/JwtHelper.java": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "46a3a548f26ad19a8b85bf5cb040795f",
+    "semantic_hash": "46a3a548f26ad19a8b85bf5cb040795f"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/DatabaseSeeder.java": {
+    "mtime": 1783599977.7475092,
+    "ast_hash": "de41e4757751da0855d854d4c4f41ec0",
+    "semantic_hash": "de41e4757751da0855d854d4c4f41ec0"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/SubmissionService.java": {
+    "mtime": 1783750168.6289053,
+    "ast_hash": "de1534b628f876fe0f5b7ccbb706d648",
+    "semantic_hash": "de1534b628f876fe0f5b7ccbb706d648"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/CodeRunner.java": {
+    "mtime": 1783600011.1095068,
+    "ast_hash": "bcb67d7811b651c417945fb78e32b7d2",
+    "semantic_hash": "bcb67d7811b651c417945fb78e32b7d2"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/DockerProcessRunner.java": {
+    "mtime": 1783751256.0918283,
+    "ast_hash": "cb241e00caf00f4bf70b745be92eb817",
+    "semantic_hash": "cb241e00caf00f4bf70b745be92eb817"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/ExecutionResult.java": {
+    "mtime": 1783600005.8835073,
+    "ast_hash": "37375ee9512d907ea93016c5bc08d6be",
+    "semantic_hash": "37375ee9512d907ea93016c5bc08d6be"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/JavaRunner.java": {
+    "mtime": 1783600043.1805046,
+    "ast_hash": "42bd4177f6bd329e270fd104dc92388e",
+    "semantic_hash": "42bd4177f6bd329e270fd104dc92388e"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/JavascriptRunner.java": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "dde01d9f610afe7a61f2b2d255d606ed",
+    "semantic_hash": "dde01d9f610afe7a61f2b2d255d606ed"
+  },
+  "leetcode-service/src/main/java/com/example/leetcode/service/runner/PythonRunner.java": {
+    "mtime": 1783641065.2596083,
+    "ast_hash": "00b70f5971192257e7eec7e1491aa440",
+    "semantic_hash": "00b70f5971192257e7eec7e1491aa440"
+  },
+  "leetcode-service/src/main/resources/db/migration/V1__leetcode_schema.sql": {
+    "mtime": 1783750077.8509116,
+    "ast_hash": "3f408987c2d81c1e044a9beeac4d33c8",
+    "semantic_hash": "3f408987c2d81c1e044a9beeac4d33c8"
+  },
+  "leetcode-service/src/main/resources/db/migration/V2__messaging_support.sql": {
+    "mtime": 1783787519.0925791,
+    "ast_hash": "103cc5398d8308c71df4b86b79327fd4",
+    "semantic_hash": "103cc5398d8308c71df4b86b79327fd4"
+  },
+  "maintenance/analysis/dump_ast.py": {
+    "mtime": 1783641065.2458959,
+    "ast_hash": "d0e7b7d8a51a6e38988a9b3d29601b3b",
+    "semantic_hash": "d0e7b7d8a51a6e38988a9b3d29601b3b"
+  },
+  "media-service/plug/kong-setup.sh": {
+    "mtime": 1783625574.209702,
+    "ast_hash": "e6f14daeed32aef8c46feb5effc9f755",
+    "semantic_hash": "e6f14daeed32aef8c46feb5effc9f755"
+  },
+  "media-service/plug/smoke.sh": {
+    "mtime": 1783591671.6210957,
+    "ast_hash": "b43c44adecc9c6d450ae1358f74ce499",
+    "semantic_hash": "b43c44adecc9c6d450ae1358f74ce499"
+  },
+  "media-service/pom.xml": {
+    "mtime": 1783777926.7419453,
+    "ast_hash": "3d178cbb209f545e8a0aa1b925d9434b",
+    "semantic_hash": "3d178cbb209f545e8a0aa1b925d9434b"
+  },
+  "media-service/src/main/java/com/example/media/MediaApplication.java": {
+    "mtime": 1783777893.3469477,
+    "ast_hash": "6d20ed14935148f57c59444bbdd8250f",
+    "semantic_hash": "6d20ed14935148f57c59444bbdd8250f"
+  },
+  "media-service/src/main/java/com/example/media/cloudinary/CloudinaryClient.java": {
+    "mtime": 1783591562.6911035,
+    "ast_hash": "d2c422c69ade5478f85a9901061659aa",
+    "semantic_hash": "d2c422c69ade5478f85a9901061659aa"
+  },
+  "media-service/src/main/java/com/example/media/controller/HealthController.java": {
+    "mtime": 1783591433.9201126,
+    "ast_hash": "8951abfc31c4c359b86223d77825ae21",
+    "semantic_hash": "8951abfc31c4c359b86223d77825ae21"
+  },
+  "media-service/src/main/java/com/example/media/controller/MediaController.java": {
+    "mtime": 1783778106.6149328,
+    "ast_hash": "8a001aec8f04558b247142cfa12b0cdc",
+    "semantic_hash": "8a001aec8f04558b247142cfa12b0cdc"
+  },
+  "media-service/src/main/java/com/example/media/messaging/TargetMessagingConfiguration.java": {
+    "mtime": 1783778012.6539392,
+    "ast_hash": "4c26f5ddc796b2495f2a0dcccef2f143",
+    "semantic_hash": "4c26f5ddc796b2495f2a0dcccef2f143"
+  },
+  "media-service/src/main/java/com/example/media/model/MediaAsset.java": {
+    "mtime": 1783591434.2051125,
+    "ast_hash": "f61bb46a672af2dcc1933d2c23ee949a",
+    "semantic_hash": "f61bb46a672af2dcc1933d2c23ee949a"
+  },
+  "media-service/src/main/java/com/example/media/model/MediaDeletionJob.java": {
+    "mtime": 1783777865.5209496,
+    "ast_hash": "545c458e9ddc5af7728eaae46b506666",
+    "semantic_hash": "545c458e9ddc5af7728eaae46b506666"
+  },
+  "media-service/src/main/java/com/example/media/repository/MediaAssetRepository.java": {
+    "mtime": 1783778106.6139326,
+    "ast_hash": "a6eed8db9ee3f0c638aaeda785725e94",
+    "semantic_hash": "a6eed8db9ee3f0c638aaeda785725e94"
+  },
+  "media-service/src/main/java/com/example/media/repository/MediaDeletionJobRepository.java": {
+    "mtime": 1783777865.5209496,
+    "ast_hash": "c22bfe0142fafc11bea9e3bc389a4e66",
+    "semantic_hash": "c22bfe0142fafc11bea9e3bc389a4e66"
+  },
+  "media-service/src/main/java/com/example/media/security/JwtHelper.java": {
+    "mtime": 1783591434.0631125,
+    "ast_hash": "c2dd5c287f02b8ad262d33c4c9b0a133",
+    "semantic_hash": "c2dd5c287f02b8ad262d33c4c9b0a133"
+  },
+  "media-service/src/main/java/com/example/media/service/MediaDeletionService.java": {
+    "mtime": 1783777893.3459477,
+    "ast_hash": "df13f6584ece71c56da6fffc14f660fc",
+    "semantic_hash": "df13f6584ece71c56da6fffc14f660fc"
+  },
+  "media-service/src/main/java/com/example/media/service/MediaService.java": {
+    "mtime": 1783778106.6139326,
+    "ast_hash": "38fc9e5775bd075644c7d06d7a4c4115",
+    "semantic_hash": "38fc9e5775bd075644c7d06d7a4c4115"
+  },
+  "media-service/src/test/java/com/example/media/service/MediaDeletionServiceTest.java": {
+    "mtime": 1783777926.7434354,
+    "ast_hash": "84daa95f87ea67165e274c45bb38e024",
+    "semantic_hash": "84daa95f87ea67165e274c45bb38e024"
+  },
+  "platform/messaging-contracts/pom.xml": {
+    "mtime": 1783754781.1435795,
+    "ast_hash": "3e7e16ed02e9b6be74a725f0bad99ffc",
+    "semantic_hash": "3e7e16ed02e9b6be74a725f0bad99ffc"
+  },
+  "platform/messaging-contracts/src/main/java/com/example/platform/messaging/EventEnvelope.java": {
+    "mtime": 1783753834.4536464,
+    "ast_hash": "8246403c12894d18345ef137de3b6bf7",
+    "semantic_hash": "8246403c12894d18345ef137de3b6bf7"
+  },
+  "platform/messaging-contracts/src/main/java/com/example/platform/messaging/EventTypes.java": {
+    "mtime": 1783754824.1645765,
+    "ast_hash": "cf3a7a912d2654c3d063e34d2189196c",
+    "semantic_hash": "cf3a7a912d2654c3d063e34d2189196c"
+  },
+  "platform/messaging-contracts/src/main/java/com/example/platform/messaging/post/FollowChanged.java": {
+    "mtime": 1783753834.4546463,
+    "ast_hash": "de4e84057309ba131fc053365e918e3c",
+    "semantic_hash": "de4e84057309ba131fc053365e918e3c"
+  },
+  "platform/messaging-contracts/src/main/java/com/example/platform/messaging/post/PostDeleted.java": {
+    "mtime": 1783753834.4546463,
+    "ast_hash": "4cc47f2d27f62390b4ae50954b3c7319",
+    "semantic_hash": "4cc47f2d27f62390b4ae50954b3c7319"
+  },
+  "platform/messaging-contracts/src/main/java/com/example/platform/messaging/post/PostSnapshot.java": {
+    "mtime": 1783753834.4546463,
+    "ast_hash": "70cda1e4a5df2b1cac5f0cec19d83ba1",
+    "semantic_hash": "70cda1e4a5df2b1cac5f0cec19d83ba1"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/comment-created-v1.schema.json": {
+    "mtime": 1783754677.3315868,
+    "ast_hash": "05e063c1ee48783f43570f567cd930fd",
+    "semantic_hash": "05e063c1ee48783f43570f567cd930fd"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/event-envelope-v1.schema.json": {
+    "mtime": 1783753834.4546463,
+    "ast_hash": "403a917d3fe772774718ef3b9946d04e",
+    "semantic_hash": "403a917d3fe772774718ef3b9946d04e"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/follow-changed-v1.schema.json": {
+    "mtime": 1783754660.4515882,
+    "ast_hash": "d172ec1cdc3f25afb173be5b8e9da99e",
+    "semantic_hash": "d172ec1cdc3f25afb173be5b8e9da99e"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/media-uploaded-v1.schema.json": {
+    "mtime": 1783754671.9335873,
+    "ast_hash": "d93bb2bd39cae8a191cecc699596b6bd",
+    "semantic_hash": "d93bb2bd39cae8a191cecc699596b6bd"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/post-deleted-v1.schema.json": {
+    "mtime": 1783754655.5635884,
+    "ast_hash": "025d163b65faa4ba13a26061f4a084f2",
+    "semantic_hash": "025d163b65faa4ba13a26061f4a084f2"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/post-snapshot-v1.schema.json": {
+    "mtime": 1783753834.4546463,
+    "ast_hash": "176cd2bee6df6bb4326a6a7f0888acf5",
+    "semantic_hash": "176cd2bee6df6bb4326a6a7f0888acf5"
+  },
+  "platform/messaging-contracts/src/main/resources/schemas/user-registered-v1.schema.json": {
+    "mtime": 1783754665.2635877,
+    "ast_hash": "fc3518f1fbbb67f556cb6c476cb62a3a",
+    "semantic_hash": "fc3518f1fbbb67f556cb6c476cb62a3a"
+  },
+  "platform/messaging-contracts/src/test/java/com/example/platform/messaging/EventEnvelopeTest.java": {
+    "mtime": 1783753834.4556463,
+    "ast_hash": "4d714d4807b1eee140621899b65848c1",
+    "semantic_hash": "4d714d4807b1eee140621899b65848c1"
+  },
+  "platform/messaging-contracts/src/test/java/com/example/platform/messaging/SchemaResourceTest.java": {
+    "mtime": 1783754857.7095742,
+    "ast_hash": "1cabc31d7c3965c77bd9736547354970",
+    "semantic_hash": "1cabc31d7c3965c77bd9736547354970"
+  },
+  "platform/messaging-contracts/src/test/java/com/example/platform/messaging/SchemaValidationTest.java": {
+    "mtime": 1783754814.4635773,
+    "ast_hash": "ea91a90d884697fff019fb993c3f30b4",
+    "semantic_hash": "ea91a90d884697fff019fb993c3f30b4"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/comment-wrong-target-type.json": {
+    "mtime": 1783754770.9925802,
+    "ast_hash": "c612072a622b2084f11693f26933bac0",
+    "semantic_hash": "c612072a622b2084f11693f26933bac0"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/envelope-bad-version.json": {
+    "mtime": 1783754738.7085826,
+    "ast_hash": "671bc0a36bd0138aad092461644490f0",
+    "semantic_hash": "671bc0a36bd0138aad092461644490f0"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/envelope-missing-eventid.json": {
+    "mtime": 1783754730.8005831,
+    "ast_hash": "d946638314d34f4e5695b573f4d2288c",
+    "semantic_hash": "d946638314d34f4e5695b573f4d2288c"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/envelope-unknown-field.json": {
+    "mtime": 1783754744.368582,
+    "ast_hash": "6a59a2ac1455390fb926bdd4b43ac4d3",
+    "semantic_hash": "6a59a2ac1455390fb926bdd4b43ac4d3"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/media-missing-url.json": {
+    "mtime": 1783754765.5355806,
+    "ast_hash": "307919b65872f40914fb8685f72254f0",
+    "semantic_hash": "307919b65872f40914fb8685f72254f0"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/invalid/post-snapshot-bad-visibility.json": {
+    "mtime": 1783754751.0465817,
+    "ast_hash": "518f10bad1643947e3d3a0b1dcf86f67",
+    "semantic_hash": "518f10bad1643947e3d3a0b1dcf86f67"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/comment-created.json": {
+    "mtime": 1783754718.3925838,
+    "ast_hash": "305257f16843028452c5c7a650991bd2",
+    "semantic_hash": "305257f16843028452c5c7a650991bd2"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/follow-created.json": {
+    "mtime": 1783754698.8685853,
+    "ast_hash": "56cf78065e15a8115b0ae788c727193d",
+    "semantic_hash": "56cf78065e15a8115b0ae788c727193d"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/media-uploaded.json": {
+    "mtime": 1783754712.9825842,
+    "ast_hash": "bc26fa42e0f99b371b33d7dda21a13a1",
+    "semantic_hash": "bc26fa42e0f99b371b33d7dda21a13a1"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/post-created.json": {
+    "mtime": 1783754687.1335862,
+    "ast_hash": "8fb95fd9dd687237d19eb180eceb9320",
+    "semantic_hash": "8fb95fd9dd687237d19eb180eceb9320"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/post-deleted.json": {
+    "mtime": 1783754692.5975857,
+    "ast_hash": "f05ace2f78bf1e3184a64eb8e5d187eb",
+    "semantic_hash": "f05ace2f78bf1e3184a64eb8e5d187eb"
+  },
+  "platform/messaging-contracts/src/test/resources/fixtures/valid/user-registered.json": {
+    "mtime": 1783754706.9255848,
+    "ast_hash": "d2b46b26ed36819b395161ac1c98ebe1",
+    "semantic_hash": "d2b46b26ed36819b395161ac1c98ebe1"
+  },
+  "platform/messaging-support/pom.xml": {
+    "mtime": 1783766833.0797286,
+    "ast_hash": "145e39ca8ad75f5f878030e5482eceea",
+    "semantic_hash": "145e39ca8ad75f5f878030e5482eceea"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/AmqpTracing.java": {
+    "mtime": 1783766702.3117378,
+    "ast_hash": "08dfb29ce4aec3d986f3fefdf5e05a9e",
+    "semantic_hash": "08dfb29ce4aec3d986f3fefdf5e05a9e"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/DeterministicProcessingException.java": {
+    "mtime": 1783766499.393752,
+    "ast_hash": "6486e967ac6cda15716737c1a47a6bd3",
+    "semantic_hash": "6486e967ac6cda15716737c1a47a6bd3"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/EventErrorClassifier.java": {
+    "mtime": 1783766524.3637505,
+    "ast_hash": "c3574cdad2f230cdffe98ec72d0d1493",
+    "semantic_hash": "c3574cdad2f230cdffe98ec72d0d1493"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/EventOutcomeRouter.java": {
+    "mtime": 1783766532.4857497,
+    "ast_hash": "571e85510bb55e8088f850c3fc24c16a",
+    "semantic_hash": "571e85510bb55e8088f850c3fc24c16a"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/EventProcessingException.java": {
+    "mtime": 1783766378.3767607,
+    "ast_hash": "5d27191f9f7b2a454eeeca1b847b73b1",
+    "semantic_hash": "5d27191f9f7b2a454eeeca1b847b73b1"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/EventPublishException.java": {
+    "mtime": 1783760971.3241425,
+    "ast_hash": "019d39a554a8cc19272e01df4a9199e7",
+    "semantic_hash": "019d39a554a8cc19272e01df4a9199e7"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/EventPublisher.java": {
+    "mtime": 1783760976.9761422,
+    "ast_hash": "effc98e9b9b1be3f54ede55b8c74ce22",
+    "semantic_hash": "effc98e9b9b1be3f54ede55b8c74ce22"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/InboxIdempotency.java": {
+    "mtime": 1783761415.234111,
+    "ast_hash": "553b8afad4a41c4911cd15b29812c4f8",
+    "semantic_hash": "553b8afad4a41c4911cd15b29812c4f8"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/InboxMessage.java": {
+    "mtime": 1783767038.582714,
+    "ast_hash": "6c2e620041ff3c9efdb738b65cf8c3a4",
+    "semantic_hash": "6c2e620041ff3c9efdb738b65cf8c3a4"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/InboxMessageRepository.java": {
+    "mtime": 1783755139.6995542,
+    "ast_hash": "0a60d403aba0110505853073ad3f41fc",
+    "semantic_hash": "0a60d403aba0110505853073ad3f41fc"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/InvalidEventSchemaException.java": {
+    "mtime": 1783766510.1767514,
+    "ast_hash": "47724df9662d3bc56b49ea078d8f2d83",
+    "semantic_hash": "47724df9662d3bc56b49ea078d8f2d83"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/LogRedactor.java": {
+    "mtime": 1783766927.086722,
+    "ast_hash": "65eefa42ab879be48aa90ac04024db6b",
+    "semantic_hash": "65eefa42ab879be48aa90ac04024db6b"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/MessageOutcome.java": {
+    "mtime": 1783766515.795751,
+    "ast_hash": "e353f5aa945a2998d7d947241d588b31",
+    "semantic_hash": "e353f5aa945a2998d7d947241d588b31"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/MessagingHeaders.java": {
+    "mtime": 1783766678.8927395,
+    "ast_hash": "31e189c0a07cd87e553e15a61d79ff51",
+    "semantic_hash": "31e189c0a07cd87e553e15a61d79ff51"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/MessagingMetrics.java": {
+    "mtime": 1783766846.7597277,
+    "ast_hash": "92accfc65c9075adde9e7fd5dc0ec801",
+    "semantic_hash": "92accfc65c9075adde9e7fd5dc0ec801"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/MessagingRetentionProperties.java": {
+    "mtime": 1783755047.8935606,
+    "ast_hash": "a6f73115b0df08c220290ca7b07502ff",
+    "semantic_hash": "a6f73115b0df08c220290ca7b07502ff"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/MessagingTopology.java": {
+    "mtime": 1783766213.8107724,
+    "ast_hash": "18952a11a60850d511df359252661a2c",
+    "semantic_hash": "18952a11a60850d511df359252661a2c"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/OutboxMessage.java": {
+    "mtime": 1783754998.9505641,
+    "ast_hash": "6c1fceb431755d77ff6ee5497c69eb49",
+    "semantic_hash": "6c1fceb431755d77ff6ee5497c69eb49"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/OutboxMessageRepository.java": {
+    "mtime": 1783761123.5541317,
+    "ast_hash": "0a34285accfe9c9da4a24f6c311cdba0",
+    "semantic_hash": "0a34285accfe9c9da4a24f6c311cdba0"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/OutboxRelay.java": {
+    "mtime": 1783761115.1331322,
+    "ast_hash": "e195db1b62831c692d0a0f7739501ef4",
+    "semantic_hash": "e195db1b62831c692d0a0f7739501ef4"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/OutboxRelayProperties.java": {
+    "mtime": 1783760984.4011416,
+    "ast_hash": "6d3c93afa4ce92128218b83751be27e0",
+    "semantic_hash": "6d3c93afa4ce92128218b83751be27e0"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/PostTargetEventProcessor.java": {
+    "mtime": 1783777865.5209496,
+    "ast_hash": "ad7f7b403dbebfae7303c5fa8ddb6ebd",
+    "semantic_hash": "ad7f7b403dbebfae7303c5fa8ddb6ebd"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/PostTargetReconciliationClient.java": {
+    "mtime": 1783777992.0069408,
+    "ast_hash": "bf7dd3d0c510234d2a8c15d8679d24a0",
+    "semantic_hash": "bf7dd3d0c510234d2a8c15d8679d24a0"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/RabbitEventPublisher.java": {
+    "mtime": 1783761050.574137,
+    "ast_hash": "b0816cce4833433eccac75167dcda906",
+    "semantic_hash": "b0816cce4833433eccac75167dcda906"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/SafeEventSerializer.java": {
+    "mtime": 1783755040.5275612,
+    "ast_hash": "0fbe95c5fbcebb0aa61d67e8e9b4976f",
+    "semantic_hash": "0fbe95c5fbcebb0aa61d67e8e9b4976f"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/SensitiveDataException.java": {
+    "mtime": 1783755028.1755621,
+    "ast_hash": "e7fae34fdad6fec01a28bf73e5807691",
+    "semantic_hash": "e7fae34fdad6fec01a28bf73e5807691"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/TargetProjection.java": {
+    "mtime": 1783777506.413975,
+    "ast_hash": "20fd0748267ede255a601313e471394b",
+    "semantic_hash": "20fd0748267ede255a601313e471394b"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/TargetProjectionRepository.java": {
+    "mtime": 1783777992.0059407,
+    "ast_hash": "0dd20ecd6e0fa33983ef0ba0a27eddc7",
+    "semantic_hash": "0dd20ecd6e0fa33983ef0ba0a27eddc7"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/TargetProjectionStore.java": {
+    "mtime": 1783777992.0069408,
+    "ast_hash": "6e4d577d5bacd3b8bb1c7778c85e9ac8",
+    "semantic_hash": "6e4d577d5bacd3b8bb1c7778c85e9ac8"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/TraceContext.java": {
+    "mtime": 1783766696.1297383,
+    "ast_hash": "07c5b0fec750bd61224146488df4c6f7",
+    "semantic_hash": "07c5b0fec750bd61224146488df4c6f7"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/TransientProcessingException.java": {
+    "mtime": 1783766493.6497526,
+    "ast_hash": "656c70637644e9a722e3c86f3f0c4893",
+    "semantic_hash": "656c70637644e9a722e3c86f3f0c4893"
+  },
+  "platform/messaging-support/src/main/java/com/example/platform/messaging/support/UnsupportedEventVersionException.java": {
+    "mtime": 1783766504.8527517,
+    "ast_hash": "5b04c3cbff24fcdcf8b5c08f3a95de41",
+    "semantic_hash": "5b04c3cbff24fcdcf8b5c08f3a95de41"
+  },
+  "platform/messaging-support/src/main/resources/db/migration/messaging/V001__messaging_support.sql": {
+    "mtime": 1783755057.35256,
+    "ast_hash": "8bb47b291116dfdad3f7b011fe9057ea",
+    "semantic_hash": "8bb47b291116dfdad3f7b011fe9057ea"
+  },
+  "platform/messaging-support/src/main/resources/db/migration/messaging/V002__target_projections.sql": {
+    "mtime": 1783777593.108969,
+    "ast_hash": "8aa035f89d2094e897573d0518a5d802",
+    "semantic_hash": "8aa035f89d2094e897573d0518a5d802"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/EventErrorClassifierTest.java": {
+    "mtime": 1783766558.388748,
+    "ast_hash": "39f9b6d1afbfbb6dc07e1ce1f3bd3d89",
+    "semantic_hash": "39f9b6d1afbfbb6dc07e1ce1f3bd3d89"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/EventOutcomeRoutingTest.java": {
+    "mtime": 1783766577.5707467,
+    "ast_hash": "a5e91281152ff0e65c3c726cbdd53642",
+    "semantic_hash": "a5e91281152ff0e65c3c726cbdd53642"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/InboxIdempotencyComponentTest.java": {
+    "mtime": 1783761483.6171062,
+    "ast_hash": "5465e82b38c7b8e1512b46208c7625a2",
+    "semantic_hash": "5465e82b38c7b8e1512b46208c7625a2"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/LogRedactorTest.java": {
+    "mtime": 1783766883.274725,
+    "ast_hash": "16d5116afb73e22bec7ae722d665259b",
+    "semantic_hash": "16d5116afb73e22bec7ae722d665259b"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/MessagingMetricsTest.java": {
+    "mtime": 1783766872.8187258,
+    "ast_hash": "658bfd3e41c262b177e23393dbaa1c6c",
+    "semantic_hash": "658bfd3e41c262b177e23393dbaa1c6c"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/MessagingSupportComponentTest.java": {
+    "mtime": 1783778045.464937,
+    "ast_hash": "b25f3c1f1495c82a7978d2b4bd40872b",
+    "semantic_hash": "b25f3c1f1495c82a7978d2b4bd40872b"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/MessagingTopologyTest.java": {
+    "mtime": 1783766265.5337687,
+    "ast_hash": "e6027f822c0059fabb56b29040dd5fb7",
+    "semantic_hash": "e6027f822c0059fabb56b29040dd5fb7"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/OutboxRelayComponentTest.java": {
+    "mtime": 1783761185.2421274,
+    "ast_hash": "44caba97565bd948909ba1cb3b845443",
+    "semantic_hash": "44caba97565bd948909ba1cb3b845443"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/RabbitEventPublisherTest.java": {
+    "mtime": 1783761272.7291212,
+    "ast_hash": "2ec1bb45523571d8c881a40014e56158",
+    "semantic_hash": "2ec1bb45523571d8c881a40014e56158"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/SafeEventSerializerTest.java": {
+    "mtime": 1783755175.8425517,
+    "ast_hash": "dc19a0b7b4f7f95e3a5e8727ed9352db",
+    "semantic_hash": "dc19a0b7b4f7f95e3a5e8727ed9352db"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/TestApp.java": {
+    "mtime": 1783755144.5365539,
+    "ast_hash": "8af23f9a8c958e3e2c7f2cf0d9721ece",
+    "semantic_hash": "8af23f9a8c958e3e2c7f2cf0d9721ece"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/TraceContextAmqpTest.java": {
+    "mtime": 1783766737.0387354,
+    "ast_hash": "cd4b8ce7dacad6878221978854cb19f3",
+    "semantic_hash": "cd4b8ce7dacad6878221978854cb19f3"
+  },
+  "platform/messaging-support/src/test/java/com/example/platform/messaging/support/TraceContextTest.java": {
+    "mtime": 1783766722.8407364,
+    "ast_hash": "f9fe3e3d033ab4ffbd3d6c535e3d937b",
+    "semantic_hash": "f9fe3e3d033ab4ffbd3d6c535e3d937b"
+  },
+  "platform/scripts/verify-event-catalog.sh": {
+    "mtime": 1783772838.5663047,
+    "ast_hash": "08dc5188eb172fa0824f68733a371fb9",
+    "semantic_hash": "08dc5188eb172fa0824f68733a371fb9"
+  },
+  "pom.xml": {
+    "mtime": 1783755187.593551,
+    "ast_hash": "24f04a572a5254c5355083dda03f082c",
+    "semantic_hash": "24f04a572a5254c5355083dda03f082c"
+  },
+  "post-search-service/plug/kong-setup.sh": {
+    "mtime": 1783625574.323702,
+    "ast_hash": "9a803588ffb71fac9092d2d5569b09e4",
+    "semantic_hash": "9a803588ffb71fac9092d2d5569b09e4"
+  },
+  "post-search-service/plug/smoke.sh": {
+    "mtime": 1783587838.7663662,
+    "ast_hash": "c6a0183f47fbec1d9aaa6c393ae44f31",
+    "semantic_hash": "c6a0183f47fbec1d9aaa6c393ae44f31"
+  },
+  "post-search-service/pom.xml": {
+    "mtime": 1783777047.9180074,
+    "ast_hash": "d2196a22e1e5a96d8325a04e02ee28c2",
+    "semantic_hash": "d2196a22e1e5a96d8325a04e02ee28c2"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/PostSearchApplication.java": {
+    "mtime": 1783774893.6831596,
+    "ast_hash": "7ff11430786fd322344ca26b42fac69b",
+    "semantic_hash": "7ff11430786fd322344ca26b42fac69b"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/controller/HealthController.java": {
+    "mtime": 1783587613.6913822,
+    "ast_hash": "8f17ba749bdcbf1f982e8809e1580d54",
+    "semantic_hash": "8f17ba749bdcbf1f982e8809e1580d54"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/controller/InternalProjectionRebuildController.java": {
+    "mtime": 1783775798.9120955,
+    "ast_hash": "ec9e3209c4aa32a5b77e8627f1c9ab74",
+    "semantic_hash": "ec9e3209c4aa32a5b77e8627f1c9ab74"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/controller/PostSearchController.java": {
+    "mtime": 1783777002.6340106,
+    "ast_hash": "58f9f70d326b5cc2a2e78aee5896de5d",
+    "semantic_hash": "58f9f70d326b5cc2a2e78aee5896de5d"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/messaging/PostLifecycleEventConsumer.java": {
+    "mtime": 1783774893.6841595,
+    "ast_hash": "2f486dd2d3286a356c18789e238b0aeb",
+    "semantic_hash": "2f486dd2d3286a356c18789e238b0aeb"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/messaging/PostProjectionMessagingConfiguration.java": {
+    "mtime": 1783774893.6841595,
+    "ast_hash": "1621072950f32d6c035bc32f52825c4f",
+    "semantic_hash": "1621072950f32d6c035bc32f52825c4f"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/model/LegacySearchDocument.java": {
+    "mtime": 1783775784.5880966,
+    "ast_hash": "bf28d2e12ac320eb24af9cc7412a6a5b",
+    "semantic_hash": "bf28d2e12ac320eb24af9cc7412a6a5b"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/model/SearchDocument.java": {
+    "mtime": 1783774844.273163,
+    "ast_hash": "21320c0eb25c7e33be8699c680d8ebc1",
+    "semantic_hash": "21320c0eb25c7e33be8699c680d8ebc1"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/model/SearchTermEntry.java": {
+    "mtime": 1783587614.1023822,
+    "ast_hash": "fe62c4a29aec76f6f6802ba84e1ee5d3",
+    "semantic_hash": "fe62c4a29aec76f6f6802ba84e1ee5d3"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/repository/LegacySearchDocumentRepository.java": {
+    "mtime": 1783775784.5890965,
+    "ast_hash": "e46d29b6ef9c4f0db8475d4f525716e5",
+    "semantic_hash": "e46d29b6ef9c4f0db8475d4f525716e5"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/repository/SearchDocumentRepository.java": {
+    "mtime": 1783774868.2721612,
+    "ast_hash": "0dc889eeac78b1a6402e85659b2440ea",
+    "semantic_hash": "0dc889eeac78b1a6402e85659b2440ea"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/repository/SearchTermEntryRepository.java": {
+    "mtime": 1783587614.3753822,
+    "ast_hash": "28c3374d4d6e550b14bbb3957a1c1728",
+    "semantic_hash": "28c3374d4d6e550b14bbb3957a1c1728"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/security/DeprecatedSearchMutationFilter.java": {
+    "mtime": 1783777002.6340106,
+    "ast_hash": "683c420da51900faf266af97b04d4293",
+    "semantic_hash": "683c420da51900faf266af97b04d4293"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/security/JwtHelper.java": {
+    "mtime": 1783587613.8263822,
+    "ast_hash": "ade84530303bad062377cca9a8c76d14",
+    "semantic_hash": "ade84530303bad062377cca9a8c76d14"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/service/PostProjectionRebuildService.java": {
+    "mtime": 1783775287.4031317,
+    "ast_hash": "abbe73e443a33529cb51743ba5a74dfe",
+    "semantic_hash": "abbe73e443a33529cb51743ba5a74dfe"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/service/PostSearchService.java": {
+    "mtime": 1783774868.2721612,
+    "ast_hash": "cc077c648f2d8249dfa4025ad9b6395d",
+    "semantic_hash": "cc077c648f2d8249dfa4025ad9b6395d"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/service/SearchShadowComparisonService.java": {
+    "mtime": 1783775784.5890965,
+    "ast_hash": "97fbc116a9b4248bacc6c25cb5382035",
+    "semantic_hash": "97fbc116a9b4248bacc6c25cb5382035"
+  },
+  "post-search-service/src/main/java/com/example/postsearch/service/Tokenizer.java": {
+    "mtime": 1783587614.5103822,
+    "ast_hash": "60913f4437b890d85c99b4709807188a",
+    "semantic_hash": "60913f4437b890d85c99b4709807188a"
+  },
+  "post-search-service/src/main/resources/db/migration/service/V1__search_projection_messaging.sql": {
+    "mtime": 1783774965.0061545,
+    "ast_hash": "dd02d9c73c07671e6c69ad9edf4e3196",
+    "semantic_hash": "dd02d9c73c07671e6c69ad9edf4e3196"
+  },
+  "post-search-service/src/main/resources/db/migration/service/V2__projection_rebuild_checkpoint.sql": {
+    "mtime": 1783775256.4801338,
+    "ast_hash": "4f4b19e2e56fff4204378ceb3cec1a7d",
+    "semantic_hash": "4f4b19e2e56fff4204378ceb3cec1a7d"
+  },
+  "post-search-service/src/main/resources/db/migration/service/V3__legacy_shadow_comparison.sql": {
+    "mtime": 1783775784.5880966,
+    "ast_hash": "46894ad20e347419452cdebb41542697",
+    "semantic_hash": "46894ad20e347419452cdebb41542697"
+  },
+  "post-search-service/src/test/java/com/example/postsearch/messaging/PostLifecycleEventConsumerIntegrationTest.java": {
+    "mtime": 1783777025.757009,
+    "ast_hash": "3d5b78cb4509d73441d2448760467461",
+    "semantic_hash": "3d5b78cb4509d73441d2448760467461"
+  },
+  "src/main/java/com/example/demo/HealthController.java": {
+    "mtime": 1783429674.6465335,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "tweeter-service/plug/kong-setup.sh": {
+    "mtime": 1783625573.985702,
+    "ast_hash": "52d1235b12a5e81375a04aadfcc89e37",
+    "semantic_hash": "52d1235b12a5e81375a04aadfcc89e37"
+  },
+  "tweeter-service/plug/smoke.sh": {
+    "mtime": 1783427219.7027068,
+    "ast_hash": "cd829982ae25c453d9dc68233a103f00",
+    "semantic_hash": "cd829982ae25c453d9dc68233a103f00"
+  },
+  "tweeter-service/pom.xml": {
+    "mtime": 1783777714.3519604,
+    "ast_hash": "def7d2ff6f3388a3f9caad46836974da",
+    "semantic_hash": "def7d2ff6f3388a3f9caad46836974da"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/TweeterApplication.java": {
+    "mtime": 1783773234.2022767,
+    "ast_hash": "5f32390df5f7077e797e81195da2855a",
+    "semantic_hash": "5f32390df5f7077e797e81195da2855a"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/controller/HealthController.java": {
+    "mtime": 1783427217.7037067,
+    "ast_hash": "bb5e17b58db50df359129bbd6d5e603a",
+    "semantic_hash": "bb5e17b58db50df359129bbd6d5e603a"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/controller/InternalPostExportController.java": {
+    "mtime": 1783775256.4801338,
+    "ast_hash": "976fef19eb67728a067a1a262ed6c827",
+    "semantic_hash": "976fef19eb67728a067a1a262ed6c827"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/controller/PostController.java": {
+    "mtime": 1783773469.84126,
+    "ast_hash": "53c1634e33973ef913ca998f8d7b106c",
+    "semantic_hash": "53c1634e33973ef913ca998f8d7b106c"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/messaging/OutboxPublisherConfiguration.java": {
+    "mtime": 1783777714.3534722,
+    "ast_hash": "2ab8c538036ee4adc99d213bb4155a19",
+    "semantic_hash": "2ab8c538036ee4adc99d213bb4155a19"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/model/Follow.java": {
+    "mtime": 1783427218.033707,
+    "ast_hash": "7ae8edcd5ee92799e99fcd052490c486",
+    "semantic_hash": "7ae8edcd5ee92799e99fcd052490c486"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/model/Post.java": {
+    "mtime": 1783772908.4452996,
+    "ast_hash": "ac584a25a811f83b32afa05b75126b48",
+    "semantic_hash": "ac584a25a811f83b32afa05b75126b48"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/repository/FollowRepository.java": {
+    "mtime": 1783427218.3637068,
+    "ast_hash": "b36824a95bec2fe0d5dfe68b6e61bcd9",
+    "semantic_hash": "b36824a95bec2fe0d5dfe68b6e61bcd9"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/repository/PostRepository.java": {
+    "mtime": 1783775256.4801338,
+    "ast_hash": "5586e1f275b26949e202ebb9592fac73",
+    "semantic_hash": "5586e1f275b26949e202ebb9592fac73"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/security/JwtHelper.java": {
+    "mtime": 1783427570.615682,
+    "ast_hash": "9417a3f6f5bd6c4adb14d07db03d87d3",
+    "semantic_hash": "9417a3f6f5bd6c4adb14d07db03d87d3"
+  },
+  "tweeter-service/src/main/java/com/example/tweeter/service/PostService.java": {
+    "mtime": 1783773543.8962548,
+    "ast_hash": "60b08d908c5d3613e09507fc55be151a",
+    "semantic_hash": "60b08d908c5d3613e09507fc55be151a"
+  },
+  "tweeter-service/src/main/resources/db/migration/service/V1__post_lifecycle.sql": {
+    "mtime": 1783773329.76227,
+    "ast_hash": "c84da555ee1d8ce4d1e7c5739de07fc9",
+    "semantic_hash": "c84da555ee1d8ce4d1e7c5739de07fc9"
+  },
+  "tweeter-service/src/main/resources/db/migration/service/V2__messaging_outbox.sql": {
+    "mtime": 1783773329.76227,
+    "ast_hash": "691954dc861570a9474d41319fea15a8",
+    "semantic_hash": "691954dc861570a9474d41319fea15a8"
+  },
+  "tweeter-service/src/test/java/com/example/tweeter/migration/PostLifecycleMigrationTest.java": {
+    "mtime": 1783773329.76327,
+    "ast_hash": "9aab10e65fadb73e7734686a80586469",
+    "semantic_hash": "9aab10e65fadb73e7734686a80586469"
+  },
+  "tweeter-service/src/test/java/com/example/tweeter/service/PostOutboxIntegrationTest.java": {
+    "mtime": 1783773556.2152538,
+    "ast_hash": "ff1e7a235c5d4fcb09ca4c856f508fe8",
+    "semantic_hash": "ff1e7a235c5d4fcb09ca4c856f508fe8"
+  },
+  "whatsapp-service/plug/kong-setup.sh": {
+    "mtime": 1783625574.549702,
+    "ast_hash": "0970e2ec1e6760fcf833cfd0a8583d7f",
+    "semantic_hash": "0970e2ec1e6760fcf833cfd0a8583d7f"
+  },
+  "whatsapp-service/plug/smoke.sh": {
+    "mtime": 1783430533.8834727,
+    "ast_hash": "48f96113de7040230b2ccdfc5c67b181",
+    "semantic_hash": "48f96113de7040230b2ccdfc5c67b181"
+  },
+  "whatsapp-service/plug/ws-smoke.mjs": {
+    "mtime": 1783431604.746397,
+    "ast_hash": "350cdd8eccdda1df9c48f8cc5e8aee75",
+    "semantic_hash": "350cdd8eccdda1df9c48f8cc5e8aee75"
+  },
+  "whatsapp-service/pom.xml": {
+    "mtime": 1783779376.527843,
+    "ast_hash": "bbe6170e4a623d3a639eed1b7efcd1af",
+    "semantic_hash": "bbe6170e4a623d3a639eed1b7efcd1af"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/WhatsappApplication.java": {
+    "mtime": 1783430422.9404805,
+    "ast_hash": "62fb7780aa399e5cb86316cde386507f",
+    "semantic_hash": "62fb7780aa399e5cb86316cde386507f"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/config/WebSocketConfig.java": {
+    "mtime": 1783430423.5170996,
+    "ast_hash": "d4d84ba4f1728e7ee9737e7b5053179c",
+    "semantic_hash": "d4d84ba4f1728e7ee9737e7b5053179c"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/config/WhatsappMessagingConfig.java": {
+    "mtime": 1783779418.21984,
+    "ast_hash": "30bf824ac1c42268c83ec3068b598ba4",
+    "semantic_hash": "30bf824ac1c42268c83ec3068b598ba4"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/config/WhatsappOutboxRelayConfig.java": {
+    "mtime": 1783779432.8136222,
+    "ast_hash": "89effa719216bd3f7679ace14723827e",
+    "semantic_hash": "89effa719216bd3f7679ace14723827e"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/controller/ChatController.java": {
+    "mtime": 1783430423.2964804,
+    "ast_hash": "93a0f1f0a36f8c6db2ae0de0345a49d8",
+    "semantic_hash": "93a0f1f0a36f8c6db2ae0de0345a49d8"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/controller/HealthController.java": {
+    "mtime": 1783430423.1624806,
+    "ast_hash": "c8e558d4e848a32068c5b439c3f7197d",
+    "semantic_hash": "c8e558d4e848a32068c5b439c3f7197d"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/messaging/ChatEventPayloads.java": {
+    "mtime": 1783779396.1582932,
+    "ast_hash": "27173c83fb5f510225f633a04ec82d87",
+    "semantic_hash": "27173c83fb5f510225f633a04ec82d87"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/messaging/ChatEventPublisher.java": {
+    "mtime": 1783779408.0408957,
+    "ast_hash": "6d1c6e0549183e028447b1b6f3cf7de9",
+    "semantic_hash": "6d1c6e0549183e028447b1b6f3cf7de9"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/messaging/ChatEventTypes.java": {
+    "mtime": 1783779384.7128508,
+    "ast_hash": "4ec24cce35d016b8d946d73b75c38e0b",
+    "semantic_hash": "4ec24cce35d016b8d946d73b75c38e0b"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/model/Chat.java": {
+    "mtime": 1783430424.0998971,
+    "ast_hash": "8ec57c64527574c049c31ba0e2cbf7bc",
+    "semantic_hash": "8ec57c64527574c049c31ba0e2cbf7bc"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/model/ChatParticipant.java": {
+    "mtime": 1783430424.2324805,
+    "ast_hash": "148b7eba5a2661629adc2ef0853bcaef",
+    "semantic_hash": "148b7eba5a2661629adc2ef0853bcaef"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/model/InboxEntry.java": {
+    "mtime": 1783430424.4964805,
+    "ast_hash": "87e27cf37aebb24e1ba6ad54be308c8d",
+    "semantic_hash": "87e27cf37aebb24e1ba6ad54be308c8d"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/model/Message.java": {
+    "mtime": 1783430424.3654804,
+    "ast_hash": "81cbd6f9f9a5ea6361269280d51b7cb5",
+    "semantic_hash": "81cbd6f9f9a5ea6361269280d51b7cb5"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/repository/ChatParticipantRepository.java": {
+    "mtime": 1783430424.8504803,
+    "ast_hash": "fbf8cd2a3bbac85620214d8cd63f6037",
+    "semantic_hash": "fbf8cd2a3bbac85620214d8cd63f6037"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/repository/ChatRepository.java": {
+    "mtime": 1783430424.7184803,
+    "ast_hash": "54265242acc428376f4ed044c7c23b30",
+    "semantic_hash": "54265242acc428376f4ed044c7c23b30"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/repository/InboxEntryRepository.java": {
+    "mtime": 1783430425.1164804,
+    "ast_hash": "30040dd5f288d56ce22ad4d5c141ba14",
+    "semantic_hash": "30040dd5f288d56ce22ad4d5c141ba14"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/repository/MessageRepository.java": {
+    "mtime": 1783430424.9824803,
+    "ast_hash": "d8976b11bf20b555973f413ec880a360",
+    "semantic_hash": "d8976b11bf20b555973f413ec880a360"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/security/JwtHandshakeInterceptor.java": {
+    "mtime": 1783430423.8744805,
+    "ast_hash": "323adcdf8095ab1eb4f8278d593c8d6b",
+    "semantic_hash": "323adcdf8095ab1eb4f8278d593c8d6b"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/security/JwtHelper.java": {
+    "mtime": 1783430423.7414806,
+    "ast_hash": "5204b85422cb2ab83083431ea478f31a",
+    "semantic_hash": "5204b85422cb2ab83083431ea478f31a"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/service/ChatService.java": {
+    "mtime": 1783779459.625435,
+    "ast_hash": "bfe51669647cde7b7fba4287ca6d69fc",
+    "semantic_hash": "bfe51669647cde7b7fba4287ca6d69fc"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/websocket/ChatWebSocketHandler.java": {
+    "mtime": 1783430425.6914804,
+    "ast_hash": "f58f130784143bc9b15aad1b0750db8a",
+    "semantic_hash": "f58f130784143bc9b15aad1b0750db8a"
+  },
+  "whatsapp-service/src/main/java/com/example/whatsapp/websocket/SessionRegistry.java": {
+    "mtime": 1783430425.5574803,
+    "ast_hash": "57b786e28ade6f0bbc33a990e9e22b99",
+    "semantic_hash": "57b786e28ade6f0bbc33a990e9e22b99"
+  },
+  "whatsapp-service/src/test/java/com/example/whatsapp/ChatEventsComponentTest.java": {
+    "mtime": 1783779497.8078344,
+    "ast_hash": "da25b4c5ad7887178add9a178550af05",
+    "semantic_hash": "da25b4c5ad7887178add9a178550af05"
+  }
+}
