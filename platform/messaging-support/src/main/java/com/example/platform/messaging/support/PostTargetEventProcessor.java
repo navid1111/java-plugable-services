@@ -11,9 +11,18 @@ public class PostTargetEventProcessor {
     private final ObjectMapper mapper;
     private final InboxIdempotency inbox;
     private final TargetProjectionStore targets;
+    private final TargetLifecycleObserver observer;
+    public interface TargetLifecycleObserver {
+        void changed(String targetType, String targetId, long version, boolean active, Instant when);
+    }
     public PostTargetEventProcessor(String consumer, ObjectMapper mapper,
             InboxIdempotency inbox, TargetProjectionStore targets) {
+        this(consumer, mapper, inbox, targets, (type, id, version, active, when) -> {});
+    }
+    public PostTargetEventProcessor(String consumer, ObjectMapper mapper,
+            InboxIdempotency inbox, TargetProjectionStore targets, TargetLifecycleObserver observer) {
         this.consumer = consumer; this.mapper = mapper; this.inbox = inbox; this.targets = targets;
+        this.observer = observer;
     }
     public boolean process(String json) {
         JsonNode event = mapper.readTree(json);
@@ -23,11 +32,15 @@ public class PostTargetEventProcessor {
         JsonNode payload = event.path("payload");
         return inbox.process(consumer, id, type, () -> {
             if (EventTypes.POST_CREATED_V1.equals(type) || EventTypes.POST_UPDATED_V1.equals(type)) {
-                targets.apply("post", required(payload, "postId"), required(payload, "authorUsername"),
-                        version, true, Instant.parse(required(payload, "updatedAt")));
+                String postId = required(payload, "postId");
+                Instant when = Instant.parse(required(payload, "updatedAt"));
+                targets.apply("post", postId, required(payload, "authorUsername"), version, true, when);
+                observer.changed("post", postId, version, true, when);
             } else if (EventTypes.POST_DELETED_V1.equals(type)) {
-                targets.apply("post", required(payload, "postId"), null, version, false,
-                        Instant.parse(required(payload, "deletedAt")));
+                String postId = required(payload, "postId");
+                Instant when = Instant.parse(required(payload, "deletedAt"));
+                targets.apply("post", postId, null, version, false, when);
+                observer.changed("post", postId, version, false, when);
             } else throw new IllegalArgumentException("unsupported target event: " + type);
         });
     }

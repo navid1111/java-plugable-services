@@ -205,6 +205,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      POST_EXPORT_BASE_URL: http://tweeter-service:8080
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
     expose:
       - "8080"
     healthcheck:
@@ -311,6 +313,8 @@ services:
       MEDIA_MAX_VIDEO_BYTES: ${MEDIA_MAX_VIDEO_BYTES:-104857600}
       MEDIA_ALLOWED_IMAGE_FORMATS: ${MEDIA_ALLOWED_IMAGE_FORMATS:-jpg,jpeg,png,gif,webp}
       MEDIA_ALLOWED_VIDEO_FORMATS: ${MEDIA_ALLOWED_VIDEO_FORMATS:-mp4,mov,webm}
+      POST_EXPORT_BASE_URL: http://tweeter-service:8080
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-dev-internal-token}
     expose:
       - "8080"
     healthcheck:

@@ -39,9 +39,9 @@
 - [x] T025 Require active target existence before comment creation. **Verify:** missing/deleted targets are rejected and existing targets succeed.
 - [x] T026 Require active target existence and visibility/owner authorization before media attachment. **Verify:** cross-user and missing-target uploads are rejected.
 - [x] T027 Define post deletion policy for comments and implement tombstone/delete processing. **Verify:** deletion is eventually reflected and replay is harmless.
-- [ ] T028 Define post deletion policy for media and enqueue durable external-object cleanup. **Verify:** metadata and Cloudinary cleanup converge after transient failure.
-- [ ] T029 Add target reconciliation comparing local projections to authoritative post export. **Verify:** injected missing/stale targets are repaired.
-- [ ] T030 Add comment/media count events or BFF summaries without cross-database reads. **Verify:** post detail counts converge and duplicate events do not inflate them.
+- [x] T028 Define post deletion policy for media and enqueue durable external-object cleanup. **Verify:** metadata and Cloudinary cleanup converge after transient failure.
+- [x] T029 Add target reconciliation comparing local projections to authoritative post export. **Verify:** injected missing/stale targets are repaired.
+- [x] T030 Add comment/media count events or BFF summaries without cross-database reads. **Verify:** post detail counts converge and duplicate events do not inflate them.
 
 ## Phase 4 — Media lifecycle and identity
 

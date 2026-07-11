@@ -36,6 +36,7 @@ public class MediaService {
     private final MediaAssetRepository assets;
     private final CloudinaryClient cloudinary;
     private final TargetProjectionStore targets;
+    private final MediaDeletionService deletion;
     private final long maxImageBytes;
     private final long maxVideoBytes;
     private final Set<String> allowedImageFormats;
@@ -45,6 +46,7 @@ public class MediaService {
             MediaAssetRepository assets,
             CloudinaryClient cloudinary,
             TargetProjectionStore targets,
+            MediaDeletionService deletion,
             @Value("${MEDIA_MAX_IMAGE_BYTES:10485760}") long maxImageBytes,
             @Value("${MEDIA_MAX_VIDEO_BYTES:104857600}") long maxVideoBytes,
             @Value("${MEDIA_ALLOWED_IMAGE_FORMATS:jpg,jpeg,png,gif,webp}") String allowedImageFormats,
@@ -52,6 +54,7 @@ public class MediaService {
         this.assets = assets;
         this.cloudinary = cloudinary;
         this.targets = targets;
+        this.deletion = deletion;
         this.maxImageBytes = maxImageBytes;
         this.maxVideoBytes = maxVideoBytes;
         this.allowedImageFormats = csvSet(allowedImageFormats);
@@ -122,6 +125,13 @@ public class MediaService {
     }
 
     @Transactional(readOnly = true)
+    public long countForActiveTarget(String targetType, String targetId) {
+        String type = requireTargetType(targetType); String id = requireTargetId(targetId);
+        targets.requireActive(type, id);
+        return assets.countByTargetTypeAndTargetIdAndDeletedAtIsNull(type, id);
+    }
+
+    @Transactional(readOnly = true)
     public MediaPage findByTarget(String targetType, String targetId, String cursor, int requestedPageSize) {
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
@@ -151,9 +161,7 @@ public class MediaService {
         if (!asset.getUploaderUsername().equals(requester)) {
             throw new ForbiddenException("cannot delete another user's media");
         }
-        cloudinary.destroy(asset.getPublicId(), asset.getResourceType());
-        asset.markDeleted();
-        assets.save(asset);
+        deletion.enqueue(asset);
     }
 
     private MediaType validateFile(MultipartFile file) {

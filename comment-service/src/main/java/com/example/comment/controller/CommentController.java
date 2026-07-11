@@ -62,6 +62,17 @@ public class CommentController {
 
     public record TargetCommentsResponse(List<CommentResponse> items, String nextCursor) {
     }
+    public record TargetCommentSummary(String targetType, String targetId, long commentCount) {}
+
+    @GetMapping("/targets/{targetType}/{targetId}/summary")
+    public ResponseEntity<?> summary(@RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable String targetType, @PathVariable String targetId) {
+        try {
+            jwtHelper.extractUsername(authorization);
+            return ResponseEntity.ok(new TargetCommentSummary(targetType, targetId,
+                    comments.countForActiveTarget(targetType, targetId)));
+        } catch (IllegalArgumentException e) { return badRequest(e.getMessage()); }
+    }
 
     @PostMapping("/targets/{targetType}/{targetId}")
     public ResponseEntity<?> create(

@@ -78,6 +78,17 @@ public class MediaController {
 
     public record TargetMediaResponse(List<MediaAssetResponse> items, String nextCursor) {
     }
+    public record TargetMediaSummary(String targetType, String targetId, long mediaCount) {}
+
+    @GetMapping("/targets/{targetType}/{targetId}/summary")
+    public ResponseEntity<?> summary(@RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable String targetType, @PathVariable String targetId) {
+        try {
+            jwtHelper.extractUsername(authorization);
+            return ResponseEntity.ok(new TargetMediaSummary(targetType, targetId,
+                    media.countForActiveTarget(targetType, targetId)));
+        } catch (IllegalArgumentException e) { return badRequest(e.getMessage()); }
+    }
 
     @PostMapping(value = "/targets/{targetType}/{targetId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> upload(

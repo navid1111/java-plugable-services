@@ -13,6 +13,8 @@ import com.example.media.model.MediaAsset;
 public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
 
     Optional<MediaAsset> findByIdAndDeletedAtIsNull(Long id);
+    List<MediaAsset> findByTargetTypeAndTargetIdAndDeletedAtIsNull(String targetType, String targetId);
+    long countByTargetTypeAndTargetIdAndDeletedAtIsNull(String targetType, String targetId);
 
     @Query(value = """
             SELECT *

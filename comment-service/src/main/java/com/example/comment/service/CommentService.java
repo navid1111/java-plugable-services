@@ -58,6 +58,13 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
+    public long countForActiveTarget(String targetType, String targetId) {
+        String type = requireTargetType(targetType); String id = requireTargetId(targetId);
+        targets.requireActive(type, id);
+        return comments.countByTargetTypeAndTargetId(type, id);
+    }
+
+    @Transactional(readOnly = true)
     public CommentPage findByTarget(String targetType, String targetId, String cursor, int requestedPageSize) {
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);

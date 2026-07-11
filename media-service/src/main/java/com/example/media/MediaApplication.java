@@ -4,12 +4,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import com.example.media.model.MediaAsset;
 import com.example.media.repository.MediaAssetRepository;
 import com.example.platform.messaging.support.TargetProjection;
 import com.example.platform.messaging.support.TargetProjectionRepository;
 
 @SpringBootApplication
+@EnableScheduling
 @EntityScan(basePackageClasses = {MediaAsset.class, TargetProjection.class})
 @EnableJpaRepositories(basePackageClasses = {MediaAssetRepository.class, TargetProjectionRepository.class})
 public class MediaApplication {

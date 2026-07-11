@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import com.example.comment.model.Comment;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+    long countByTargetTypeAndTargetId(String targetType, String targetId);
 
     @Query(value = """
             SELECT c.*

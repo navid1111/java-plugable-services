@@ -98,4 +98,23 @@ class MessagingSupportComponentTest {
         assertThrows(IllegalArgumentException.class,
                 () -> store.apply("unknown", "42", "alice", 1, true, Instant.now()));
     }
+
+    @Test
+    void targetReconciliationRepairsMissingAndStaleRows() {
+        TargetProjectionStore store = new TargetProjectionStore(targets);
+        store.apply("post", "stale", "old-owner", 1, true, Instant.now());
+        store.apply("post", "orphan", "alice", 1, true, Instant.now());
+
+        var result = store.reconcilePosts(java.util.List.of(
+                new TargetProjectionStore.AuthoritativeTarget(
+                        "stale", "new-owner", 3, true, Instant.now()),
+                new TargetProjectionStore.AuthoritativeTarget(
+                        "missing", "bob", 1, true, Instant.now())));
+
+        assertEquals(2, result.applied());
+        assertEquals(1, result.tombstoned());
+        assertEquals("new-owner", store.requireActive("post", "stale").getOwnerUsername());
+        assertEquals("bob", store.requireActive("post", "missing").getOwnerUsername());
+        assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "orphan"));
+    }
 }
