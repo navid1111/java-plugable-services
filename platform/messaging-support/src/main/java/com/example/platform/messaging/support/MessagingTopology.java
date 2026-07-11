@@ -78,6 +78,10 @@ public final class MessagingTopology {
         for (String routingKey : spec.routingKeys()) {
             declarables.add(BindingBuilder.bind(workQueue).to(events).with(routingKey));
         }
+        // Publishing to the retry queue through the default exchange gives the message
+        // the retry queue name as its routing key. RabbitMQ preserves that key when TTL
+        // dead-letters the message, so this binding is the delayed-retry return path.
+        declarables.add(BindingBuilder.bind(workQueue).to(events).with(retry));
         // The work queue's dead-lettered messages route to the DLQ by the work-queue name.
         Binding dlqBinding = BindingBuilder.bind(deadLetterQueue).to(dlx).with(work);
         declarables.add(dlqBinding);

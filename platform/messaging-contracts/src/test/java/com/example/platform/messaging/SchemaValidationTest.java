@@ -41,7 +41,9 @@ class SchemaValidationTest {
             EventTypes.FOLLOW_DELETED_V1, schema("follow-changed-v1"),
             EventTypes.USER_REGISTERED_V1, schema("user-registered-v1"),
             EventTypes.MEDIA_UPLOADED_V1, schema("media-uploaded-v1"),
-            EventTypes.COMMENT_CREATED_V1, schema("comment-created-v1"));
+            EventTypes.COMMENT_CREATED_V1, schema("comment-created-v1"),
+            EventTypes.LEETCODE_JUDGE_REQUESTED_V1, schema("leetcode-judge-requested-v1"),
+            EventTypes.LEETCODE_JUDGE_COMPLETED_V1, schema("leetcode-judge-completed-v1"));
 
     @Test
     void validFixturesPassEnvelopeAndPayloadSchemas() throws Exception {

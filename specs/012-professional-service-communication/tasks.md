@@ -64,13 +64,13 @@
 - [ ] T044 Implement composed feed endpoint or event-built feed detail projection based on load test results. **Verify:** latency SLO and freshness SLO pass.
 - [x] T045 Add booking created/cancelled/availability events while keeping slot locking local. **Verify:** concurrent no-double-booking tests remain green and notifications are idempotent.
 - [x] T046 Add chat message-created/read events for external reactions only; retain DB/WebSocket delivery source of truth. **Verify:** broker outage does not break message persistence or later event delivery.
-- [ ] T047 Align LeetCode commands/results with shared contracts/support, persistent inbox, retry/DLQ, confirmed results, and stale-job reconciliation. **Verify:** crash/redelivery test converges to one terminal result.
+- [x] T047 Align LeetCode commands/results with shared contracts/support, persistent inbox, retry/DLQ, confirmed results, and stale-job reconciliation. **Verify:** crash/redelivery test converges to one terminal result.
 
 ## Phase 6 — Tests, operations, and cutover
 
 - [x] T048 Add producer/consumer contract compatibility checks to CI. **Verify:** incompatible schema change fails the build.
 - [ ] T049 Add Testcontainers component suites for every outbox/inbox flow. **Verify:** tests use real PostgreSQL and RabbitMQ.
-- [ ] T050 Add broker-down, publisher-confirm-timeout, consumer-crash-before/after-commit, poison-message, duplicate, and out-of-order tests. **Verify:** no committed fact is lost and no side effect is duplicated.
+- [x] T050 Add broker-down, publisher-confirm-timeout, consumer-crash-before/after-commit, poison-message, duplicate, and out-of-order tests. **Verify:** no committed fact is lost and no side effect is duplicated.
 - [ ] T051 Add E2E post create/update/delete test asserting search, comment target, media target, and BFF convergence. **Verify:** test passes from clean volumes.
 - [ ] T052 Add dashboards and alerts for outbox age, queue age/depth, projection lag, retries, DLQs, circuit breakers, and BFF partial responses. **Verify:** synthetic failure triggers expected alert.
 - [ ] T053 Write owner-specific runbooks for outage, replay, reconciliation, DLQ inspection/redrive, schema rollback, and credential rotation. **Verify:** another operator completes a recovery drill.

@@ -11,7 +11,8 @@ class SchemaResourceTest {
                 "event-envelope-v1.schema.json","post-snapshot-v1.schema.json",
                 "post-deleted-v1.schema.json","follow-changed-v1.schema.json",
                 "user-registered-v1.schema.json","media-uploaded-v1.schema.json",
-                "comment-created-v1.schema.json"}) {
+                "comment-created-v1.schema.json", "leetcode-judge-requested-v1.schema.json",
+                "leetcode-judge-completed-v1.schema.json"}) {
             try (var in = getClass().getResourceAsStream("/schemas/" + name)) {
                 assertNotNull(in, name);
                 var schema = mapper.readTree(in);

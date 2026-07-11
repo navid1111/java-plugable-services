@@ -99,6 +99,25 @@ class InboxIdempotencyComponentTest {
         assertTrue(inbox.existsByConsumerAndEventId(consumer, eventId));
     }
 
+    @Test
+    void crashBeforeCommitRollsBackEffectAndInboxSoRedeliveryCanRecover() {
+        String consumer = "post-search";
+        UUID eventId = UUID.randomUUID();
+
+        assertThrows(IllegalStateException.class, () -> idempotency.process(
+                consumer, eventId, "post.created.v1", () -> {
+                    jdbc.update("insert into inbox_effects(event) values (?)", eventId);
+                    throw new IllegalStateException("simulated consumer crash");
+                }));
+        assertEquals(0, effectsFor(eventId), "uncommitted side effect must roll back");
+        assertFalse(inbox.existsByConsumerAndEventId(consumer, eventId),
+                "failed delivery must not leave an inbox marker");
+
+        assertTrue(idempotency.process(consumer, eventId, "post.created.v1",
+                () -> jdbc.update("insert into inbox_effects(event) values (?)", eventId)));
+        assertEquals(1, effectsFor(eventId), "redelivery commits the effect once");
+    }
+
     private static void sleepQuietly() {
         try {
             Thread.sleep(50);

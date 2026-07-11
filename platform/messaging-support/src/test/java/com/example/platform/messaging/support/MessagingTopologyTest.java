@@ -31,7 +31,7 @@ class MessagingTopologyTest {
     private static final MessagingTopology.ConsumerSpec SPEC = new MessagingTopology.ConsumerSpec(
             CONSUMER,
             List.of("post.created.v1", "post.updated.v1", "post.deleted.v1"),
-            Duration.ofSeconds(5),
+            Duration.ofMillis(250),
             1000);
 
     @Container
@@ -88,6 +88,7 @@ class MessagingTopologyTest {
         assertTrue(queueExists(CONSUMER + ".dlq"), "dead-letter queue declared");
 
         assertRoutesToWorkQueue();
+        assertRetryReturnsToWorkQueue();
         assertDeadLettersToDlq();
 
         // Simulate a broker data reset: definitions are gone.
@@ -117,5 +118,12 @@ class MessagingTopologyTest {
         template.convertAndSend(MessagingTopology.DEAD_LETTER_EXCHANGE, CONSUMER, "dead-body");
         Object body = template.receiveAndConvert(CONSUMER + ".dlq");
         assertEquals("dead-body", body, "dead-lettered message routed to the DLQ");
+    }
+
+    private void assertRetryReturnsToWorkQueue() {
+        template.convertAndSend("", CONSUMER + ".retry", "retry-body");
+        Object body = template.receiveAndConvert(CONSUMER);
+        assertEquals("retry-body", body,
+                "expired retry delivery routed back to the consumer work queue");
     }
 }

@@ -1,0 +1,21 @@
+{
+  "eventId": "a73c8198-c28d-4bb5-9b9f-04955b5d91df",
+  "eventType": "leetcode.submission.judge.requested.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-11T18:00:00Z",
+  "producer": "leetcode-service",
+  "aggregateType": "leetcode-submission",
+  "aggregateId": "42",
+  "aggregateVersion": 1,
+  "correlationId": "3ea15042-79b7-4ac2-bcfe-5b8ba85ce534",
+  "causationId": null,
+  "traceparent": null,
+  "payload": {
+    "submissionId": 42,
+    "problemId": "two-sum",
+    "language": "python",
+    "code": "print(1)",
+    "testCasesJson": "[]",
+    "timeoutSeconds": 5
+  }
+}

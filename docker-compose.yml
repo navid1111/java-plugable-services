@@ -440,8 +440,8 @@ services:
   leetcode-service:
     profiles: ["leetcode"]
     build:
-      context: ./leetcode-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: leetcode-service/Dockerfile
     container_name: leetcode-service
     depends_on:
       leetcode-db:
@@ -469,8 +469,8 @@ services:
   leetcode-judge-worker:
     profiles: ["leetcode"]
     build:
-      context: ./leetcode-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: leetcode-service/Dockerfile
     container_name: leetcode-judge-worker
     depends_on:
       leetcode-db:
