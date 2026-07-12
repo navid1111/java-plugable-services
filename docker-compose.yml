@@ -112,8 +112,8 @@ services:
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_EXPIRATION_MINUTES: "60"
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       WORKLOAD_TRUSTED_CALLERS: ${AUTH_WORKLOAD_TRUSTED_CALLERS:-tweeter-service=dev-tweeter-workload-secret-0123456789abcdef,post-search-service=dev-search-workload-secret-0123456789abcdef,comment-service=dev-comment-workload-secret-0123456789abcdef,media-service=dev-media-workload-secret-0123456789abcdef}
     expose:
       - "8080"   # reachable only inside kong-net, via Kong
@@ -165,8 +165,8 @@ services:
       WORKLOAD_JWT_SECRET: ${TWEETER_WORKLOAD_JWT_SECRET:-dev-tweeter-workload-secret-0123456789abcdef}
       WORKLOAD_TRUSTED_CALLERS: ${TWEETER_WORKLOAD_TRUSTED_CALLERS:-post-search-service=dev-search-workload-secret-0123456789abcdef,comment-service=dev-comment-workload-secret-0123456789abcdef,media-service=dev-media-workload-secret-0123456789abcdef}
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
     expose:
       - "8080"
     healthcheck:
@@ -215,8 +215,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER:-springboot-auth}
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       POST_EXPORT_BASE_URL: http://tweeter-service:8080
       WORKLOAD_JWT_SECRET: ${COMMENT_WORKLOAD_JWT_SECRET:-dev-comment-workload-secret-0123456789abcdef}
     expose:
@@ -265,8 +265,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postsearchuser
       SPRING_DATASOURCE_PASSWORD: postsearchpass
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       POST_EXPORT_BASE_URL: http://tweeter-service:8080
       WORKLOAD_JWT_SECRET: ${SEARCH_WORKLOAD_JWT_SECRET:-dev-search-workload-secret-0123456789abcdef}
       WORKLOAD_TRUSTED_CALLERS: ${SEARCH_WORKLOAD_TRUSTED_CALLERS:-platform-operator=dev-platform-operator-secret-0123456789abcdef}
@@ -318,8 +318,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER:-springboot-auth}
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-platform-dev}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
@@ -468,8 +468,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER:-springboot-auth}
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-platformpass}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       LEETCODE_ROLE: api
     expose:
       - "8080"
@@ -497,8 +497,8 @@ services:
       SPRING_DATASOURCE_USERNAME: leetcodeuser
       SPRING_DATASOURCE_PASSWORD: leetcodepass
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-platform}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-platformpass}
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
       LEETCODE_ROLE: worker
       SERVER_PORT: "8081"
     volumes:

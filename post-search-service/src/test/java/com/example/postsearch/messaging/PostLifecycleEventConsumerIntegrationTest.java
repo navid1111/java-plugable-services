@@ -11,7 +11,9 @@ import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -20,7 +22,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -37,12 +41,15 @@ import com.example.postsearch.repository.LegacySearchDocumentRepository;
 
 import tools.jackson.databind.ObjectMapper;
 
-@SpringBootTest(properties = "spring.rabbitmq.listener.simple.auto-startup=false")
+@SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class PostLifecycleEventConsumerIntegrationTest {
     @Container static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine");
+    @Container @ServiceConnection static final RabbitMQContainer RABBIT =
+            new RabbitMQContainer("rabbitmq:3.13-management-alpine");
     static HttpServer exportServer;
 
     @DynamicPropertySource
@@ -63,10 +70,13 @@ class PostLifecycleEventConsumerIntegrationTest {
     @Autowired SearchShadowComparisonService shadow;
     @Autowired LegacySearchDocumentRepository legacy;
     @Autowired MockMvc mvc;
+    @Autowired RabbitTemplate rabbitTemplate;
 
     @BeforeEach
     void clear() {
-        inbox.deleteAll();
+        // Inbox markers deliberately report isNew=true so duplicate inserts cannot become
+        // merges. A bulk delete is therefore required for reliable test isolation.
+        inbox.deleteAllInBatch();
         terms.deleteAll();
         documents.deleteAll();
         legacy.deleteAll();
@@ -82,6 +92,23 @@ class PostLifecycleEventConsumerIntegrationTest {
         assertThat(document.getAggregateVersion()).isEqualTo(1);
         assertThat(terms.count()).isEqualTo(3);
         assertThat(inbox.count()).isOne();
+    }
+
+    @Test
+    void duplicateBrokerDeliveriesProduceOneEffectiveSearchProjection() throws Exception {
+        String created = snapshot(EventTypes.POST_CREATED_V1, 1, "delivered through rabbitmq");
+        rabbitTemplate.convertAndSend(com.example.platform.messaging.support.MessagingTopology.EVENTS_EXCHANGE,
+                EventTypes.POST_CREATED_V1, created);
+        rabbitTemplate.convertAndSend(com.example.platform.messaging.support.MessagingTopology.EVENTS_EXCHANGE,
+                EventTypes.POST_CREATED_V1, created);
+
+        long deadline = System.nanoTime() + java.time.Duration.ofSeconds(10).toNanos();
+        while (System.nanoTime() < deadline && inbox.count() != 1) Thread.sleep(100);
+        assertThat(inbox.count()).isOne();
+        assertThat(documents.findByTargetTypeAndTargetId("post", "42")).get()
+                .extracting(document -> document.getContent())
+                .isEqualTo("delivered through rabbitmq");
+        assertThat(terms.count()).isEqualTo(3);
     }
 
     @Test

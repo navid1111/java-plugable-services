@@ -1,0 +1,44 @@
+services:
+  kong-database:
+    container_name: !reset null
+  kong-migrations:
+    container_name: !reset null
+  kong:
+    container_name: !reset null
+    ports: !override
+      - "28000:8000"
+      - "28001:8001"
+  users-db:
+    container_name: !reset null
+  auth-service:
+    container_name: !reset null
+  posts-db:
+    container_name: !reset null
+  tweeter-service:
+    container_name: !reset null
+  comments-db:
+    container_name: !reset null
+  comment-service:
+    container_name: !reset null
+  post-search-db:
+    container_name: !reset null
+  post-search-service:
+    container_name: !reset null
+  media-db:
+    container_name: !reset null
+  media-service:
+    container_name: !reset null
+    environment:
+      CLOUDINARY_CLOUD_NAME: e2e-cloud
+      CLOUDINARY_API_KEY: e2e-api-key
+      CLOUDINARY_API_SECRET: e2e-api-secret
+  rabbitmq:
+    container_name: !reset null
+  bff:
+    container_name: !reset null
+
+networks:
+  kong-net:
+    name: professional-messaging-e2e-net
+    external: false
+    driver: bridge

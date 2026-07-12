@@ -6,23 +6,34 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.example.platform.messaging.EventTypes;
 import com.example.platform.messaging.support.OutboxMessageRepository;
+import com.example.platform.messaging.support.OutboxRelay;
+import com.example.platform.messaging.support.MessagingTopology;
 import com.example.tweeter.repository.PostRepository;
 import com.example.tweeter.repository.FollowRepository;
 
 @SpringBootTest(properties = "platform.messaging.outbox.scheduling-enabled=false")
 @Testcontainers(disabledWithoutDocker = true)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class PostOutboxIntegrationTest {
     private static final String ALICE_ID = "550e8400-e29b-41d4-a716-446655440000";
     private static final String BOB_ID = "550e8400-e29b-41d4-a716-446655440001";
@@ -30,6 +41,10 @@ class PostOutboxIntegrationTest {
     @Container
     static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine");
+
+    @Container @ServiceConnection
+    static final RabbitMQContainer RABBIT =
+            new RabbitMQContainer("rabbitmq:3.13-management-alpine");
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
@@ -44,6 +59,9 @@ class PostOutboxIntegrationTest {
     @Autowired OutboxMessageRepository outboxRepository;
     @Autowired FollowRepository followRepository;
     @Autowired RollbackProbe rollbackProbe;
+    @Autowired OutboxRelay outboxRelay;
+    @Autowired RabbitAdmin rabbitAdmin;
+    @Autowired RabbitTemplate rabbitTemplate;
 
     @BeforeEach
     void clearDatabase() {
@@ -109,6 +127,29 @@ class PostOutboxIntegrationTest {
         assertThat(followRepository.count()).isZero();
         assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
                 .containsExactlyInAnyOrder(EventTypes.FOLLOW_CREATED_V1, EventTypes.FOLLOW_DELETED_V1);
+    }
+
+    @Test
+    void committedPostPublishesThroughRealBrokerAndOnlyThenCompletesOutbox() {
+        String probeName = "tweeter-component.post-created-probe";
+        rabbitAdmin.deleteQueue(probeName);
+        Queue probe = new Queue(probeName, false);
+        TopicExchange exchange = new TopicExchange(MessagingTopology.EVENTS_EXCHANGE, true, false);
+        rabbitAdmin.declareQueue(probe);
+        rabbitAdmin.declareBinding(BindingBuilder.bind(probe).to(exchange)
+                .with(EventTypes.POST_CREATED_V1));
+
+        var post = posts.create(java.util.UUID.randomUUID().toString(), "alice", "broker delivery");
+        assertThat(outboxRepository.findAll()).singleElement()
+                .extracting(message -> message.getPublishedAt()).isNull();
+
+        assertThat(outboxRelay.drainOnce()).isEqualTo(1);
+        var delivery = rabbitTemplate.receive(probeName, 10_000);
+        assertThat(delivery).isNotNull();
+        assertThat(new String(delivery.getBody()))
+                .contains(EventTypes.POST_CREATED_V1, "\"postId\":\"" + post.getId() + "\"");
+        assertThat(outboxRepository.findAll()).singleElement()
+                .extracting(message -> message.getPublishedAt()).isNotNull();
     }
 
     @TestConfiguration

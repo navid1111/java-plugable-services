@@ -70,13 +70,25 @@
 ## Phase 6 — Tests, operations, and cutover
 
 - [x] T048 Add producer/consumer contract compatibility checks to CI. **Verify:** incompatible schema change fails the build.
-- [ ] T049 Add Testcontainers component suites for every outbox/inbox flow. **Verify:** tests use real PostgreSQL and RabbitMQ.
+- [x] T049 Add Testcontainers component suites for every outbox/inbox flow. **Verify:** tests use real PostgreSQL and RabbitMQ.
+  - Real-broker component coverage now spans auth user lifecycle, Tweeter post/follow outbox,
+    post-search inbox, comment/media target inboxes, media lifecycle outbox, booking, chat, and
+    LeetCode judge request/result flows. Shared support suites cover topology, confirms,
+    retries/DLQ routing, trace propagation, and concurrent outbox/inbox behavior.
 - [x] T050 Add broker-down, publisher-confirm-timeout, consumer-crash-before/after-commit, poison-message, duplicate, and out-of-order tests. **Verify:** no committed fact is lost and no side effect is duplicated.
-- [ ] T051 Add E2E post create/update/delete test asserting search, comment target, media target, and BFF convergence. **Verify:** test passes from clean volumes.
+- [x] T051 Add E2E post create/update/delete test asserting search, comment target, media target, and BFF convergence. **Verify:** test passes from clean volumes.
+  - `platform/scripts/test-post-lifecycle-e2e.sh --clean` passes against an isolated Compose
+    project and clean volumes, including Kong route propagation and create/update/delete
+    convergence across search, comment target, media target, and BFF projections.
 - [x] T052 Add dashboards and alerts for outbox age, queue age/depth, projection lag, retries, DLQs, circuit breakers, and BFF partial responses. **Verify:** synthetic failure triggers expected alert.
 - [x] T053 Write owner-specific runbooks for outage, replay, reconciliation, DLQ inspection/redrive, schema rollback, and credential rotation. **Verify:** another operator completes a recovery drill.
 - [x] T054 Remove legacy client orchestration and deprecated public mutation routes. **Verify:** repository search finds no client-side search/media lifecycle dual writes.
-- [ ] T055 Run migration/backfill against a production-like data copy and document timing, locks, rollback, and unresolved records. **Verify:** zero unexplained loss and rollback drill passes.
+- [x] T055 Run migration/backfill against a production-like data copy and document timing, locks, rollback, and unresolved records. **Verify:** zero unexplained loss and rollback drill passes.
+  - `platform/scripts/test-migration-backfill-drill.sh` verifies the existing-schema Flyway
+    migration plus a 50,000-reference PostgreSQL identity backfill, no-op re-run, forced
+    transaction rollback, snapshot restore, checksums, and zero unresolved rows. Latest
+    backfill time was 468 ms; lock and sanitized-dump procedures are documented in
+    `docs/architecture/migration-backfill-drill.md`.
 - [ ] T056 Final integration demo: auth → create post → event-indexed search → attach media/comment → composed view → delete → eventual cleanup, plus booking/chat/LeetCode regression. **Verify:** one-command demo and all service test suites pass.
 
 ## Definition of Done

@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.support.TransactionOperations;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.example.platform.messaging.support.*;
 import tools.jackson.databind.ObjectMapper;
 
@@ -25,7 +26,10 @@ public class AuthMessagingConfiguration {
             OutboxRelayProperties properties, TransactionOperations transactions) {
         return new OutboxRelay(repository, publisher, properties, transactions);
     }
-    @Bean RelaySchedule authRelaySchedule(OutboxRelay relay) { return new RelaySchedule(relay); }
+    @Bean
+    @ConditionalOnProperty(name = "platform.messaging.outbox.scheduling-enabled",
+            havingValue = "true", matchIfMissing = true)
+    RelaySchedule authRelaySchedule(OutboxRelay relay) { return new RelaySchedule(relay); }
     public static class RelaySchedule {
         private final OutboxRelay relay;
         RelaySchedule(OutboxRelay relay) { this.relay = relay; }
