@@ -48,6 +48,8 @@ public class JwtService {
                 .issuer(issuer)
                 .subject(user.getUserId().toString())
                 .claim("username", user.getUsername())
+                .claim("roles", java.util.List.of("USER"))
+                .claim("scope", "user")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(key, Jwts.SIG.HS256)
@@ -67,6 +69,16 @@ public class JwtService {
                 .requireIssuer(issuer)
                 .build()
                 .parseSignedClaims(token);
+        java.util.List<?> roles = jws.getPayload().get("roles", java.util.List.class);
+        String scope = jws.getPayload().get("scope", String.class);
+        boolean legacySubject;
+        try { java.util.UUID.fromString(jws.getPayload().getSubject()); legacySubject = false; }
+        catch (IllegalArgumentException oldToken) { legacySubject = true; }
+        boolean signedLegacy = legacySubject && roles == null && scope == null;
+        if (!signedLegacy && (roles == null || !roles.contains("USER") || scope == null
+                || java.util.Arrays.stream(scope.split(" +")).noneMatch("user"::equals))) {
+            throw new io.jsonwebtoken.JwtException("required user authority missing");
+        }
         return new Identity(jws.getPayload().getSubject(),
                 jws.getPayload().get("username", String.class));
     }

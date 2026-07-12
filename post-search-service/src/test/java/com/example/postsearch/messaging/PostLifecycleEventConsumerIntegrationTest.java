@@ -15,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -133,6 +135,14 @@ class PostLifecycleEventConsumerIntegrationTest {
         mvc.perform(put("/post-search/documents/post/42/like-count")
                         .header("Authorization", "Bearer e30.eyJzdWIiOiJhbGljZSJ9."))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void internalProjectionOperationsRejectDirectUnauthenticatedCalls() throws Exception {
+        mvc.perform(get("/internal/projections/posts/shadow-report"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/internal/projections/posts/rebuild"))
+                .andExpect(status().isUnauthorized());
     }
 
     private static synchronized String startExportServer() {

@@ -138,8 +138,11 @@ class MessagingSupportComponentTest {
             exchange.getResponseBody().write(body); exchange.close();
         }); server.start();
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            WorkloadJwtIssuer workloadJwt = new WorkloadJwtIssuer("test-service",
+                    "test-workload-secret-that-is-at-least-32-bytes", java.time.Duration.ofSeconds(30), mapper);
             UserIdentityBackfill backfill=new UserIdentityBackfill("http://localhost:"+server.getAddress().getPort(),
-                    "token",new ObjectMapper(),jdbc,new TransactionTemplate(transactionManager),java.util.List.of(
+                    workloadJwt,mapper,jdbc,new TransactionTemplate(transactionManager),java.util.List.of(
                     new UserIdentityBackfill.Target("UPDATE identity_test SET user_id=? WHERE username=? AND user_id IS NULL",
                             "SELECT COUNT(*) FROM identity_test WHERE user_id IS NULL")));
             var report=backfill.run();

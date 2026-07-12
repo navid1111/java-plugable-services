@@ -75,14 +75,14 @@ class PostDetailCompositionTest {
     }
 
     private void stubCommentSummary(long id, long count) {
-        wm.stubFor(get(urlPathEqualTo("/comments/targets/tweeter.post/" + id + "/summary"))
-                .willReturn(okJson("{\"targetType\":\"tweeter.post\",\"targetId\":\"" + id
+        wm.stubFor(get(urlPathEqualTo("/comments/targets/post/" + id + "/summary"))
+                .willReturn(okJson("{\"targetType\":\"post\",\"targetId\":\"" + id
                         + "\",\"commentCount\":" + count + "}")));
     }
 
     private void stubMediaSummary(long id, long count) {
-        wm.stubFor(get(urlPathEqualTo("/media/targets/tweeter.post/" + id + "/summary"))
-                .willReturn(okJson("{\"targetType\":\"tweeter.post\",\"targetId\":\"" + id
+        wm.stubFor(get(urlPathEqualTo("/media/targets/post/" + id + "/summary"))
+                .willReturn(okJson("{\"targetType\":\"post\",\"targetId\":\"" + id
                         + "\",\"mediaCount\":" + count + "}")));
     }
 
@@ -108,7 +108,7 @@ class PostDetailCompositionTest {
         stubPost(1, null);
         stubCommentSummary(1, 5);
         // Media summary fails — must not fail the whole response.
-        wm.stubFor(get(urlPathEqualTo("/media/targets/tweeter.post/1/summary"))
+        wm.stubFor(get(urlPathEqualTo("/media/targets/post/1/summary"))
                 .willReturn(aResponse().withStatus(500)));
 
         PostDetail body = getDetail(1);
@@ -124,7 +124,7 @@ class PostDetailCompositionTest {
         stubPost(1, null);
         stubMediaSummary(1, 7);
         // Comment summary is slower than the read timeout -> degraded, not a failure.
-        wm.stubFor(get(urlPathEqualTo("/comments/targets/tweeter.post/1/summary"))
+        wm.stubFor(get(urlPathEqualTo("/comments/targets/post/1/summary"))
                 .willReturn(okJson("{\"commentCount\":9}").withFixedDelay(2000)));
 
         PostDetail body = getDetail(1);

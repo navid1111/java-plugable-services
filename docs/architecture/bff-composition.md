@@ -23,8 +23,8 @@ Sources (each an HTTP call to the owning service, Authorization + `traceparent` 
 | Section | Owner | Route | Class |
 |---------|-------|-------|-------|
 | post, author | tweeter-service | `GET /posts/{id}` | **critical** |
-| comments | comment-service | `GET /comments/targets/tweeter.post/{id}/summary` | optional |
-| media | media-service | `GET /media/targets/tweeter.post/{id}/summary` | optional |
+| comments | comment-service | `GET /comments/targets/post/{id}/summary` | optional |
+| media | media-service | `GET /media/targets/post/{id}/summary` | optional |
 
 ## Deadlines and parallelism
 
@@ -60,3 +60,15 @@ absent) and the inbound `Authorization`, so one trace and one identity span the 
 `PostDetailCompositionTest` (WireMock-stubbed downstreams) covers: full composition in one call;
 partial response when an optional dependency 500s; partial response when an optional dependency
 exceeds the read timeout; and the 404 / 410 / 502 problem responses.
+## Feed composition decision
+
+`GET /bff/feed` uses live bounded fan-out rather than a second feed-detail projection. The
+authoritative cursor page is fetched once from tweeter-service; comment and media summaries
+are fetched concurrently on the same bounded pool and share one 1.5 second page deadline.
+Page size is capped at 20. Optional failures degrade only their section, while the returned
+`sourceVersionWatermark` exposes the newest authoritative post version observed in the page.
+
+The executable WireMock load-shaped test uses three simultaneous items with 180 ms downstream
+latency and requires the composed page to finish below 850 ms. If production p95 breaches the
+1.5 second SLO or fan-out saturation alerts fire, replace summaries with an event-built feed
+detail projection; the endpoint contract and cursor remain unchanged.

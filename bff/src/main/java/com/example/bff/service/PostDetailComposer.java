@@ -34,7 +34,7 @@ import com.example.bff.service.DownstreamViews.PostView;
 @Service
 public class PostDetailComposer {
 
-    private static final String TARGET_TYPE = "tweeter.post";
+    private static final String TARGET_TYPE = "post";
     private static final HexFormat HEX = HexFormat.of();
 
     private final RestClient tweeter;

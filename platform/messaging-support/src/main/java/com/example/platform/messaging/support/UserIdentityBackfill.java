@@ -14,12 +14,12 @@ public class UserIdentityBackfill {
     public record Mapping(String userId, String username) {}
     public record Target(String updateSql, String unresolvedCountSql) {}
     public record Report(int exportedUsers, int updatedRows, long unresolvedRows) {}
-    private final URI auth; private final String token; private final ObjectMapper mapper;
+    private final URI auth; private final WorkloadJwtIssuer workloadJwt; private final ObjectMapper mapper;
     private final JdbcTemplate jdbc; private final TransactionOperations transactions; private final List<Target> targets;
     private final HttpClient http=HttpClient.newHttpClient();
-    public UserIdentityBackfill(String authBaseUrl, String token, ObjectMapper mapper, JdbcTemplate jdbc,
+    public UserIdentityBackfill(String authBaseUrl, WorkloadJwtIssuer workloadJwt, ObjectMapper mapper, JdbcTemplate jdbc,
             TransactionOperations transactions, List<Target> targets) {
-        auth=URI.create(authBaseUrl); this.token=token; this.mapper=mapper; this.jdbc=jdbc;
+        auth=URI.create(authBaseUrl); this.workloadJwt=workloadJwt; this.mapper=mapper; this.jdbc=jdbc;
         this.transactions=transactions; this.targets=List.copyOf(targets);
     }
     public Report run() {
@@ -39,7 +39,8 @@ public class UserIdentityBackfill {
             List<Mapping> result=new ArrayList<>(); long checkpoint=0; boolean more;
             do {
                 HttpRequest request=HttpRequest.newBuilder(auth.resolve("/internal/users/export?afterId="+checkpoint+"&pageSize=500"))
-                        .header("X-Internal-Service-Token",token).GET().build();
+                        .header("Authorization",workloadJwt.authorization("auth-service", "identity:export"))
+                        .GET().build();
                 HttpResponse<String> response=http.send(request,HttpResponse.BodyHandlers.ofString());
                 if(response.statusCode()!=200) throw new IllegalStateException("auth export returned "+response.statusCode());
                 JsonNode page=mapper.readTree(response.body()); more=page.path("hasMore").asBoolean();

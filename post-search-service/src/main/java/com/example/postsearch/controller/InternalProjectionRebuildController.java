@@ -1,9 +1,5 @@
 package com.example.postsearch.controller;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,43 +11,45 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.postsearch.service.PostProjectionRebuildService;
 import com.example.postsearch.service.SearchShadowComparisonService;
+import com.example.platform.messaging.support.WorkloadAuthenticationException;
+import com.example.platform.messaging.support.WorkloadJwtVerifier;
 
 @RestController
 @RequestMapping("/internal/projections/posts")
 public class InternalProjectionRebuildController {
     private final PostProjectionRebuildService rebuild;
-    private final byte[] expectedToken;
+    private final WorkloadJwtVerifier workloads;
     private final SearchShadowComparisonService shadow;
 
     public InternalProjectionRebuildController(PostProjectionRebuildService rebuild,
             SearchShadowComparisonService shadow,
-            @Value("${internal.service.token}") String token) {
+            WorkloadJwtVerifier workloads) {
         this.rebuild = rebuild;
         this.shadow = shadow;
-        this.expectedToken = token.getBytes(StandardCharsets.UTF_8);
+        this.workloads = workloads;
     }
 
     @GetMapping("/shadow-report")
     public ResponseEntity<?> shadowReport(
-            @RequestHeader(value = "X-Internal-Service-Token", required = false) String token) {
-        if (!authorized(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        if (!authorized(authorization, "search:inspect")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(shadow.compare());
     }
 
     @PostMapping("/rebuild")
     public ResponseEntity<?> rebuild(
-            @RequestHeader(value = "X-Internal-Service-Token", required = false) String token,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestParam(defaultValue = "25") int maxPages,
             @RequestParam(defaultValue = "false") boolean reset) {
-        if (!authorized(token)) {
+        if (!authorized(authorization, "search:rebuild")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         if (reset) rebuild.resetCheckpoint();
         return ResponseEntity.ok(rebuild.rebuild(maxPages));
     }
 
-    private boolean authorized(String token) {
-        return token != null && MessageDigest.isEqual(expectedToken,
-                token.getBytes(StandardCharsets.UTF_8));
+    private boolean authorized(String authorization, String scope) {
+        try { workloads.verify(authorization, scope); return true; }
+        catch (WorkloadAuthenticationException denied) { return false; }
     }
 }

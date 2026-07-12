@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.web.client.RestClient;
+import com.example.platform.messaging.support.WorkloadJwtIssuer;
 
 @Service
 public class PostProjectionRebuildService {
@@ -17,17 +18,17 @@ public class PostProjectionRebuildService {
     private final JdbcTemplate jdbc;
     private final TransactionOperations transactions;
     private final RestClient tweeter;
-    private final String token;
+    private final WorkloadJwtIssuer workloadJwt;
 
     public PostProjectionRebuildService(PostSearchService search, JdbcTemplate jdbc,
             TransactionOperations transactions,
             @Value("${post-export.base-url}") String baseUrl,
-            @Value("${internal.service.token}") String token) {
+            WorkloadJwtIssuer workloadJwt) {
         this.search = search;
         this.jdbc = jdbc;
         this.transactions = transactions;
         this.tweeter = RestClient.builder().baseUrl(baseUrl).build();
-        this.token = token;
+        this.workloadJwt = workloadJwt;
     }
 
     public record ExportedPost(String postId, String authorUserId, String authorUsername, String content,
@@ -56,7 +57,8 @@ public class PostProjectionRebuildService {
         ExportPage page = tweeter.get()
                 .uri(uri -> uri.path("/internal/posts/export")
                         .queryParam("afterId", checkpoint).queryParam("pageSize", 200).build())
-                .header("X-Internal-Service-Token", token)
+                .header(HttpHeaders.AUTHORIZATION,
+                        workloadJwt.authorization("tweeter-service", "posts:export"))
                 .retrieve().body(ExportPage.class);
         if (page == null) throw new IllegalStateException("empty post export response");
         return page;

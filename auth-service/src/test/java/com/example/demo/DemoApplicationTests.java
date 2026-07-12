@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 import com.example.platform.messaging.support.OutboxMessageRepository;
 import com.example.platform.messaging.EventTypes;
+import com.example.platform.messaging.support.WorkloadJwtIssuer;
+import java.time.Duration;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,6 +24,19 @@ class DemoApplicationTests {
     @Autowired OutboxMessageRepository outbox;
 
     @Test void contextLoads() {}
+
+    @Test
+    void internalExportRequiresValidAudienceScopedWorkloadIdentity() throws Exception {
+        mvc.perform(get("/internal/users/export")).andExpect(status().isUnauthorized());
+        WorkloadJwtIssuer workload = new WorkloadJwtIssuer("test-service",
+                "test-workload-secret-that-is-at-least-32-bytes", Duration.ofSeconds(30), mapper);
+        mvc.perform(get("/internal/users/export").header("Authorization",
+                        workload.authorization("auth-service", "identity:export")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/internal/users/export").header("Authorization",
+                        workload.authorization("tweeter-service", "identity:export")))
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void loginAndMeExposeStableIdAndJwtSubjectUsesIt() throws Exception {
@@ -39,6 +54,8 @@ class DemoApplicationTests {
         var claims = mapper.readTree(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1])));
         assertEquals(userId, claims.path("sub").asText());
         assertEquals(username, claims.path("username").asText());
+        assertEquals("USER", claims.path("roles").get(0).asText());
+        assertEquals("user", claims.path("scope").asText());
         mvc.perform(get("/auth/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.userId").value(userId))
                 .andExpect(jsonPath("$.username").value(username));

@@ -11,11 +11,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 public class PostTargetReconciliationClient {
-    private final URI baseUri; private final String token; private final ObjectMapper mapper;
+    private final URI baseUri; private final WorkloadJwtIssuer workloadJwt; private final ObjectMapper mapper;
     private final TargetProjectionStore targets; private final HttpClient http = HttpClient.newHttpClient();
-    public PostTargetReconciliationClient(String baseUrl, String token, ObjectMapper mapper,
+    public PostTargetReconciliationClient(String baseUrl, WorkloadJwtIssuer workloadJwt, ObjectMapper mapper,
             TargetProjectionStore targets) {
-        this.baseUri = URI.create(baseUrl); this.token = token; this.mapper = mapper; this.targets = targets;
+        this.baseUri = URI.create(baseUrl); this.workloadJwt = workloadJwt; this.mapper = mapper; this.targets = targets;
     }
     public TargetProjectionStore.ReconciliationResult reconcile() {
         List<TargetProjectionStore.AuthoritativeTarget> all = new ArrayList<>();
@@ -37,7 +37,8 @@ public class PostTargetReconciliationClient {
         try {
             HttpRequest request = HttpRequest.newBuilder(baseUri.resolve(
                     "/internal/posts/export?afterId=" + checkpoint + "&pageSize=500"))
-                    .header("X-Internal-Service-Token", token).GET().build();
+                    .header("Authorization", workloadJwt.authorization("tweeter-service", "posts:export"))
+                    .GET().build();
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) throw new IllegalStateException("post export returned " + response.statusCode());
             return mapper.readTree(response.body());

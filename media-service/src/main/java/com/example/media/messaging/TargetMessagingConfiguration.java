@@ -36,9 +36,9 @@ public class TargetMessagingConfiguration {
         @RabbitListener(queues = CONSUMER) public void receive(String json) { processor.process(json); }
     }
     @Bean PostTargetReconciliationClient reconciliationClient(ObjectMapper mapper, TargetProjectionStore store,
-            @Value("${post-export.base-url:http://tweeter-service:8080}") String baseUrl,
-            @Value("${internal.service.token:local-dev-internal-token}") String token) {
-        return new PostTargetReconciliationClient(baseUrl, token, mapper, store);
+            WorkloadJwtIssuer workloadJwt,
+            @Value("${post-export.base-url:http://tweeter-service:8080}") String baseUrl) {
+        return new PostTargetReconciliationClient(baseUrl, workloadJwt, mapper, store);
     }
     @Bean ReconciliationSchedule reconciliationSchedule(PostTargetReconciliationClient client) { return new ReconciliationSchedule(client); }
     public static class ReconciliationSchedule {
