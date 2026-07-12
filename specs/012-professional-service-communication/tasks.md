@@ -59,8 +59,8 @@
 
 - [ ] T040 Add service-to-service identity using mTLS or short-lived workload JWTs with audience/scope. **Verify:** direct unauthenticated internal calls fail.
 - [ ] T041 Verify user JWT signatures in every service as defense in depth and standardize role/scope authorization. **Verify:** forged tokens and admin escalation fail even when bypassing Kong.
-- [ ] T042 Create a BFF/API-composer service behind Kong with strict deadlines, bounded parallelism, tracing, and RFC 9457 errors. **Verify:** dependency failure follows documented partial-response policy.
-- [ ] T043 Implement composed post-detail endpoint with post, author projection, media, comment summary, and visibility checks. **Verify:** one client call returns the documented contract without DB sharing.
+- [x] T042 Create a BFF/API-composer service behind Kong with strict deadlines, bounded parallelism, tracing, and RFC 9457 errors. **Verify:** dependency failure follows documented partial-response policy.
+- [x] T043 Implement composed post-detail endpoint with post, author projection, media, comment summary, and visibility checks. **Verify:** one client call returns the documented contract without DB sharing.
 - [ ] T044 Implement composed feed endpoint or event-built feed detail projection based on load test results. **Verify:** latency SLO and freshness SLO pass.
 - [x] T045 Add booking created/cancelled/availability events while keeping slot locking local. **Verify:** concurrent no-double-booking tests remain green and notifications are idempotent.
 - [x] T046 Add chat message-created/read events for external reactions only; retain DB/WebSocket delivery source of truth. **Verify:** broker outage does not break message persistence or later event delivery.

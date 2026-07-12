@@ -492,6 +492,29 @@ services:
     networks:
       - kong-net
 
+  # ---- BFF / API composer: client-shaped reads across owning services (no DB sharing) ----
+  # Run with the owning-service profiles, e.g.:
+  #   docker compose --profile bff --profile tweeter --profile comments --profile media up
+  bff:
+    profiles: ["bff"]
+    build:
+      context: ./bff
+      dockerfile: Dockerfile
+    container_name: bff
+    environment:
+      TWEETER_BASE_URL: http://tweeter-service:8080
+      COMMENT_BASE_URL: http://comment-service:8080
+      MEDIA_BASE_URL: http://media-service:8080
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kong-net
+
 volumes:
   kong_data:
   app_data:
