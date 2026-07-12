@@ -156,6 +156,8 @@ echo "Create projections converged."
 
 request_json "create comment" POST "$BASE/comments/targets/post/$POST_ID" 201 \
   "{\"content\":\"converged comment ${STAMP}\"}" "$TOKEN" >/dev/null
+await_contains "BFF comment attachment" "$BASE/bff/posts/$POST_ID" '"commentCount":1' "$TOKEN" >/dev/null
+await_contains "BFF media attachment" "$BASE/bff/posts/$POST_ID" '"mediaCount":1' "$TOKEN" >/dev/null
 echo "Created comment; updating the owning post."
 
 request_json "update post" PUT "$BASE/posts/$POST_ID" 200 \

@@ -1,7 +1,7 @@
 # Tasks: Professional Service Communication
 
 **Architecture:** [professional-service-communication.md](../../docs/architecture/professional-service-communication.md)  
-**Status:** In progress  
+**Status:** Complete
 **Rule:** A task is complete only when its stated verification passes. `[P]` means it can run in parallel after its prerequisites.
 
 ## Phase 1 — Shared messaging foundation
@@ -87,16 +87,20 @@
   - `platform/scripts/test-migration-backfill-drill.sh` verifies the existing-schema Flyway
     migration plus a 50,000-reference PostgreSQL identity backfill, no-op re-run, forced
     transaction rollback, snapshot restore, checksums, and zero unresolved rows. Latest
-    backfill time was 468 ms; lock and sanitized-dump procedures are documented in
+    backfill time was 510 ms; lock and sanitized-dump procedures are documented in
     `docs/architecture/migration-backfill-drill.md`.
-- [ ] T056 Final integration demo: auth → create post → event-indexed search → attach media/comment → composed view → delete → eventual cleanup, plus booking/chat/LeetCode regression. **Verify:** one-command demo and all service test suites pass.
+- [x] T056 Final integration demo: auth → create post → event-indexed search → attach media/comment → composed view → delete → eventual cleanup, plus booking/chat/LeetCode regression. **Verify:** one-command demo and all service test suites pass.
+  - `platform/scripts/run-final-integration-demo.sh` passes from clean isolated volumes,
+    verifies attached media/comment counts through the BFF and delete cleanup, then runs
+    contracts/support, auth, Tweeter, comment, media, search, BFF, booking, chat, and
+    LeetCode test suites.
 
 ## Definition of Done
 
-- [ ] No client performs required cross-service propagation.
-- [ ] Every distributed fact has one owner, versioned contract, outbox, idempotent consumer, retry/DLQ policy, metrics, and runbook.
-- [ ] Services never read another service's database.
-- [ ] Search is derived only from authoritative events.
-- [ ] Comments and media reject missing, deleted, or unauthorized targets.
+- [x] No client performs required cross-service propagation.
+- [x] Every distributed fact has one owner, versioned contract, outbox, idempotent consumer, retry/DLQ policy, metrics, and runbook.
+- [x] Services never read another service's database.
+- [x] Search is derived only from authoritative events.
+- [x] Comments and media reject missing, deleted, or unauthorized targets.
 - [x] Workloads authenticate internally and user tokens are verified in depth.
-- [ ] Failure and replay tests prove no lost committed work and no duplicate effective side effects.
+- [x] Failure and replay tests prove no lost committed work and no duplicate effective side effects.

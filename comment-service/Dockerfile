@@ -8,7 +8,8 @@ COPY platform/messaging-support/pom.xml /support/pom.xml
 COPY platform/messaging-support/src /support/src
 RUN mvn -B -f /support/pom.xml install -DskipTests
 COPY comment-service/pom.xml .
-RUN mvn -B dependency:go-offline
+# Resolve application dependencies without pulling unrelated report/site plugins.
+RUN mvn -B dependency:resolve
 
 COPY comment-service/src ./src
 RUN mvn -B clean package -DskipTests

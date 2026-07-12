@@ -28,7 +28,7 @@ spread across 250 exported auth users. It:
 Latest local result (2026-07-12, PostgreSQL 16-alpine):
 
 ```text
-identity_backfill_drill rows=50000 users=250 elapsed_ms=468 unresolved=0 rollback=passed
+identity_backfill_drill rows=50000 users=250 elapsed_ms=510 unresolved=0 rollback=passed
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
 ```
 
