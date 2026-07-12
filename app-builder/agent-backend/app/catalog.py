@@ -106,6 +106,46 @@ def render_skill(plugs: list[dict], endpoints: dict[str, list[str]]) -> str:
         "- post-search for finding videos when that plug is AVAILABLE.",
         "",
     ]
+
+    if "bff" in {p["id"] for p in available}:
+        lines += [
+            "## Prefer the BFF for composite reads",
+            "",
+            "The **BFF** (`/bff`) composes reads across tweeter + comments + media on the"
+            " server, with a strict deadline and graceful partial responses. When it is"
+            " AVAILABLE, use it for read screens instead of fanning out to each service and"
+            " stitching on the client — one call replaces several and handles slow/failing"
+            " optional sections for you.",
+            "",
+            "Rule of thumb — **reads through the BFF, writes direct**:",
+            "- Feed / post-detail *reads* → call `/bff/*` (below).",
+            "- Everything else (create post, follow, comment, upload media, search) → call the"
+            " owning service directly. The BFF is read-only; it has no write endpoints.",
+            "",
+            "Only these two BFF endpoints exist — never invent others:",
+            "- `GET /bff/feed` → `{ items: PostDetail[], nextCursor: string|null,"
+            " sourceVersionWatermark: number }`",
+            "- `GET /bff/posts/{id}` → a single `PostDetail`.",
+            "",
+            "`PostDetail` shape (render defensively — `comments`/`media` may be `null`):",
+            "```json",
+            "{",
+            "  \"post\":     { \"id\": number, \"content\": string, \"createdAt\": string,"
+            " \"updatedAt\": string, \"version\": number },",
+            "  \"author\":   { \"username\": string },",
+            "  \"comments\": { \"commentCount\": number } | null,",
+            "  \"media\":    { \"mediaCount\": number } | null,",
+            "  \"degraded\": string[]",
+            "}",
+            "```",
+            "- `comments` or `media` is `null` when that optional section could not be composed"
+            " in time; its name then appears in `degraded`. Show the rest of the post normally",
+            "  and treat a listed section as 'temporarily unavailable', not an error.",
+            "- A `404` from `/bff/posts/{id}` means the post does not exist (or was deleted) —"
+            " the BFF only fails the whole read when the owning post itself is missing.",
+            "",
+        ]
+
     return "\n".join(lines)
 
 

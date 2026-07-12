@@ -1,0 +1,19 @@
+# BFF plug kit — API composer for client-shaped reads.
+# The BFF owns no database; it composes reads from the owning services, so this
+# fragment only declares the bff container. Bring it up together with the
+# tweeter / comments / media plug fragments it reads from.
+services:
+  bff:
+    image: bff:latest
+    container_name: bff
+    environment:
+      TWEETER_BASE_URL: http://tweeter-service:8080
+      COMMENT_BASE_URL: http://comment-service:8080
+      MEDIA_BASE_URL: http://media-service:8080
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

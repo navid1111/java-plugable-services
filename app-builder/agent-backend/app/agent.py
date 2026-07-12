@@ -1,14 +1,22 @@
 """Agent wiring for app-builder.
 
-The backend can drive either the local Codex CLI or embedded Hermes. Both are
-constrained to the generated app workspace; backend capabilities are exposed
-through the workspace-local plugs skill rendered by :mod:`app.workspace`.
+The backend can drive the local Codex CLI, the Claude Code CLI (headless), or
+embedded Hermes. `settings.agent_backend` is an ordered preference list — the
+first backend that is actually available is used, the rest are fallbacks — so a
+missing/broken Codex install transparently falls back to Claude Code, then
+Hermes. All backends are constrained to the generated app workspace; backend
+capabilities are exposed through the workspace-local plugs skill rendered by
+:mod:`app.workspace`.
 """
 
 from __future__ import annotations
 
 import asyncio
+import importlib.util
+import json
+import logging
 import os
+import shutil
 import sys
 import tempfile
 from collections.abc import Callable, Coroutine
@@ -16,6 +24,8 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 APPBUILDER_SYSTEM_APPEND = """\
 You are app-builder's frontend agent. You build small, self-contained web apps that
@@ -52,15 +62,72 @@ class AppAgent(Protocol):
     def history(self) -> list[dict[str, Any]]: ...
 
 
+# Canonical backend name -> the aliases users may write in APPBUILDER_AGENT_BACKEND.
+_BACKEND_ALIASES = {
+    "codex-cli": {"codex", "codex-cli", "codex_cli"},
+    "claude-cli": {"claude", "claude-cli", "claude_cli", "claude-code", "claude_code"},
+    "hermes": {"hermes"},
+}
+
+
+def _canonical_backend(name: str) -> str | None:
+    for canonical, aliases in _BACKEND_ALIASES.items():
+        if name in aliases:
+            return canonical
+    return None
+
+
+def _backend_available(canonical: str) -> bool:
+    """Whether a backend's runtime is actually installed/importable."""
+    if canonical == "codex-cli":
+        return shutil.which(settings.codex_command) is not None
+    if canonical == "claude-cli":
+        return shutil.which(settings.claude_command) is not None
+    if canonical == "hermes":
+        if settings.hermes_source_path and settings.hermes_source_path.exists():
+            return True
+        return importlib.util.find_spec("run_agent") is not None
+    return False
+
+
+_BACKEND_FACTORIES = {
+    "codex-cli": lambda cwd, publisher, history: CodexCliAppAgent(cwd=cwd, publisher=publisher, history=history),
+    "claude-cli": lambda cwd, publisher, history: ClaudeCliAppAgent(cwd=cwd, publisher=publisher, history=history),
+    "hermes": lambda cwd, publisher, history: HermesAppAgent(cwd=cwd, publisher=publisher, history=history),
+}
+
+
 def create_app_agent(cwd: Path, publisher: EventPublisher, history: list[dict[str, Any]] | None = None) -> AppAgent:
-    backend = settings.agent_backend.strip().lower()
-    if backend in {"codex", "codex-cli", "codex_cli"}:
-        return CodexCliAppAgent(cwd=cwd, publisher=publisher, history=history)
-    if backend == "hermes":
-        return HermesAppAgent(cwd=cwd, publisher=publisher, history=history)
+    requested = settings.agent_backends
+    if not requested:
+        raise ValueError("APPBUILDER_AGENT_BACKEND is empty; set at least one of 'codex-cli', 'claude-cli', 'hermes'.")
+
+    attempted: list[str] = []
+    for name in requested:
+        canonical = _canonical_backend(name)
+        if canonical is None:
+            logger.warning("ignoring unknown APPBUILDER_AGENT_BACKEND entry %r", name)
+            continue
+        if not _backend_available(canonical):
+            attempted.append(canonical)
+            logger.info("agent backend %r unavailable; trying next fallback", canonical)
+            continue
+        try:
+            agent = _BACKEND_FACTORIES[canonical](cwd, publisher, history)
+        except Exception:  # available but failed to initialize — fall back to the next
+            attempted.append(canonical)
+            logger.warning("agent backend %r failed to start; trying next fallback", canonical, exc_info=True)
+            continue
+        if attempted:
+            logger.warning("using agent backend %r after %s were unusable", canonical, attempted)
+        else:
+            logger.info("using agent backend %r", canonical)
+        return agent
+
     raise ValueError(
-        "Unsupported APPBUILDER_AGENT_BACKEND "
-        f"{settings.agent_backend!r}; use 'codex-cli' or 'hermes'."
+        "No usable agent backend from APPBUILDER_AGENT_BACKEND "
+        f"{settings.agent_backend!r}. Tried {attempted or requested} but none started. "
+        "Install the Codex CLI, the Claude Code CLI (`claude`), or Hermes."
     )
 
 
@@ -296,6 +363,148 @@ class CodexCliAppAgent:
         return f"""{APPBUILDER_SYSTEM_APPEND}
 
 User request:
+{text}
+
+Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
+Build only the static app files in this directory. If you add or change backend fetch code,
+run `./verify-backend.sh` before finishing and report the real result.
+"""
+
+
+def _summarize_claude_tool_input(tool_input: dict) -> str:
+    for key in ("file_path", "path", "command", "pattern", "query", "url"):
+        value = tool_input.get(key)
+        if value:
+            return str(value)[:200]
+    return ", ".join(list(tool_input)[:4])
+
+
+class ClaudeCliAppAgent:
+    """Adapter that runs the installed Claude Code CLI headlessly in the workspace.
+
+    Mirrors :class:`CodexCliAppAgent` but drives `claude -p` with streaming JSON so
+    tool use and assistant text surface as the same events the UI already renders.
+    """
+
+    def __init__(self, cwd: Path, publisher: EventPublisher, history: list[dict[str, Any]] | None = None) -> None:
+        self.cwd = cwd.resolve()
+        self._publisher = publisher
+        self._process: asyncio.subprocess.Process | None = None
+        self._history = history or []
+
+    async def run(self, text: str) -> None:
+        cmd = self._command(text)
+        await self._publisher("thinking", {"text": "Starting Claude Code CLI..."})
+        meta: dict[str, Any] = {"is_error": False, "num_turns": None, "cost_usd": None, "session_id": None}
+        final_text = ""
+        try:
+            self._process = await asyncio.create_subprocess_exec(
+                *cmd,
+                cwd=str(self.cwd),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            final_text, meta = await asyncio.wait_for(
+                self._consume(self._process),
+                timeout=settings.claude_timeout_seconds,
+            )
+            exit_code = await self._process.wait()
+        except asyncio.TimeoutError:
+            await self.interrupt()
+            await self._publisher("assistant_text", {"text": "Claude Code timed out before finishing."})
+            await self._publisher(
+                "done",
+                {"is_error": True, "num_turns": meta.get("num_turns"), "cost_usd": meta.get("cost_usd")},
+            )
+            return
+        finally:
+            self._process = None
+
+        if final_text:
+            await self._publisher("assistant_text", {"text": final_text[-2000:]})
+        await self._publisher(
+            "done",
+            {
+                "is_error": bool(meta.get("is_error")) or exit_code != 0,
+                "num_turns": meta.get("num_turns"),
+                "cost_usd": meta.get("cost_usd"),
+                "session_id": meta.get("session_id"),
+            },
+        )
+
+    async def interrupt(self) -> None:
+        if self._process and self._process.returncode is None:
+            self._process.terminate()
+            try:
+                await asyncio.wait_for(self._process.wait(), timeout=5)
+            except asyncio.TimeoutError:
+                self._process.kill()
+
+    def history(self) -> list[dict[str, Any]]:
+        return self._history
+
+    def _command(self, text: str) -> list[str]:
+        cmd = [
+            settings.claude_command,
+            "--print",
+            "--output-format",
+            "stream-json",
+            "--verbose",
+            "--permission-mode",
+            settings.claude_permission_mode,
+            "--append-system-prompt",
+            APPBUILDER_SYSTEM_APPEND,
+        ]
+        if settings.model:
+            cmd += ["--model", settings.model]
+        cmd.append(self._prompt(text))
+        return cmd
+
+    async def _consume(self, process: asyncio.subprocess.Process) -> tuple[str, dict[str, Any]]:
+        """Parse Claude Code's stream-json output into UI events; return (final_text, meta)."""
+        final_text = ""
+        meta: dict[str, Any] = {"is_error": False, "num_turns": None, "cost_usd": None, "session_id": None}
+        assert process.stdout is not None
+        while line := await process.stdout.readline():
+            raw = line.decode(errors="replace").strip()
+            if not raw:
+                continue
+            try:
+                event = json.loads(raw)
+            except json.JSONDecodeError:
+                # Non-JSON line (merged stderr / diagnostics) — surface as progress.
+                await self._publisher("thinking", {"text": raw[:500]})
+                continue
+            etype = event.get("type")
+            if etype == "system":
+                if event.get("session_id"):
+                    meta["session_id"] = event["session_id"]
+            elif etype == "assistant":
+                for block in (event.get("message") or {}).get("content") or []:
+                    btype = block.get("type")
+                    if btype == "text" and block.get("text"):
+                        await self._publisher("assistant_delta", {"text": block["text"]})
+                    elif btype == "tool_use":
+                        await self._publisher(
+                            "tool_use",
+                            {
+                                "tool": block.get("name", ""),
+                                "input": _summarize_claude_tool_input(block.get("input") or {}),
+                            },
+                        )
+            elif etype == "result":
+                final_text = (event.get("result") or "").strip()
+                meta["is_error"] = bool(event.get("is_error"))
+                meta["num_turns"] = event.get("num_turns")
+                meta["cost_usd"] = event.get("total_cost_usd")
+                if event.get("session_id"):
+                    meta["session_id"] = event["session_id"]
+        return final_text, meta
+
+    def _prompt(self, text: str) -> str:
+        # The app-builder system rules go via --append-system-prompt, so the user
+        # prompt only carries the request plus the workspace-read reminder.
+        return f"""User request:
 {text}
 
 Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
