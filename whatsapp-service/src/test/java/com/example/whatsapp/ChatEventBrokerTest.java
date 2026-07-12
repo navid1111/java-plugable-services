@@ -31,6 +31,8 @@ import com.example.whatsapp.service.ChatService;
 @SpringBootTest(properties = "chat.messaging.outbox.delay-ms=200")
 @Testcontainers
 class ChatEventBrokerTest {
+    private static final String ALICE_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final String BOB_ID = "550e8400-e29b-41d4-a716-446655440001";
 
     private static final String EXCHANGE = "platform.events.v1";
     private static final String PROBE_QUEUE = "chat-broker-test.probe";
@@ -56,8 +58,9 @@ class ChatEventBrokerTest {
         rabbitAdmin.declareBinding(BindingBuilder.bind(probe).to(events).with("chat.message-created.v1"));
         rabbitAdmin.declareBinding(BindingBuilder.bind(probe).to(events).with("chat.message-read.v1"));
 
-        var chat = chatService.createChat("alice", "room", List.of("bob"));
-        var delivery = chatService.sendMessage("alice", chat.id(), "hello bob");
+        var chat = chatService.createChat(ALICE_ID, "alice", "room",
+                List.of(new ChatService.UserRef(BOB_ID, "bob")));
+        var delivery = chatService.sendMessage(ALICE_ID, "alice", chat.id(), "hello bob");
         long messageId = delivery.message().id();
 
         Message received = rabbitTemplate.receive(PROBE_QUEUE, 10_000);

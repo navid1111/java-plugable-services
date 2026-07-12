@@ -49,24 +49,20 @@ public class PostService {
     }
 
     @Transactional
-    public Post create(String authorUsername, String content) {
-        return create(null, authorUsername, content);
-    }
-
-    @Transactional
     public Post create(String authorUserId, String authorUsername, String content) {
+        String stableAuthorId = requireUserId(authorUserId);
         String trimmed = requireText(content, "content");
         if (trimmed.length() > 280) {
             throw new IllegalArgumentException("content must be 280 characters or fewer");
         }
-        Post post = posts.saveAndFlush(new Post(authorUserId, authorUsername, trimmed));
+        Post post = posts.saveAndFlush(new Post(stableAuthorId, requireText(authorUsername, "username"), trimmed));
         emitSnapshot(EventTypes.POST_CREATED_V1, post);
         return post;
     }
 
     @Transactional
-    public Post update(Long id, String actorUsername, String content, long expectedVersion) {
-        Post post = ownedActivePost(id, actorUsername);
+    public Post update(Long id, String actorUserId, String content, long expectedVersion) {
+        Post post = ownedActivePost(id, actorUserId);
         requireVersion(post, expectedVersion);
         String trimmed = requireText(content, "content");
         if (trimmed.length() > 280) {
@@ -79,20 +75,20 @@ public class PostService {
     }
 
     @Transactional
-    public Post delete(Long id, String actorUsername, long expectedVersion) {
-        Post post = ownedActivePost(id, actorUsername);
+    public Post delete(Long id, String actorUserId, long expectedVersion) {
+        Post post = ownedActivePost(id, actorUserId);
         requireVersion(post, expectedVersion);
         post.delete(Instant.now());
         posts.flush();
         emit(EventTypes.POST_DELETED_V1, post,
                 new com.example.platform.messaging.post.PostDeleted(
-                        post.getId().toString(), actorUsername, post.getDeletedAt()));
+                        post.getId().toString(), requireUserId(actorUserId), post.getDeletedAt()));
         return post;
     }
 
-    private Post ownedActivePost(Long id, String actorUsername) {
+    private Post ownedActivePost(Long id, String actorUserId) {
         Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("post not found"));
-        if (!post.getAuthorUsername().equals(requireText(actorUsername, "username"))) {
+        if (!post.getAuthorUserId().equals(requireUserId(actorUserId))) {
             throw new IllegalArgumentException("only the author may change this post");
         }
         if (post.isDeleted()) throw new IllegalArgumentException("post is deleted");
@@ -120,11 +116,11 @@ public class PostService {
                 event.eventType(), event.eventVersion(), eventSerializer.serialize(event), event.occurredAt()));
     }
 
-    private void emitFollow(String eventType, String follower, String followee) {
-        String aggregateId = follower + "->" + followee;
+    private void emitFollow(String eventType, String followerUserId, String followeeUserId) {
+        String aggregateId = followerUserId + "->" + followeeUserId;
         EventEnvelope<FollowChanged> event = EventEnvelope.fact(eventType, 1, "tweeter-service",
                 "follow", aggregateId, 1, UUID.randomUUID(), null, null,
-                new FollowChanged("legacy:" + follower, "legacy:" + followee, Instant.now()));
+                new FollowChanged(followerUserId, followeeUserId, Instant.now()));
         outbox.save(new OutboxMessage(event.eventId(), event.aggregateType(), event.aggregateId(),
                 event.eventType(), event.eventVersion(), eventSerializer.serialize(event), event.occurredAt()));
     }
@@ -135,57 +131,46 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<Post> findByAuthor(String authorUsername) {
-        return posts.findByAuthorUsernameOrderByCreatedAtDescIdDesc(authorUsername);
-    }
-    @Transactional(readOnly = true)
     public List<Post> findByAuthorUserId(String authorUserId) {
-        return posts.findByAuthorUserIdOrderByCreatedAtDescIdDesc(authorUserId);
+        return posts.findByAuthorUserIdOrderByCreatedAtDescIdDesc(requireUserId(authorUserId));
     }
 
     @Transactional
-    public void follow(String followerUsername, String followeeUsername) {
-        follow(null, followerUsername, followeeUsername);
-    }
-
-    @Transactional
-    public void follow(String followerUserId, String followerUsername, String followeeUsername) {
+    public void follow(String followerUserId, String followerUsername,
+            String followeeUserId, String followeeUsername) {
+        String followerId = requireUserId(followerUserId);
+        String followeeId = requireUserId(followeeUserId);
         String follower = requireText(followerUsername, "follower username");
         String followee = requireText(followeeUsername, "followee username");
-        if (follower.equals(followee)) {
+        if (followerId.equals(followeeId)) {
             throw new IllegalArgumentException("cannot follow yourself");
         }
-        if (follows.insertIfMissing(followerUserId, follower, followee) == 1) {
-            emitFollow(EventTypes.FOLLOW_CREATED_V1, follower, followee);
+        if (follows.insertIfMissing(followerId, follower, followeeId, followee) == 1) {
+            emitFollow(EventTypes.FOLLOW_CREATED_V1, followerId, followeeId);
         }
     }
 
     @Transactional
-    public void unfollow(String followerUsername, String followeeUsername) {
-        String follower = requireText(followerUsername, "follower username");
-        String followee = requireText(followeeUsername, "followee username");
-        if (follows.deleteByFollowerUsernameAndFolloweeUsername(follower, followee) == 1) {
-            emitFollow(EventTypes.FOLLOW_DELETED_V1, follower, followee);
+    public void unfollow(String followerUserId, String followeeUserId) {
+        String followerId = requireUserId(followerUserId);
+        String followeeId = requireUserId(followeeUserId);
+        if (follows.deleteByFollowerUserIdAndFolloweeUserId(followerId, followeeId) == 1) {
+            emitFollow(EventTypes.FOLLOW_DELETED_V1, followerId, followeeId);
         }
     }
 
     @Transactional(readOnly = true)
-    public FeedPage feed(String username, String cursor, int requestedPageSize) {
-        return feed(null, username, cursor, requestedPageSize);
-    }
-
-    @Transactional(readOnly = true)
-    public FeedPage feed(String userId, String username, String cursor, int requestedPageSize) {
-        String follower = requireText(username, "username");
+    public FeedPage feed(String userId, String cursor, int requestedPageSize) {
+        String followerId = requireUserId(userId);
         int pageSize = clampPageSize(requestedPageSize);
         int fetchSize = pageSize + 1;
 
         List<Post> fetched;
         if (cursor == null || cursor.isBlank()) {
-            fetched = posts.findFeedFirstPage(userId, follower, fetchSize);
+            fetched = posts.findFeedFirstPage(followerId, fetchSize);
         } else {
             FeedCursor parsed = decodeCursor(cursor);
-            fetched = posts.findFeedAfterCursor(userId, follower, parsed.createdAt(), parsed.id(), fetchSize);
+            fetched = posts.findFeedAfterCursor(followerId, parsed.createdAt(), parsed.id(), fetchSize);
         }
 
         boolean hasMore = fetched.size() > pageSize;
@@ -225,5 +210,10 @@ public class PostService {
             throw new IllegalArgumentException(fieldName + " is required");
         }
         return value.trim();
+    }
+
+    private String requireUserId(String value) {
+        try { return UUID.fromString(value).toString(); }
+        catch (RuntimeException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
     }
 }

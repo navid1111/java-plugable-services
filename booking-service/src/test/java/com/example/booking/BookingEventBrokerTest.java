@@ -70,7 +70,7 @@ class BookingEventBrokerTest {
         Instant start = Instant.now().plus(1, ChronoUnit.DAYS);
         Long slotId = slots.save(new Slot(resource.getId(), start, start.plus(1, ChronoUnit.HOURS))).getId();
 
-        var view = bookingService.book("alice", slotId);
+        var view = bookingService.book("550e8400-e29b-41d4-a716-446655440000", "alice", slotId);
         assertNotNull(view.id());
 
         // The relay drains the outbox (~200ms cadence) and confirms each publish. Read the

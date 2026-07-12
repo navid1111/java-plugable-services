@@ -8,6 +8,9 @@ RUN mvn -B install -DskipTests
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY --from=contracts /root/.m2 /root/.m2
+COPY platform/messaging-support/pom.xml /support/pom.xml
+COPY platform/messaging-support/src /support/src
+RUN mvn -B -f /support/pom.xml install -DskipTests
 COPY tweeter-service/pom.xml .
 RUN mvn -B dependency:go-offline
 COPY tweeter-service/src ./src

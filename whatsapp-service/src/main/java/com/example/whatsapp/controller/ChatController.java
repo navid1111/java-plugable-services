@@ -29,7 +29,8 @@ public class ChatController {
         this.jwtHelper = jwtHelper;
     }
 
-    public record CreateChatRequest(String name, List<String> participants) {
+    public record ParticipantRequest(String userId, String username) {}
+    public record CreateChatRequest(String name, List<ParticipantRequest> participants) {
     }
 
     @PostMapping("/chats")
@@ -37,8 +38,12 @@ public class ChatController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestBody CreateChatRequest request) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            ChatService.ChatView chat = chats.createChat(username, request.name(), request.participants());
+            var identity = jwtHelper.extractIdentity(authorization);
+            List<ChatService.UserRef> participants = request.participants() == null ? List.of()
+                    : request.participants().stream()
+                            .map(p -> new ChatService.UserRef(p.userId(), p.username())).toList();
+            ChatService.ChatView chat = chats.createChat(identity.userId(), identity.username(),
+                    request.name(), participants);
             return ResponseEntity.status(HttpStatus.CREATED).body(chat);
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
@@ -49,8 +54,8 @@ public class ChatController {
     public ResponseEntity<?> myChats(
             @RequestHeader(value = "Authorization", required = false) String authorization) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            return ResponseEntity.ok(chats.findMyChats(username));
+            var identity = jwtHelper.extractIdentity(authorization);
+            return ResponseEntity.ok(chats.findMyChats(identity.userId()));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
         }
@@ -63,8 +68,8 @@ public class ChatController {
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int pageSize) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            return ResponseEntity.ok(chats.findMessages(username, id, cursor, pageSize));
+            var identity = jwtHelper.extractIdentity(authorization);
+            return ResponseEntity.ok(chats.findMessages(identity.userId(), id, cursor, pageSize));
         } catch (ChatService.ForbiddenException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (ChatService.NotFoundException e) {

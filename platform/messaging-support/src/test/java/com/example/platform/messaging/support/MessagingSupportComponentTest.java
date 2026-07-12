@@ -92,30 +92,31 @@ class MessagingSupportComponentTest {
     void targetLifecycleIsIdempotentVersionedAndRejectsMissingTargets() {
         TargetProjectionStore store = new TargetProjectionStore(targets);
         assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "42"));
-        assertTrue(store.apply("post", "42", "alice", 1, true, Instant.now()));
-        assertFalse(store.apply("post", "42", "alice", 1, true, Instant.now()));
+        assertTrue(store.apply("post", "42", "user-1", "alice", 1, true, Instant.now()));
+        assertFalse(store.apply("post", "42", "user-1", "alice", 1, true, Instant.now()));
+        assertEquals("user-1", store.requireActive("post", "42").getOwnerUserId());
         assertEquals("alice", store.requireActive("post", "42").getOwnerUsername());
-        assertEquals("alice", store.requireActiveOwnedBy("post", "42", "alice").getOwnerUsername());
+        assertEquals("alice", store.requireActiveOwnedBy("post", "42", "user-1").getOwnerUsername());
         assertThrows(IllegalArgumentException.class,
-                () -> store.requireActiveOwnedBy("post", "42", "mallory"));
-        assertTrue(store.apply("post", "42", null, 2, false, Instant.now()));
+                () -> store.requireActiveOwnedBy("post", "42", "user-2"));
+        assertTrue(store.apply("post", "42", null, null, 2, false, Instant.now()));
         assertThrows(IllegalArgumentException.class, () -> store.requireActive("post", "42"));
-        assertFalse(store.apply("post", "42", "alice", 1, true, Instant.now()));
+        assertFalse(store.apply("post", "42", "user-1", "alice", 1, true, Instant.now()));
         assertThrows(IllegalArgumentException.class,
-                () -> store.apply("unknown", "42", "alice", 1, true, Instant.now()));
+                () -> store.apply("unknown", "42", "user-1", "alice", 1, true, Instant.now()));
     }
 
     @Test
     void targetReconciliationRepairsMissingAndStaleRows() {
         TargetProjectionStore store = new TargetProjectionStore(targets);
-        store.apply("post", "stale", "old-owner", 1, true, Instant.now());
-        store.apply("post", "orphan", "alice", 1, true, Instant.now());
+        store.apply("post", "stale", "user-1", "old-owner", 1, true, Instant.now());
+        store.apply("post", "orphan", "user-2", "alice", 1, true, Instant.now());
 
         var result = store.reconcilePosts(java.util.List.of(
                 new TargetProjectionStore.AuthoritativeTarget(
-                        "stale", "new-owner", 3, true, Instant.now()),
+                        "stale", "user-1", "new-owner", 3, true, Instant.now()),
                 new TargetProjectionStore.AuthoritativeTarget(
-                        "missing", "bob", 1, true, Instant.now())));
+                        "missing", "user-3", "bob", 1, true, Instant.now())));
 
         assertEquals(2, result.applied());
         assertEquals(1, result.tombstoned());

@@ -40,12 +40,8 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment create(String authorUsername, String targetType, String targetId, String content) {
-        return create(null, authorUsername, targetType, targetId, content);
-    }
-
-    @Transactional
     public Comment create(String authorUserId, String authorUsername, String targetType, String targetId, String content) {
+        requireUserId(authorUserId);
         String author = requireText(authorUsername, "author username");
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
@@ -92,11 +88,11 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteOwn(String username, Long commentId) {
-        String requester = requireText(username, "username");
+    public void deleteOwn(String userId, Long commentId) {
+        String requester = requireUserId(userId);
         Comment comment = comments.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("comment not found"));
-        if (!comment.getAuthorUsername().equals(requester)) {
+        if (!requester.equals(comment.getAuthorUserId())) {
             throw new ForbiddenException("cannot delete another user's comment");
         }
         comments.delete(comment);
@@ -149,6 +145,12 @@ public class CommentService {
             throw new IllegalArgumentException(fieldName + " is required");
         }
         return value.trim();
+    }
+
+    private String requireUserId(String value) {
+        String userId = requireText(value, "userId");
+        try { return java.util.UUID.fromString(userId).toString(); }
+        catch (IllegalArgumentException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
     }
 
     public static class NotFoundException extends RuntimeException {

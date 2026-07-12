@@ -17,6 +17,8 @@ public class Submission {
     private Long id;
 
     private String problemId;
+    @Column(name = "user_id", length = 36)
+    private String userId;
     private String username;
 
     @Column(columnDefinition = "TEXT")
@@ -52,6 +54,8 @@ public class Submission {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }

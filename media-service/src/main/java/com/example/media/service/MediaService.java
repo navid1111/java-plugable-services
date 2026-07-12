@@ -72,24 +72,14 @@ public class MediaService {
 
     @Transactional
     public MediaAsset upload(
-            String uploaderUsername,
-            String targetType,
-            String targetId,
-            MultipartFile file,
-            String caption,
-            String altText) {
-        return upload(null, uploaderUsername, targetType, targetId, file, caption, altText);
-    }
-
-    @Transactional
-    public MediaAsset upload(
             String uploaderUserId, String uploaderUsername, String targetType, String targetId,
             MultipartFile file, String caption, String altText) {
         String uploader = requireText(uploaderUsername, "username");
+        String stableUploaderId = requireUserId(uploaderUserId);
         String type = requireTargetType(targetType);
         String id = requireTargetId(targetId);
         try {
-            targets.requireActiveOwnedBy(type, id, uploader);
+            targets.requireActiveOwnedBy(type, id, stableUploaderId);
         } catch (IllegalArgumentException denied) {
             throw new ForbiddenException(denied.getMessage());
         }
@@ -102,6 +92,7 @@ public class MediaService {
             MediaAsset asset = new MediaAsset(
                     type,
                     id,
+                    stableUploaderId,
                     uploader,
                     upload.publicId(),
                     upload.resourceType(),
@@ -115,7 +106,6 @@ public class MediaService {
                     upload.durationSeconds(),
                     trimmedCaption,
                     trimmedAltText);
-            asset.assignUploaderUserId(uploaderUserId);
             return assets.save(asset);
         } catch (RuntimeException e) {
             try {
@@ -162,11 +152,11 @@ public class MediaService {
     }
 
     @Transactional
-    public void deleteOwn(String username, Long mediaId) {
-        String requester = requireText(username, "username");
+    public void deleteOwn(String userId, Long mediaId) {
+        String requester = requireUserId(userId);
         MediaAsset asset = assets.findByIdAndDeletedAtIsNull(mediaId)
                 .orElseThrow(() -> new NotFoundException("media asset not found"));
-        if (!asset.getUploaderUsername().equals(requester)) {
+        if (!requester.equals(asset.getUploaderUserId())) {
             throw new ForbiddenException("cannot delete another user's media");
         }
         deletion.enqueue(asset);
@@ -260,6 +250,11 @@ public class MediaService {
             throw new IllegalArgumentException(fieldName + " is required");
         }
         return value.trim();
+    }
+
+    private String requireUserId(String value) {
+        try { return java.util.UUID.fromString(value).toString(); }
+        catch (RuntimeException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
     }
 
     private String optionalText(String value, String fieldName, int maxLength) {

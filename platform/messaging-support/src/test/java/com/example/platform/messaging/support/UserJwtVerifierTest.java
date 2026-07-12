@@ -56,6 +56,18 @@ class UserJwtVerifierTest {
         assertThrows(UserAuthenticationException.class, () -> principal.requireRole("ADMIN"));
     }
 
+    @Test
+    void rejectsSignedUsernameSubjectFromCompatibilityPeriod() {
+        String header = encode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
+        String payload = encode("{\"iss\":\"springboot-auth\",\"sub\":\"alice\""
+                + ",\"username\":\"alice\",\"exp\":" + NOW.plusSeconds(60).getEpochSecond()
+                + ",\"roles\":[\"USER\"],\"scope\":\"user\"}");
+        String input = header + "." + payload;
+        String token = input + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(
+                WorkloadJwtIssuer.sign(input, SECRET.getBytes(StandardCharsets.UTF_8)));
+        assertThrows(UserAuthenticationException.class, () -> verifier.verifyUser("Bearer " + token));
+    }
+
     private String token(String issuer, long exp, String rolesJson, String scope) {
         String header = encode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
         String payload = encode("{\"iss\":\"" + issuer

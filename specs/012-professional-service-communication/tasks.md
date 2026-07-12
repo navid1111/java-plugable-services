@@ -53,7 +53,8 @@
 - [x] T036 Add user registered/profile-updated/deactivated events without credentials or tokens. **Verify:** schema and log tests prove sensitive fields never leave auth.
 - [x] T037 Add nullable `userId` columns to service tables and dual-write during migration. **Verify:** new records contain stable ID while old tokens remain temporarily compatible.
 - [x] T038 Backfill username references using an audited auth export and switch reads/contracts to user ID. **Verify:** row counts and unresolved-reference report pass.
-- [ ] T039 Remove username as relational identity after compatibility period. **Verify:** username rename requires no cross-service database updates.
+- [x] T039 Remove username as relational identity after compatibility period. **Verify:** username rename requires no cross-service database updates.
+  - UUID-only JWT subjects and UUID-based ownership, membership, idempotency, uniqueness, and joins now cover posts, follows, feeds, comments, media, target projections, search, booking, chat/WebSocket delivery, and LeetCode submissions. Usernames remain display snapshots and auth login keys only. `platform/scripts/verify-stable-user-identity.sh` guards the cutover.
 
 ## Phase 5 — Workload security, BFF, and remaining events
 

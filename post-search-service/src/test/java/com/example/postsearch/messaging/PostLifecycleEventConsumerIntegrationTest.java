@@ -181,7 +181,8 @@ class PostLifecycleEventConsumerIntegrationTest {
     private String deleted(long version) {
         return json(EventEnvelope.fact(EventTypes.POST_DELETED_V1, 1, "tweeter-service", "post", "42",
                 version, UUID.randomUUID(), null, null,
-                new PostDeleted("42", "legacy:alice", Instant.parse("2026-01-02T00:00:00Z"))));
+                new PostDeleted("42", "550e8400-e29b-41d4-a716-446655440000",
+                        Instant.parse("2026-01-02T00:00:00Z"))));
     }
 
     private String json(Object value) { return mapper.writeValueAsString(value); }

@@ -71,12 +71,12 @@ public class JwtService {
                 .parseSignedClaims(token);
         java.util.List<?> roles = jws.getPayload().get("roles", java.util.List.class);
         String scope = jws.getPayload().get("scope", String.class);
-        boolean legacySubject;
-        try { java.util.UUID.fromString(jws.getPayload().getSubject()); legacySubject = false; }
-        catch (IllegalArgumentException oldToken) { legacySubject = true; }
-        boolean signedLegacy = legacySubject && roles == null && scope == null;
-        if (!signedLegacy && (roles == null || !roles.contains("USER") || scope == null
-                || java.util.Arrays.stream(scope.split(" +")).noneMatch("user"::equals))) {
+        try { java.util.UUID.fromString(jws.getPayload().getSubject()); }
+        catch (IllegalArgumentException invalidSubject) {
+            throw new io.jsonwebtoken.JwtException("JWT subject must be a stable user UUID");
+        }
+        if (roles == null || !roles.contains("USER") || scope == null
+                || java.util.Arrays.stream(scope.split(" +")).noneMatch("user"::equals)){
             throw new io.jsonwebtoken.JwtException("required user authority missing");
         }
         return new Identity(jws.getPayload().getSubject(),

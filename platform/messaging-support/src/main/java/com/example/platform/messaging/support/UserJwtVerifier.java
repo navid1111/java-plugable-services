@@ -60,18 +60,12 @@ public final class UserJwtVerifier {
             String subject = required(claims, "sub");
             String username = claims.path("username").asText();
             String userId;
-            boolean legacy;
-            try { userId = UUID.fromString(subject).toString(); legacy = false; }
-            catch (IllegalArgumentException oldSubject) { userId = null; username = subject; legacy = true; }
-            if (!legacy && username.isBlank()) fail("missing claim: username");
+            try { userId = UUID.fromString(subject).toString(); }
+            catch (IllegalArgumentException invalidSubject) { fail("JWT subject must be a stable user UUID"); return null; }
+            if (username.isBlank()) fail("missing claim: username");
             Set<String> roles = values(claims.get("roles"));
             Set<String> scopes = values(claims.get("scope"));
-            // Signed pre-migration tokens used username as sub and predate authority claims.
-            // Keep only that identifiable legacy shape compatible until T039 removes it.
-            if (legacy && roles.isEmpty() && scopes.isEmpty()) {
-                roles = Set.of("USER"); scopes = Set.of("user");
-            }
-            return new Principal(new JwtIdentity(userId, username, legacy), roles, scopes);
+            return new Principal(new JwtIdentity(userId, username), roles, scopes);
         } catch (UserAuthenticationException e) {
             throw e;
         } catch (RuntimeException e) {

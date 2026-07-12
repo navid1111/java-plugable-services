@@ -47,9 +47,10 @@ public class BookingController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestBody(required = false) CreateBookingRequest request) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
+            var identity = jwtHelper.extractIdentity(authorization);
             Long slotId = request == null ? null : request.slotId();
-            return ResponseEntity.status(HttpStatus.CREATED).body(bookings.book(username, slotId));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(bookings.book(identity.userId(), identity.username(), slotId));
         } catch (BookingService.ConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (BookingService.NotFoundException e) {
@@ -63,8 +64,8 @@ public class BookingController {
     public ResponseEntity<?> mine(
             @RequestHeader(value = "Authorization", required = false) String authorization) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            return ResponseEntity.ok(bookings.mine(username));
+            var identity = jwtHelper.extractIdentity(authorization);
+            return ResponseEntity.ok(bookings.mine(identity.userId()));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
         }
@@ -75,8 +76,8 @@ public class BookingController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            bookings.cancel(username, id);
+            var identity = jwtHelper.extractIdentity(authorization);
+            bookings.cancel(identity.userId(), id);
             return ResponseEntity.noContent().build();
         } catch (BookingService.ForbiddenException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));

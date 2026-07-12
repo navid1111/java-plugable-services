@@ -9,9 +9,9 @@ import com.example.whatsapp.model.ChatParticipant;
 
 public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Long> {
 
-    boolean existsByChatIdAndUsername(Long chatId, String username);
+    boolean existsByChatIdAndUserId(Long chatId, String userId);
 
-    List<ChatParticipant> findByChatIdOrderByUsernameAsc(Long chatId);
+    List<ChatParticipant> findByChatIdOrderByUserIdAsc(Long chatId);
 
     List<ChatParticipant> findByChatIdIn(Collection<Long> chatIds);
 }

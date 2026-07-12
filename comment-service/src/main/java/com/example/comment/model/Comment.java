@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
         name = "comments",
         indexes = {
                 @Index(name = "idx_comments_target_created_at", columnList = "target_type, target_id, created_at DESC, id DESC"),
-                @Index(name = "idx_comments_author_created_at", columnList = "author_username, created_at DESC, id DESC")
+                @Index(name = "idx_comments_author_created_at", columnList = "author_user_id, created_at DESC, id DESC")
         })
 public class Comment {
 
@@ -53,10 +53,6 @@ public class Comment {
         this.authorUsername = authorUsername;
         this.content = content;
     }
-    public Comment(String targetType, String targetId, String authorUsername, String content) {
-        this(targetType, targetId, null, authorUsername, content);
-    }
-
     @PrePersist
     void onCreate() {
         if (createdAt == null) {

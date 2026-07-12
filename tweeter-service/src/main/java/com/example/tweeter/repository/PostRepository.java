@@ -11,7 +11,6 @@ import com.example.tweeter.model.Post;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    List<Post> findByAuthorUsernameOrderByCreatedAtDescIdDesc(String authorUsername);
     List<Post> findByAuthorUserIdOrderByCreatedAtDescIdDesc(String authorUserId);
 
     @Query(value = "SELECT * FROM posts WHERE id > :afterId ORDER BY id ASC LIMIT :limit", nativeQuery = true)
@@ -20,27 +19,24 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(value = """
             SELECT p.*
             FROM posts p
-            JOIN follows f ON f.followee_username = p.author_username
-            WHERE ((:userId IS NOT NULL AND f.follower_user_id = :userId AND f.followee_user_id = p.author_user_id)
-                OR (:userId IS NULL AND f.follower_username = :username AND f.followee_username = p.author_username))
+            JOIN follows f ON f.followee_user_id = p.author_user_id
+            WHERE f.follower_user_id = :userId
             ORDER BY p.created_at DESC, p.id DESC
             LIMIT :limit
             """, nativeQuery = true)
-    List<Post> findFeedFirstPage(@Param("userId") String userId, @Param("username") String username, @Param("limit") int limit);
+    List<Post> findFeedFirstPage(@Param("userId") String userId, @Param("limit") int limit);
 
     @Query(value = """
             SELECT p.*
             FROM posts p
-            JOIN follows f ON f.followee_username = p.author_username
-            WHERE ((:userId IS NOT NULL AND f.follower_user_id = :userId AND f.followee_user_id = p.author_user_id)
-                OR (:userId IS NULL AND f.follower_username = :username AND f.followee_username = p.author_username))
+            JOIN follows f ON f.followee_user_id = p.author_user_id
+            WHERE f.follower_user_id = :userId
               AND (p.created_at < :createdAt OR (p.created_at = :createdAt AND p.id < :id))
             ORDER BY p.created_at DESC, p.id DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<Post> findFeedAfterCursor(
             @Param("userId") String userId,
-            @Param("username") String username,
             @Param("createdAt") Instant createdAt,
             @Param("id") Long id,
             @Param("limit") int limit);

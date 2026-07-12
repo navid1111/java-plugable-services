@@ -20,7 +20,7 @@ import jakarta.persistence.UniqueConstraint;
         },
         indexes = {
                 @Index(name = "idx_media_target_created", columnList = "target_type, target_id, created_at DESC, id DESC"),
-                @Index(name = "idx_media_uploader_created", columnList = "uploader_username, created_at DESC, id DESC")
+                @Index(name = "idx_media_uploader_created", columnList = "uploader_user_id, created_at DESC, id DESC")
         })
 public class MediaAsset {
 
@@ -87,6 +87,7 @@ public class MediaAsset {
     public MediaAsset(
             String targetType,
             String targetId,
+            String uploaderUserId,
             String uploaderUsername,
             String publicId,
             String resourceType,
@@ -102,6 +103,7 @@ public class MediaAsset {
             String altText) {
         this.targetType = targetType;
         this.targetId = targetId;
+        this.uploaderUserId = uploaderUserId;
         this.uploaderUsername = uploaderUsername;
         this.publicId = publicId;
         this.resourceType = resourceType;
@@ -116,8 +118,6 @@ public class MediaAsset {
         this.caption = caption;
         this.altText = altText;
     }
-
-    public void assignUploaderUserId(String userId) { this.uploaderUserId = userId; }
 
     @PrePersist
     void onCreate() {

@@ -17,7 +17,7 @@ import jakarta.persistence.Version;
 @Table(
         name = "posts",
         indexes = {
-                @Index(name = "idx_posts_author_created_at", columnList = "author_username, created_at DESC"),
+                @Index(name = "idx_posts_author_created_at", columnList = "author_user_id, created_at DESC"),
                 @Index(name = "idx_posts_created_at_id", columnList = "created_at DESC, id DESC")
         })
 public class Post {
@@ -57,8 +57,6 @@ public class Post {
         this.authorUsername = authorUsername;
         this.content = content;
     }
-
-    public Post(String authorUsername, String content) { this(null, authorUsername, content); }
 
     @PrePersist
     void onCreate() {

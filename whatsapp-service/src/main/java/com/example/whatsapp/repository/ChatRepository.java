@@ -14,8 +14,8 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             SELECT c.*
             FROM chats c
             JOIN chat_participants cp ON cp.chat_id = c.id
-            WHERE cp.username = :username
+            WHERE cp.user_id = :userId
             ORDER BY c.created_at DESC, c.id DESC
             """, nativeQuery = true)
-    List<Chat> findByParticipant(@Param("username") String username);
+    List<Chat> findByParticipant(@Param("userId") String userId);
 }

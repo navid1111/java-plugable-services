@@ -25,10 +25,11 @@ public class LeetcodeController {
     @GetMapping("/problems/{id}") public ProblemDetail detail(@PathVariable String id){Problem p=problems.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Problem not found"));return new ProblemDetail(p.getId(),p.getTitle(),p.getDescription(),p.getDifficulty(),p.getTags(),p.getCodeStubs());}
     @PostMapping("/problems/{id}/submit") public ResponseEntity<SubmissionView> submit(@PathVariable String id,@RequestHeader("Authorization") String auth,@RequestHeader(value="Idempotency-Key",required=false) String key,@RequestParam(required=false) String competitionId,@Valid @RequestBody SubmitRequest request){
         if(key!=null&&key.length()>255) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Idempotency-Key is too long");
-        Submission s=service.submit(jwt.extractUsername(auth),id,competitionId,request.language(),request.code(),key);
+        var identity=jwt.extractIdentity(auth);
+        Submission s=service.submit(identity.userId(),identity.username(),id,competitionId,request.language(),request.code(),key);
         return ResponseEntity.accepted().location(URI.create("/leetcode/submissions/"+s.getId())).body(SubmissionView.of(s));
     }
-    @GetMapping("/submissions/{id}") public SubmissionView submission(@PathVariable Long id,@RequestHeader("Authorization") String auth){String user=jwt.extractUsername(auth);Submission s=submissions.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found"));if(!user.equals(s.getUsername()))throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found");return SubmissionView.of(s);}
+    @GetMapping("/submissions/{id}") public SubmissionView submission(@PathVariable Long id,@RequestHeader("Authorization") String auth){String userId=jwt.extractIdentity(auth).userId();Submission s=submissions.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found"));if(!userId.equals(s.getUserId()))throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Submission not found");return SubmissionView.of(s);}
     public record SubmitRequest(@NotBlank @Size(max=65536) String code,@NotBlank String language){}
     public record ProblemSummary(String id,String title,String difficulty,String tags){}
     public record ProblemDetail(String id,String title,String description,String difficulty,String tags,String codeStubs){}

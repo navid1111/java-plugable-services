@@ -32,8 +32,11 @@ public class SubmissionService {
         this.serializer=serializer; this.timeout=timeout;
     }
     @Transactional
-    public Submission submit(String username,String problemId,String competitionId,String language,String code,String key) {
-        if (key!=null&&!key.isBlank()) { var old=submissions.findByUsernameAndIdempotencyKey(username,key); if(old.isPresent()) return old.get(); }
+    public Submission submit(String userId,String username,String problemId,String competitionId,String language,String code,String key) {
+        String stableUserId;
+        try { stableUserId=UUID.fromString(userId).toString(); }
+        catch (RuntimeException invalid) { throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Stable user ID is required"); }
+        if (key!=null&&!key.isBlank()) { var old=submissions.findByUserIdAndIdempotencyKey(stableUserId,key); if(old.isPresent()) return old.get(); }
         Problem problem=problems.findById(problemId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Problem not found"));
         String lang=language.toLowerCase();
         if(!java.util.Set.of("python","javascript","java").contains(lang)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Language not supported");
@@ -43,7 +46,7 @@ public class SubmissionService {
             if(c.getStartTime()==null||c.getEndTime()==null||now.isBefore(c.getStartTime())||now.isAfter(c.getEndTime())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Competition is not active");
             if(!competitionProblems.existsByCompetitionIdAndProblemId(competitionId,problemId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Problem is not in this competition");
         }
-        Submission s=new Submission(); s.setProblemId(problemId); s.setUsername(username); s.setCode(code); s.setLanguage(lang);
+        Submission s=new Submission(); s.setProblemId(problemId); s.setUserId(stableUserId); s.setUsername(username); s.setCode(code); s.setLanguage(lang);
         s.setStatus("QUEUED"); s.setPassedCount(0); s.setTotalCount(0); s.setCompetitionId(competitionId); s.setSubmittedAt(now); s.setUpdatedAt(now); s.setIdempotencyKey(key);
         s=submissions.saveAndFlush(s);
         enqueueJudgeRequest(s, problem, UUID.randomUUID(), null, now);

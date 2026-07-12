@@ -5,12 +5,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -55,6 +53,7 @@ public class ChatService {
 
     public record ChatView(Long id, String name, List<String> participants, Instant createdAt) {
     }
+    public record UserRef(String userId, String username) {}
 
     public record MessageView(Long id, Long chatId, String senderUsername, String content, Instant createdAt) {
         static MessageView from(Message message) {
@@ -70,20 +69,22 @@ public class ChatService {
     public record MessagePage(List<MessageView> items, String nextCursor) {
     }
 
-    public record Delivery(MessageView message, List<String> recipients) {
+    public record Delivery(MessageView message, List<String> recipientUserIds) {
     }
 
     private record MessageCursor(Instant createdAt, Long id) {
     }
 
     @Transactional
-    public ChatView createChat(String creatorUsername, String requestedName, List<String> requestedParticipants) {
-        String creator = requireText(creatorUsername, "username");
-        Set<String> uniqueParticipants = new LinkedHashSet<>();
-        uniqueParticipants.add(creator);
+    public ChatView createChat(String creatorUserId, String creatorUsername,
+            String requestedName, List<UserRef> requestedParticipants) {
+        UserRef creator = requireUser(new UserRef(creatorUserId, creatorUsername));
+        Map<String, UserRef> uniqueParticipants = new LinkedHashMap<>();
+        uniqueParticipants.put(creator.userId(), creator);
         if (requestedParticipants != null) {
-            for (String participant : requestedParticipants) {
-                uniqueParticipants.add(requireText(participant, "participant username"));
+            for (UserRef participant : requestedParticipants) {
+                UserRef valid = requireUser(participant);
+                uniqueParticipants.putIfAbsent(valid.userId(), valid);
             }
         }
 
@@ -95,17 +96,16 @@ public class ChatService {
         }
 
         Chat chat = chats.save(new Chat(normalizeOptional(requestedName)));
-        List<ChatParticipant> rows = uniqueParticipants.stream()
-                .map(username -> new ChatParticipant(chat.getId(), username))
+        List<ChatParticipant> rows = uniqueParticipants.values().stream()
+                .map(user -> new ChatParticipant(chat.getId(), user.userId(), user.username()))
                 .toList();
         participants.saveAll(rows);
         return toView(chat, rows);
     }
 
     @Transactional(readOnly = true)
-    public List<ChatView> findMyChats(String username) {
-        String currentUser = requireText(username, "username");
-        List<Chat> mine = chats.findByParticipant(currentUser);
+    public List<ChatView> findMyChats(String userId) {
+        List<Chat> mine = chats.findByParticipant(requireUserId(userId));
         if (mine.isEmpty()) {
             return List.of();
         }
@@ -120,8 +120,8 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public MessagePage findMessages(String username, Long chatId, String cursor, int requestedPageSize) {
-        requireParticipant(username, chatId);
+    public MessagePage findMessages(String userId, Long chatId, String cursor, int requestedPageSize) {
+        requireParticipant(userId, chatId);
         int pageSize = clampPageSize(requestedPageSize);
         int fetchSize = pageSize + 1;
 
@@ -140,21 +140,22 @@ public class ChatService {
     }
 
     @Transactional
-    public Delivery sendMessage(String senderUsername, Long chatId, String content) {
+    public Delivery sendMessage(String senderUserId, String senderUsername, Long chatId, String content) {
+        String stableSenderId = requireUserId(senderUserId);
         String sender = requireText(senderUsername, "sender username");
-        requireParticipant(sender, chatId);
+        requireParticipant(stableSenderId, chatId);
         String trimmed = requireText(content, "content");
         if (trimmed.length() > 2000) {
             throw new IllegalArgumentException("content must be 2000 characters or fewer");
         }
 
-        List<String> chatParticipants = participantUsernames(chatId);
-        Message message = messages.save(new Message(chatId, sender, trimmed));
-        List<String> recipients = chatParticipants.stream()
-                .filter(username -> !username.equals(sender))
+        List<ChatParticipant> chatParticipants = participantRows(chatId);
+        Message message = messages.save(new Message(chatId, stableSenderId, sender, trimmed));
+        List<ChatParticipant> recipients = chatParticipants.stream()
+                .filter(participant -> !participant.getUserId().equals(stableSenderId))
                 .toList();
         inboxEntries.saveAll(recipients.stream()
-                .map(recipient -> new InboxEntry(message.getId(), recipient))
+                .map(recipient -> new InboxEntry(message.getId(), recipient.getUserId(), recipient.getUsername()))
                 .toList());
 
         // External-reaction event (push/moderation/analytics); DB + WebSocket stay the
@@ -162,29 +163,30 @@ public class ChatService {
         // published for a message that rolled back.
         events.messageCreated(message, recipients.size());
 
-        return new Delivery(MessageView.from(message), recipients);
+        return new Delivery(MessageView.from(message), recipients.stream().map(ChatParticipant::getUserId).toList());
     }
 
     @Transactional
-    public void ack(String username, Long messageId) {
-        String recipient = requireText(username, "username");
+    public void ack(String userId, String username, Long messageId) {
+        String recipientId = requireUserId(userId);
+        String recipientName = requireText(username, "username");
         if (messageId == null) {
             return;
         }
-        Optional<InboxEntry> maybeEntry = inboxEntries.findByMessageIdAndRecipientUsername(messageId, recipient);
+        Optional<InboxEntry> maybeEntry = inboxEntries.findByMessageIdAndRecipientUserId(messageId, recipientId);
         Optional<InboxEntry> undelivered = maybeEntry.filter(entry -> !entry.isDelivered());
         undelivered.ifPresent(entry -> {
             entry.markDelivered();
             // Emit only on the first read transition, so repeated acks stay idempotent.
             Long chatId = messages.findById(messageId).map(Message::getChatId).orElse(null);
-            events.messageRead(messageId, chatId, recipient);
+            events.messageRead(messageId, chatId, recipientName);
         });
     }
 
     @Transactional(readOnly = true)
-    public List<MessageView> undeliveredMessages(String username) {
-        String recipient = requireText(username, "username");
-        List<InboxEntry> entries = inboxEntries.findByRecipientUsernameAndDeliveredFalseOrderByCreatedAtAscIdAsc(recipient);
+    public List<MessageView> undeliveredMessages(String userId) {
+        List<InboxEntry> entries = inboxEntries.findByRecipientUserIdAndDeliveredFalseOrderByCreatedAtAscIdAsc(
+                requireUserId(userId));
         if (entries.isEmpty()) {
             return List.of();
         }
@@ -219,21 +221,18 @@ public class ChatService {
         return new ChatView(chat.getId(), chat.getName(), names, chat.getCreatedAt());
     }
 
-    private void requireParticipant(String username, Long chatId) {
-        String currentUser = requireText(username, "username");
+    private void requireParticipant(String userId, Long chatId) {
+        String currentUserId = requireUserId(userId);
         if (chatId == null || !chats.existsById(chatId)) {
             throw new NotFoundException("chat not found");
         }
-        if (!participants.existsByChatIdAndUsername(chatId, currentUser)) {
+        if (!participants.existsByChatIdAndUserId(chatId, currentUserId)) {
             throw new ForbiddenException("not a chat participant");
         }
     }
 
-    private List<String> participantUsernames(Long chatId) {
-        return participants.findByChatIdOrderByUsernameAsc(chatId).stream()
-                .sorted(Comparator.comparing(ChatParticipant::getUsername))
-                .map(ChatParticipant::getUsername)
-                .toList();
+    private List<ChatParticipant> participantRows(Long chatId) {
+        return participants.findByChatIdOrderByUserIdAsc(chatId);
     }
 
     private int clampPageSize(int requestedPageSize) {
@@ -267,6 +266,16 @@ public class ChatService {
             throw new IllegalArgumentException(fieldName + " is required");
         }
         return value.trim();
+    }
+
+    private String requireUserId(String value) {
+        try { return java.util.UUID.fromString(value).toString(); }
+        catch (RuntimeException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
+    }
+
+    private UserRef requireUser(UserRef user) {
+        if (user == null) throw new IllegalArgumentException("participant is required");
+        return new UserRef(requireUserId(user.userId()), requireText(user.username(), "participant username"));
     }
 
     private String normalizeOptional(String value) {

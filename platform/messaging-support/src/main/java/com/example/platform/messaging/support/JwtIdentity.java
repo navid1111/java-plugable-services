@@ -1,4 +1,4 @@
 package com.example.platform.messaging.support;
 
-/** Transitional JWT identity extraction: stable UUID subject plus username display claim. */
-public record JwtIdentity(String userId, String username, boolean legacyToken) {}
+/** Stable user identity. Username is presentation data and must not be used as a relational key. */
+public record JwtIdentity(String userId, String username) {}

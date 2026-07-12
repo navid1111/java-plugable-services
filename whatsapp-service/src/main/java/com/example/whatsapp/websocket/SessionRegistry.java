@@ -11,32 +11,32 @@ import org.springframework.web.socket.WebSocketSession;
 @Component
 public class SessionRegistry {
 
-    private final ConcurrentHashMap<String, Set<WebSocketSession>> sessionsByUsername = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Set<WebSocketSession>> sessionsByUserId = new ConcurrentHashMap<>();
 
-    public void add(String username, WebSocketSession session) {
-        sessionsByUsername.computeIfAbsent(username, ignored -> ConcurrentHashMap.newKeySet()).add(session);
+    public void add(String userId, WebSocketSession session) {
+        sessionsByUserId.computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet()).add(session);
     }
 
-    public void remove(String username, WebSocketSession session) {
-        Set<WebSocketSession> sessions = sessionsByUsername.get(username);
+    public void remove(String userId, WebSocketSession session) {
+        Set<WebSocketSession> sessions = sessionsByUserId.get(userId);
         if (sessions == null) {
             return;
         }
         sessions.remove(session);
         if (sessions.isEmpty()) {
-            sessionsByUsername.remove(username, sessions);
+            sessionsByUserId.remove(userId, sessions);
         }
     }
 
-    public void sendToUser(String username, String payload) {
-        Set<WebSocketSession> sessions = sessionsByUsername.get(username);
+    public void sendToUser(String userId, String payload) {
+        Set<WebSocketSession> sessions = sessionsByUserId.get(userId);
         if (sessions == null || sessions.isEmpty()) {
             return;
         }
 
         for (WebSocketSession session : sessions) {
             if (!session.isOpen()) {
-                remove(username, session);
+                remove(userId, session);
                 continue;
             }
             try {
@@ -44,7 +44,7 @@ public class SessionRegistry {
                     session.sendMessage(new TextMessage(payload));
                 }
             } catch (IOException e) {
-                remove(username, session);
+                remove(userId, session);
             }
         }
     }

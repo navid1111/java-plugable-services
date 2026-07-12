@@ -1,6 +1,7 @@
 package com.example.whatsapp.security;
 
 import com.example.platform.messaging.support.UserJwtVerifier;
+import com.example.platform.messaging.support.JwtIdentity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -15,4 +16,5 @@ public class JwtHelper {
     public String extractUsername(String authorization) {
         return verifier.verifyUser(authorization).username();
     }
+    public JwtIdentity extractIdentity(String authorization) { return verifier.verifyUser(authorization); }
 }

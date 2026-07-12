@@ -75,7 +75,7 @@ class BookingEventsComponentTest {
             pool.submit(() -> {
                 try {
                     barrier.await();
-                    bookingService.book(user, slotId);
+                    bookingService.book(java.util.UUID.nameUUIDFromBytes(user.getBytes()).toString(), user, slotId);
                     succeeded.incrementAndGet();
                 } catch (BookingService.ConflictException e) {
                     conflicted.incrementAndGet();
@@ -97,11 +97,13 @@ class BookingEventsComponentTest {
 
     @Test
     void cancellationIsIdempotent() {
-        var view = bookingService.book("alice", slotId);
+        String aliceId = "550e8400-e29b-41d4-a716-446655440000";
+        var view = bookingService.book(aliceId, "alice", slotId);
         assertEquals(1, count("booking.created.v1"));
+        assertEquals(1, bookingService.mine(aliceId).size(), "rename does not affect ownership lookup");
 
-        bookingService.cancel("alice", view.id());
-        bookingService.cancel("alice", view.id()); // repeat: must not emit again
+        bookingService.cancel(aliceId, view.id());
+        bookingService.cancel(aliceId, view.id()); // repeat: must not emit again
 
         assertEquals(1, count("booking.cancelled.v1"), "cancel emits once despite being repeated");
         assertEquals(2, count("slot.availability-changed.v1"), "unavailable on book, available on cancel");

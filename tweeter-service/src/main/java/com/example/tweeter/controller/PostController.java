@@ -62,9 +62,9 @@ public class PostController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id, @Valid @RequestBody UpdatePostRequest body) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
+            var identity = jwtHelper.extractIdentity(authorization);
             return ResponseEntity.ok(PostResponse.from(
-                    posts.update(id, username, body.content(), body.expectedVersion())));
+                    posts.update(id, identity.userId(), body.content(), body.expectedVersion())));
         } catch (OptimisticLockingFailureException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -77,8 +77,8 @@ public class PostController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id, @RequestParam long expectedVersion) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            posts.delete(id, username, expectedVersion);
+            var identity = jwtHelper.extractIdentity(authorization);
+            posts.delete(id, identity.userId(), expectedVersion);
             return ResponseEntity.noContent().build();
         } catch (OptimisticLockingFailureException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
@@ -112,41 +112,34 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<?> byAuthor(@RequestParam(required = false) String author,
-            @RequestParam(required = false) String authorUserId) {
-        if (authorUserId != null && !authorUserId.isBlank()) {
-            return ResponseEntity.ok(posts.findByAuthorUserId(authorUserId.trim()).stream().map(PostResponse::from).toList());
-        }
-        if (author == null || author.trim().isEmpty()) {
-            return badRequest("author is required");
-        }
-
-        List<PostResponse> responses = posts.findByAuthor(author.trim()).stream()
-                .map(PostResponse::from)
-                .toList();
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<?> byAuthor(@RequestParam String authorUserId) {
+        try {
+            return ResponseEntity.ok(posts.findByAuthorUserId(authorUserId).stream()
+                    .map(PostResponse::from).toList());
+        } catch (IllegalArgumentException e) { return badRequest(e.getMessage()); }
     }
 
-    @PutMapping("/users/{username}/follow")
+    @PutMapping("/users/{userId}/follow")
     public ResponseEntity<?> follow(
             @RequestHeader(value = "Authorization", required = false) String authorization,
-            @PathVariable String username) {
+            @PathVariable String userId,
+            @RequestParam String username) {
         try {
             var identity = jwtHelper.extractIdentity(authorization);
-            posts.follow(identity.userId(), identity.username(), username);
-            return ResponseEntity.ok(Map.of("followerUsername", identity.username(), "followeeUsername", username));
+            posts.follow(identity.userId(), identity.username(), userId, username);
+            return ResponseEntity.ok(Map.of("followerUserId", identity.userId(), "followeeUserId", userId));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
         }
     }
 
-    @DeleteMapping("/users/{username}/follow")
+    @DeleteMapping("/users/{userId}/follow")
     public ResponseEntity<?> unfollow(
             @RequestHeader(value = "Authorization", required = false) String authorization,
-            @PathVariable String username) {
+            @PathVariable String userId) {
         try {
-            String follower = jwtHelper.extractUsername(authorization);
-            posts.unfollow(follower, username);
+            var identity = jwtHelper.extractIdentity(authorization);
+            posts.unfollow(identity.userId(), userId);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
@@ -160,7 +153,7 @@ public class PostController {
             @RequestParam(defaultValue = "20") int pageSize) {
         try {
             var identity = jwtHelper.extractIdentity(authorization);
-            PostService.FeedPage page = posts.feed(identity.userId(), identity.username(), cursor, pageSize);
+            PostService.FeedPage page = posts.feed(identity.userId(), cursor, pageSize);
             List<PostResponse> items = page.items().stream()
                     .map(PostResponse::from)
                     .toList();

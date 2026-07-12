@@ -154,7 +154,6 @@ public class AuthController {
     }
 
     private java.util.Optional<User> findIdentity(JwtService.Identity identity) {
-        try { return users.findByUserId(UUID.fromString(identity.subject())); }
-        catch (IllegalArgumentException legacyToken) { return users.findByUsername(identity.subject()); }
+        return users.findByUserId(UUID.fromString(identity.subject()));
     }
 }

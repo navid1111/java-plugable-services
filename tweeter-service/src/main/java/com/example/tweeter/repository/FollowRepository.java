@@ -11,14 +11,15 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     @Modifying
     @Query(value = """
-            INSERT INTO follows (follower_user_id, follower_username, followee_username, created_at)
-            VALUES (:followerUserId, :followerUsername, :followeeUsername, CURRENT_TIMESTAMP)
-            ON CONFLICT (follower_username, followee_username) DO NOTHING
+            INSERT INTO follows (follower_user_id, follower_username, followee_user_id, followee_username, created_at)
+            VALUES (:followerUserId, :followerUsername, :followeeUserId, :followeeUsername, CURRENT_TIMESTAMP)
+            ON CONFLICT DO NOTHING
             """, nativeQuery = true)
     int insertIfMissing(
             @Param("followerUserId") String followerUserId,
             @Param("followerUsername") String followerUsername,
+            @Param("followeeUserId") String followeeUserId,
             @Param("followeeUsername") String followeeUsername);
 
-    int deleteByFollowerUsernameAndFolloweeUsername(String followerUsername, String followeeUsername);
+    int deleteByFollowerUserIdAndFolloweeUserId(String followerUserId, String followeeUserId);
 }

@@ -34,12 +34,13 @@ public class PostTargetEventProcessor {
             if (EventTypes.POST_CREATED_V1.equals(type) || EventTypes.POST_UPDATED_V1.equals(type)) {
                 String postId = required(payload, "postId");
                 Instant when = Instant.parse(required(payload, "updatedAt"));
-                targets.apply("post", postId, required(payload, "authorUsername"), version, true, when);
+                targets.apply("post", postId, required(payload, "authorUserId"),
+                        required(payload, "authorUsername"), version, true, when);
                 observer.changed("post", postId, version, true, when);
             } else if (EventTypes.POST_DELETED_V1.equals(type)) {
                 String postId = required(payload, "postId");
                 Instant when = Instant.parse(required(payload, "deletedAt"));
-                targets.apply("post", postId, null, version, false, when);
+                targets.apply("post", postId, null, null, version, false, when);
                 observer.changed("post", postId, version, false, when);
             } else throw new IllegalArgumentException("unsupported target event: " + type);
         });

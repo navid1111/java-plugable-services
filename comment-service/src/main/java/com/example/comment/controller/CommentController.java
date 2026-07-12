@@ -127,8 +127,8 @@ public class CommentController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            comments.deleteOwn(username, id);
+            var identity = jwtHelper.extractIdentity(authorization);
+            comments.deleteOwn(identity.userId(), id);
             return ResponseEntity.noContent().build();
         } catch (CommentService.ForbiddenException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));

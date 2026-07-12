@@ -26,6 +26,8 @@ import com.example.whatsapp.service.ChatService;
 @SpringBootTest(properties = "chat.messaging.relay-enabled=false")
 @Testcontainers
 class ChatEventsComponentTest {
+    private static final String ALICE_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final String BOB_ID = "550e8400-e29b-41d4-a716-446655440001";
 
     @Container
     @ServiceConnection
@@ -47,13 +49,16 @@ class ChatEventsComponentTest {
 
     @Test
     void brokerOutageStillPersistsMessageAndCapturesEvent() {
-        var chat = chatService.createChat("alice", "room", List.of("bob"));
-        var delivery = chatService.sendMessage("alice", chat.id(), "hello bob");
+        var chat = chatService.createChat(ALICE_ID, "alice", "room",
+                List.of(new ChatService.UserRef(BOB_ID, "bob")));
+        var delivery = chatService.sendMessage(ALICE_ID, "alice-renamed", chat.id(), "hello bob");
 
         // Delivery source of truth (DB) is intact even though the broker is "down".
         assertTrue(messages.findById(delivery.message().id()).isPresent(),
                 "message persists regardless of broker availability");
-        assertEquals(List.of("bob"), delivery.recipients());
+        assertEquals(List.of(BOB_ID), delivery.recipientUserIds());
+        assertTrue(chatService.findMyChats(ALICE_ID).stream().anyMatch(view -> view.id().equals(chat.id())),
+                "rename does not change chat membership");
 
         // The event is safely captured for later delivery once the relay/broker recovers.
         assertEquals(1, count("chat.message-created.v1"), "created event captured in outbox");
@@ -61,12 +66,13 @@ class ChatEventsComponentTest {
 
     @Test
     void readEventIsEmittedOncePerAck() {
-        var chat = chatService.createChat("alice", "room", List.of("bob"));
-        var delivery = chatService.sendMessage("alice", chat.id(), "hi");
+        var chat = chatService.createChat(ALICE_ID, "alice", "room",
+                List.of(new ChatService.UserRef(BOB_ID, "bob")));
+        var delivery = chatService.sendMessage(ALICE_ID, "alice", chat.id(), "hi");
         long messageId = delivery.message().id();
 
-        chatService.ack("bob", messageId);
-        chatService.ack("bob", messageId); // redelivered ack must not emit again
+        chatService.ack(BOB_ID, "bob-renamed", messageId);
+        chatService.ack(BOB_ID, "bob-renamed", messageId); // redelivered ack must not emit again
 
         assertEquals(1, count("chat.message-read.v1"), "read emitted once despite repeated acks");
     }

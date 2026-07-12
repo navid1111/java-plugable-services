@@ -47,18 +47,13 @@ public class MediaUploadIntentService {
             long bytes, Integer width, Integer height, Double durationSeconds, String originalFilename) {}
 
     @Transactional
-    public IntentResult create(String owner, String type, String targetId, String idempotencyKey,
-            String resourceType, String format, long requestedBytes) {
-        return create(null, owner, type, targetId, idempotencyKey, resourceType, format, requestedBytes);
-    }
-
-    @Transactional
     public IntentResult create(String ownerUserId, String owner, String type, String targetId, String idempotencyKey,
             String resourceType, String format, long requestedBytes) {
+        String stableOwnerId = requireUserId(ownerUserId);
         if (idempotencyKey == null || idempotencyKey.isBlank()) throw new IllegalArgumentException("idempotencyKey is required");
-        var existing = intents.findByOwnerUsernameAndIdempotencyKey(owner, idempotencyKey.trim());
+        var existing = intents.findByOwnerUserIdAndIdempotencyKey(stableOwnerId, idempotencyKey.trim());
         if (existing.isPresent()) return result(existing.get());
-        targets.requireActiveOwnedBy(type, targetId, owner);
+        targets.requireActiveOwnedBy(type, targetId, stableOwnerId);
         String resource = resourceType == null ? "" : resourceType.trim().toLowerCase(Locale.ROOT);
         String normalizedFormat = format == null ? "" : format.trim().toLowerCase(Locale.ROOT);
         long limit = switch (resource) { case "image" -> maxImageBytes; case "video" -> maxVideoBytes;
@@ -67,16 +62,15 @@ public class MediaUploadIntentService {
         if (!allowed.contains(normalizedFormat)) throw new IllegalArgumentException("unsupported media format");
         if (requestedBytes <= 0 || requestedBytes > limit) throw new IllegalArgumentException("requested upload size exceeds limit");
         UUID id = UUID.randomUUID();
-        MediaUploadIntent intent = new MediaUploadIntent(id, owner, type, targetId, idempotencyKey.trim(),
+        MediaUploadIntent intent = new MediaUploadIntent(id, stableOwnerId, owner, type, targetId, idempotencyKey.trim(),
                 resource, normalizedFormat, limit, "intent-" + id, Instant.now().plus(Duration.ofMinutes(15)));
-        intent.assignOwnerUserId(ownerUserId);
         intents.save(intent); return result(intent);
     }
 
     @Transactional
-    public MediaAsset finalizeUpload(UUID intentId, String owner, FinalizeRequest result) {
+    public MediaAsset finalizeUpload(UUID intentId, String ownerUserId, FinalizeRequest result) {
         MediaUploadIntent intent = intents.findById(intentId).orElseThrow(() -> new IllegalArgumentException("upload intent not found"));
-        if (!intent.getOwnerUsername().equals(owner)) throw new IllegalArgumentException("upload intent owner mismatch");
+        if (!intent.getOwnerUserId().equals(requireUserId(ownerUserId))) throw new IllegalArgumentException("upload intent owner mismatch");
         if (intent.getStatus() == MediaUploadIntent.Status.COMPLETED) return assets.findById(intent.getMediaAssetId()).orElseThrow();
         if (intent.getStatus() != MediaUploadIntent.Status.PENDING || intent.getExpiresAt().isBefore(Instant.now()))
             throw new IllegalArgumentException("upload intent expired");
@@ -86,20 +80,21 @@ public class MediaUploadIntentService {
         URI url = URI.create(result.secureUrl());
         if (!"https".equals(url.getScheme()) || url.getHost() == null || !url.getHost().endsWith("cloudinary.com"))
             throw new IllegalArgumentException("untrusted media URL");
-        MediaAsset asset = assets.saveAndFlush(new MediaAsset(intent.getTargetType(), intent.getTargetId(), owner,
+        MediaAsset asset = new MediaAsset(intent.getTargetType(), intent.getTargetId(), intent.getOwnerUserId(),
+                intent.getOwnerUsername(),
                 result.publicId(), result.resourceType(), result.format(), result.secureUrl(), result.secureUrl(),
-                result.originalFilename(), result.bytes(), result.width(), result.height(), result.durationSeconds(), null, null));
-        asset.assignUploaderUserId(intent.getOwnerUserId());
+                result.originalFilename(), result.bytes(), result.width(), result.height(), result.durationSeconds(), null, null);
+        asset = assets.saveAndFlush(asset);
         intent.complete(asset.getId()); intents.save(intent);
         emitCompletedLifecycle(asset);
         return asset;
     }
 
     @Transactional
-    public void failUpload(UUID intentId, String owner, String reasonCode) {
+    public void failUpload(UUID intentId, String ownerUserId, String reasonCode) {
         MediaUploadIntent intent = intents.findById(intentId)
                 .orElseThrow(() -> new IllegalArgumentException("upload intent not found"));
-        if (!intent.getOwnerUsername().equals(owner)) throw new IllegalArgumentException("upload intent owner mismatch");
+        if (!intent.getOwnerUserId().equals(requireUserId(ownerUserId))) throw new IllegalArgumentException("upload intent owner mismatch");
         if (intent.getStatus() != MediaUploadIntent.Status.PENDING) return;
         intent.fail(); intents.save(intent);
         write(EventTypes.MEDIA_PROCESSING_FAILED_V1, "media-intent", intent.getId().toString(), 1,
@@ -109,8 +104,7 @@ public class MediaUploadIntentService {
     private void emitCompletedLifecycle(MediaAsset asset) {
         String id = asset.getId().toString();
         write(EventTypes.MEDIA_UPLOADED_V1, "media", id, 1,
-                new MediaUploaded(id, asset.getUploaderUserId() == null
-                        ? "legacy:" + asset.getUploaderUsername() : asset.getUploaderUserId(), asset.getTargetType(),
+                new MediaUploaded(id, asset.getUploaderUserId(), asset.getTargetType(),
                         asset.getTargetId(), asset.getResourceType() + "/" + asset.getFormat(),
                         asset.getBytes(), asset.getSecureUrl(), asset.getCreatedAt()));
         write(EventTypes.MEDIA_PROCESSING_COMPLETED_V1, "media", id, 2,
@@ -135,4 +129,8 @@ public class MediaUploadIntentService {
     }
     private Set<String> csv(String value) { return Stream.of(value.split(",")).map(String::trim)
             .map(v -> v.toLowerCase(Locale.ROOT)).filter(v -> !v.isBlank()).collect(Collectors.toSet()); }
+    private String requireUserId(String value) {
+        try { return UUID.fromString(value).toString(); }
+        catch (RuntimeException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
+    }
 }

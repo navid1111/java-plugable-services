@@ -107,8 +107,8 @@ public class MediaController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable UUID id, @RequestBody FinalizeIntentRequest body) {
         try {
-            String owner = jwtHelper.extractUsername(authorization);
-            var asset = intents.finalizeUpload(id, owner, new MediaUploadIntentService.FinalizeRequest(
+            var identity = jwtHelper.extractIdentity(authorization);
+            var asset = intents.finalizeUpload(id, identity.userId(), new MediaUploadIntentService.FinalizeRequest(
                     body.publicId(), body.resourceType(), body.format(), body.secureUrl(), body.bytes(),
                     body.width(), body.height(), body.durationSeconds(), body.originalFilename()));
             return ResponseEntity.ok(MediaAssetResponse.from(asset));
@@ -120,7 +120,7 @@ public class MediaController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable UUID id, @RequestBody FailIntentRequest body) {
         try {
-            intents.failUpload(id, jwtHelper.extractUsername(authorization), body.reasonCode());
+            intents.failUpload(id, jwtHelper.extractIdentity(authorization).userId(), body.reasonCode());
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) { return badRequest(e.getMessage()); }
     }
@@ -196,8 +196,8 @@ public class MediaController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id) {
         try {
-            String username = jwtHelper.extractUsername(authorization);
-            media.deleteOwn(username, id);
+            var identity = jwtHelper.extractIdentity(authorization);
+            media.deleteOwn(identity.userId(), id);
             return ResponseEntity.noContent().build();
         } catch (MediaService.ForbiddenException e) {
             return error(HttpStatus.FORBIDDEN, e.getMessage());

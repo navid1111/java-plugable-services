@@ -25,8 +25,9 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             WebSocketHandler wsHandler,
             Map<String, Object> attributes) {
         String authorization = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        String username = jwtHelper.extractUsername(authorization);
-        attributes.put("username", username);
+        var identity = jwtHelper.extractIdentity(authorization);
+        attributes.put("userId", identity.userId());
+        attributes.put("username", identity.username());
         return true;
     }
 

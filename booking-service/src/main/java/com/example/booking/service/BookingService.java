@@ -84,8 +84,9 @@ public class BookingService {
     }
 
     @Transactional
-    public BookingView book(String username, Long slotId) {
-        String currentUser = requireText(username, "username");
+    public BookingView book(String userId, String username, Long slotId) {
+        String currentUserId = requireUserId(userId);
+        String currentUsername = requireText(username, "username");
         if (slotId == null) {
             throw new IllegalArgumentException("slotId is required");
         }
@@ -97,7 +98,7 @@ public class BookingService {
         }
 
         try {
-            Booking booking = bookings.saveAndFlush(new Booking(slot.getId(), currentUser));
+            Booking booking = bookings.saveAndFlush(new Booking(slot.getId(), currentUserId, currentUsername));
             Resource resource = resources.findById(slot.getResourceId())
                     .orElseThrow(() -> new NotFoundException("resource not found"));
             // Same transaction as the booking: the event commits atomically or not at all.
@@ -109,22 +110,21 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<BookingView> mine(String username) {
-        String currentUser = requireText(username, "username");
-        List<Booking> mine = bookings.findByUsernameOrderByCreatedAtDescIdDesc(currentUser);
+    public List<BookingView> mine(String userId) {
+        List<Booking> mine = bookings.findByUserIdOrderByCreatedAtDescIdDesc(requireUserId(userId));
         return enrich(mine);
     }
 
     @Transactional
-    public void cancel(String username, Long bookingId) {
-        String currentUser = requireText(username, "username");
+    public void cancel(String userId, Long bookingId) {
+        String currentUserId = requireUserId(userId);
         if (bookingId == null) {
             throw new NotFoundException("booking not found");
         }
 
         Booking booking = bookings.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("booking not found"));
-        if (!booking.getUsername().equals(currentUser)) {
+        if (!booking.getUserId().equals(currentUserId)) {
             throw new ForbiddenException("cannot cancel another user's booking");
         }
         // Emit only on the active -> cancelled transition, so repeated cancels stay idempotent.
@@ -192,6 +192,11 @@ public class BookingService {
             throw new IllegalArgumentException(fieldName + " is required");
         }
         return value.trim();
+    }
+
+    private String requireUserId(String value) {
+        try { return java.util.UUID.fromString(value).toString(); }
+        catch (RuntimeException invalid) { throw new IllegalArgumentException("userId must be a UUID"); }
     }
 
     public static class ConflictException extends RuntimeException {

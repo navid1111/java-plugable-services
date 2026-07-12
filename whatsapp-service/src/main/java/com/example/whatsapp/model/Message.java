@@ -30,6 +30,9 @@ public class Message {
     @Column(name = "sender_username", nullable = false, length = 100)
     private String senderUsername;
 
+    @Column(name = "sender_user_id", length = 36)
+    private String senderUserId;
+
     @Column(nullable = false, length = 2000)
     private String content;
 
@@ -40,8 +43,9 @@ public class Message {
         // required by JPA
     }
 
-    public Message(Long chatId, String senderUsername, String content) {
+    public Message(Long chatId, String senderUserId, String senderUsername, String content) {
         this.chatId = chatId;
+        this.senderUserId = senderUserId;
         this.senderUsername = senderUsername;
         this.content = content;
     }
@@ -64,6 +68,7 @@ public class Message {
     public String getSenderUsername() {
         return senderUsername;
     }
+    public String getSenderUserId() { return senderUserId; }
 
     public String getContent() {
         return content;

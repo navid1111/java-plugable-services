@@ -28,15 +28,16 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String username = username(session);
-        sessions.add(username, session);
-        for (ChatService.MessageView message : chats.undeliveredMessages(username)) {
+        String userId = userId(session);
+        sessions.add(userId, session);
+        for (ChatService.MessageView message : chats.undeliveredMessages(userId)) {
             session.sendMessage(new TextMessage(event("newMessage", Map.of("message", message))));
         }
     }
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        String userId = userId(session);
         String username = username(session);
         try {
             JsonNode root = objectMapper.readTree(message.getPayload());
@@ -44,14 +45,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             if ("sendMessage".equals(type)) {
                 Long chatId = requiredLong(root, "chatId");
                 String content = requiredText(root, "content");
-                ChatService.Delivery delivery = chats.sendMessage(username, chatId, content);
+                ChatService.Delivery delivery = chats.sendMessage(userId, username, chatId, content);
                 String payload = event("newMessage", Map.of("message", delivery.message()));
-                for (String recipient : delivery.recipients()) {
+                for (String recipient : delivery.recipientUserIds()) {
                     sessions.sendToUser(recipient, payload);
                 }
                 session.sendMessage(new TextMessage(event("messageSent", Map.of("message", delivery.message()))));
             } else if ("ack".equals(type)) {
-                chats.ack(username, requiredLong(root, "messageId"));
+                chats.ack(userId, username, requiredLong(root, "messageId"));
                 session.sendMessage(new TextMessage(event("ack", Map.of("messageId", requiredLong(root, "messageId")))));
             } else {
                 session.sendMessage(new TextMessage(event("error", Map.of("message", "unknown message type"))));
@@ -67,8 +68,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        Object username = session.getAttributes().get("username");
-        if (username instanceof String value) {
+        Object userId = session.getAttributes().get("userId");
+        if (userId instanceof String value) {
             sessions.remove(value, session);
         }
     }
@@ -79,6 +80,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return value;
         }
         throw new IllegalArgumentException("missing websocket username");
+    }
+
+    private String userId(WebSocketSession session) {
+        Object userId = session.getAttributes().get("userId");
+        if (userId instanceof String value && !value.isBlank()) return value;
+        throw new IllegalArgumentException("missing websocket userId");
     }
 
     private String event(String type, Map<String, ?> data) throws Exception {

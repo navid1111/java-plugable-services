@@ -13,9 +13,9 @@ import com.example.whatsapp.model.InboxEntry;
 
 public interface InboxEntryRepository extends JpaRepository<InboxEntry, Long> {
 
-    Optional<InboxEntry> findByMessageIdAndRecipientUsername(Long messageId, String recipientUsername);
+    Optional<InboxEntry> findByMessageIdAndRecipientUserId(Long messageId, String recipientUserId);
 
-    List<InboxEntry> findByRecipientUsernameAndDeliveredFalseOrderByCreatedAtAscIdAsc(String recipientUsername);
+    List<InboxEntry> findByRecipientUserIdAndDeliveredFalseOrderByCreatedAtAscIdAsc(String recipientUserId);
 
     @Modifying
     @Query("""

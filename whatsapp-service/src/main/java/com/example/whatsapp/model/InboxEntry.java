@@ -17,9 +17,9 @@ import jakarta.persistence.UniqueConstraint;
         name = "inbox_entries",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_inbox_entries_message_recipient",
-                columnNames = {"message_id", "recipient_username"}),
+                columnNames = {"message_id", "recipient_user_id"}),
         indexes = {
-                @Index(name = "idx_inbox_recipient_delivered", columnList = "recipient_username, delivered"),
+                @Index(name = "idx_inbox_recipient_delivered", columnList = "recipient_user_id, delivered"),
                 @Index(name = "idx_inbox_created_at", columnList = "created_at")
         })
 public class InboxEntry {
@@ -34,6 +34,9 @@ public class InboxEntry {
     @Column(name = "recipient_username", nullable = false, length = 100)
     private String recipientUsername;
 
+    @Column(name = "recipient_user_id", length = 36)
+    private String recipientUserId;
+
     @Column(nullable = false)
     private boolean delivered;
 
@@ -47,8 +50,9 @@ public class InboxEntry {
         // required by JPA
     }
 
-    public InboxEntry(Long messageId, String recipientUsername) {
+    public InboxEntry(Long messageId, String recipientUserId, String recipientUsername) {
         this.messageId = messageId;
+        this.recipientUserId = recipientUserId;
         this.recipientUsername = recipientUsername;
         this.delivered = false;
     }
@@ -71,6 +75,7 @@ public class InboxEntry {
     public String getRecipientUsername() {
         return recipientUsername;
     }
+    public String getRecipientUserId() { return recipientUserId; }
 
     public boolean isDelivered() {
         return delivered;

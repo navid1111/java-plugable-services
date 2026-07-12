@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 @Table(
         name = "bookings",
         indexes = {
-                @Index(name = "idx_bookings_username", columnList = "username"),
+                @Index(name = "idx_bookings_user_id", columnList = "user_id"),
                 @Index(name = "idx_bookings_slot_status", columnList = "slot_id, status")
         })
 public class Booking {
@@ -33,6 +33,9 @@ public class Booking {
     @Column(nullable = false, length = 100)
     private String username;
 
+    @Column(name = "user_id", length = 36)
+    private String userId;
+
     @Column(nullable = false, length = 20)
     private String status;
 
@@ -46,8 +49,9 @@ public class Booking {
         // required by JPA
     }
 
-    public Booking(Long slotId, String username) {
+    public Booking(Long slotId, String userId, String username) {
         this.slotId = slotId;
+        this.userId = userId;
         this.username = username;
         this.status = ACTIVE;
     }
@@ -70,6 +74,8 @@ public class Booking {
     public String getUsername() {
         return username;
     }
+
+    public String getUserId() { return userId; }
 
     public String getStatus() {
         return status;

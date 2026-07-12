@@ -17,10 +17,10 @@ import jakarta.persistence.UniqueConstraint;
         name = "follows",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_follows_follower_followee",
-                columnNames = {"follower_username", "followee_username"}),
+                columnNames = {"follower_user_id", "followee_user_id"}),
         indexes = {
-                @Index(name = "idx_follows_follower", columnList = "follower_username"),
-                @Index(name = "idx_follows_followee", columnList = "followee_username")
+                @Index(name = "idx_follows_follower", columnList = "follower_user_id"),
+                @Index(name = "idx_follows_followee", columnList = "followee_user_id")
         })
 public class Follow {
 

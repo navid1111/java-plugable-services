@@ -24,6 +24,8 @@ import com.example.tweeter.repository.FollowRepository;
 @SpringBootTest(properties = "platform.messaging.outbox.scheduling-enabled=false")
 @Testcontainers(disabledWithoutDocker = true)
 class PostOutboxIntegrationTest {
+    private static final String ALICE_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final String BOB_ID = "550e8400-e29b-41d4-a716-446655440001";
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES =
@@ -76,15 +78,15 @@ class PostOutboxIntegrationTest {
 
     @Test
     void updateAndDeleteEmitOneEventPerVersionAndRejectStaleWrites() {
-        var created = posts.create("alice", "version one");
-        var updated = posts.update(created.getId(), "alice", "version two", 1);
+        var created = posts.create(ALICE_ID, "alice", "version one");
+        var updated = posts.update(created.getId(), ALICE_ID, "version two", 1);
         assertThat(updated.getVersion() + 1).isEqualTo(2);
 
-        assertThatThrownBy(() -> posts.update(created.getId(), "alice", "lost update", 1))
+        assertThatThrownBy(() -> posts.update(created.getId(), ALICE_ID, "lost update", 1))
                 .isInstanceOf(org.springframework.dao.OptimisticLockingFailureException.class);
         assertThat(outboxRepository.count()).isEqualTo(2);
 
-        var deleted = posts.delete(created.getId(), "alice", 2);
+        var deleted = posts.delete(created.getId(), ALICE_ID, 2);
         assertThat(deleted.isDeleted()).isTrue();
         assertThat(deleted.getVersion() + 1).isEqualTo(3);
         assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
@@ -96,14 +98,14 @@ class PostOutboxIntegrationTest {
 
     @Test
     void repeatedFollowAndUnfollowProduceOnlyEffectiveEvents() {
-        posts.follow("alice", "bob");
-        posts.follow("alice", "bob");
+        posts.follow(ALICE_ID, "alice", BOB_ID, "bob");
+        posts.follow(ALICE_ID, "alice-renamed", BOB_ID, "bob-renamed");
         assertThat(followRepository.count()).isOne();
         assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
                 .containsExactly(EventTypes.FOLLOW_CREATED_V1);
 
-        posts.unfollow("alice", "bob");
-        posts.unfollow("alice", "bob");
+        posts.unfollow(ALICE_ID, BOB_ID);
+        posts.unfollow(ALICE_ID, BOB_ID);
         assertThat(followRepository.count()).isZero();
         assertThat(outboxRepository.findAll()).extracting(message -> message.getEventType())
                 .containsExactlyInAnyOrder(EventTypes.FOLLOW_CREATED_V1, EventTypes.FOLLOW_DELETED_V1);
@@ -126,7 +128,7 @@ class PostOutboxIntegrationTest {
 
         @Transactional
         public void createThenFail() {
-            postService.create("rollback-user", "this must disappear");
+            postService.create(java.util.UUID.randomUUID().toString(), "rollback-user", "this must disappear");
             throw new IllegalStateException("forced rollback");
         }
     }

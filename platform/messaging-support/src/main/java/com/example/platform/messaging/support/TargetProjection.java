@@ -14,23 +14,28 @@ import jakarta.persistence.Table;
 public class TargetProjection {
     @Id private String targetType;
     @Id private String targetId;
+    private String ownerUserId;
     private String ownerUsername;
     private long aggregateVersion;
     private boolean active;
     private Instant updatedAt;
 
     protected TargetProjection() {}
-    public TargetProjection(String type, String id, String owner, long version, boolean active, Instant updatedAt) {
-        this.targetType = type; this.targetId = id; this.ownerUsername = owner;
+    public TargetProjection(String type, String id, String ownerUserId, String ownerUsername,
+            long version, boolean active, Instant updatedAt) {
+        this.targetType = type; this.targetId = id; this.ownerUserId = ownerUserId;
+        this.ownerUsername = ownerUsername;
         this.aggregateVersion = version; this.active = active; this.updatedAt = updatedAt;
     }
-    public boolean apply(String owner, long version, boolean active, Instant when) {
+    public boolean apply(String ownerUserId, String ownerUsername, long version, boolean active, Instant when) {
         if (version <= aggregateVersion) return false;
-        this.ownerUsername = owner == null ? ownerUsername : owner;
+        this.ownerUserId = ownerUserId == null ? this.ownerUserId : ownerUserId;
+        this.ownerUsername = ownerUsername == null ? this.ownerUsername : ownerUsername;
         this.aggregateVersion = version; this.active = active; this.updatedAt = when; return true;
     }
     public String getTargetType() { return targetType; }
     public String getTargetId() { return targetId; }
+    public String getOwnerUserId() { return ownerUserId; }
     public String getOwnerUsername() { return ownerUsername; }
     public long getAggregateVersion() { return aggregateVersion; }
     public boolean isActive() { return active; }

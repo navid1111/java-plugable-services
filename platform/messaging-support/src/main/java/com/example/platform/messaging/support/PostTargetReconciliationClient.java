@@ -27,7 +27,8 @@ public class PostTargetReconciliationClient {
                 boolean active = post.path("deletedAt").isNull();
                 String changed = active ? post.path("updatedAt").asText() : post.path("deletedAt").asText();
                 all.add(new TargetProjectionStore.AuthoritativeTarget(post.path("postId").asText(),
-                        post.path("authorUsername").asText(), post.path("aggregateVersion").asLong(),
+                        post.path("authorUserId").asText(), post.path("authorUsername").asText(),
+                        post.path("aggregateVersion").asLong(),
                         active, Instant.parse(changed)));
             }
         } while (more);

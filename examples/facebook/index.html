@@ -259,6 +259,10 @@
           <input id="chatRecipient" value="bob">
         </label>
         <label>
+          Recipient User ID
+          <input id="chatRecipientId" placeholder="UUID from the recipient's login response">
+        </label>
+        <label>
           Chat ID
           <input id="chatId" inputmode="numeric" placeholder="Create a chat first">
         </label>
@@ -280,6 +284,7 @@
   <script>
     let token = '';
     let currentUser = '';
+    let currentUserId = '';
     let socket = null;
 
     const els = {
@@ -291,6 +296,7 @@
       postStatus: document.querySelector('#postStatus'),
       postsList: document.querySelector('#postsList'),
       chatRecipient: document.querySelector('#chatRecipient'),
+      chatRecipientId: document.querySelector('#chatRecipientId'),
       chatId: document.querySelector('#chatId'),
       chatMessage: document.querySelector('#chatMessage'),
       chatStatus: document.querySelector('#chatStatus'),
@@ -372,6 +378,7 @@
         });
         token = body.access_token;
         currentUser = els.username.value.trim();
+        currentUserId = body.userId;
         updateSession();
         setStatus(els.authStatus, 'Token ready', 'ok');
         await refreshPosts();
@@ -383,6 +390,7 @@
     function clearToken() {
       token = '';
       currentUser = '';
+      currentUserId = '';
       if (socket) {
         socket.close();
       }
@@ -409,7 +417,7 @@
         return;
       }
       try {
-        const posts = await request(`/posts?author=${encodeURIComponent(currentUser)}`);
+        const posts = await request(`/posts?authorUserId=${encodeURIComponent(currentUserId)}`);
         els.postsList.innerHTML = '';
         for (const post of posts) {
           const item = document.createElement('div');
@@ -431,11 +439,12 @@
     async function createChat() {
       try {
         const recipient = els.chatRecipient.value.trim();
+        const recipientUserId = els.chatRecipientId.value.trim();
         const chat = await request('/chat/chats', {
           method: 'POST',
           body: JSON.stringify({
             name: `${currentUser} and ${recipient}`,
-            participants: [recipient],
+            participants: [{ userId: recipientUserId, username: recipient }],
           }),
         });
         els.chatId.value = chat.id;
