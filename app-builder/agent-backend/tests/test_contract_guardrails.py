@@ -167,6 +167,15 @@ class ContractGuardrailTest(unittest.TestCase):
         self.assertIn("sandbox intentionally cannot open network sockets", agents)
         self.assertIn("server runs the canonical linter", agents)
 
+    def test_react_and_typescript_sources_are_included_in_contract_lint(self) -> None:
+        verifier = render_frontend_contract_verifier()
+
+        self.assertIn('".jsx"', verifier)
+        self.assertIn('".tsx"', verifier)
+        self.assertIn('part == "node_modules"', verifier)
+        self.assertIn("Build a React frontend", render_agents_md([], {}))
+        self.assertIn("React frontend agent", APPBUILDER_SYSTEM_APPEND)
+
 
 if __name__ == "__main__":
     unittest.main()

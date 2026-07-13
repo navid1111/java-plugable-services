@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from app.sessions import AppSession, SessionManager
+from app.workspace import frontend_fingerprint
 
 
 class FakeAgent:
@@ -22,7 +24,44 @@ class FakeAgent:
         return []
 
 
+class WritingAgent(FakeAgent):
+    def __init__(self, cwd: Path) -> None:
+        super().__init__()
+        self.cwd = cwd
+
+    async def run(self, text: str) -> None:
+        self.last_text = text
+        await asyncio.sleep(0.1)
+        (self.cwd / "src" / "App.jsx").write_text("export default function App(){ return <h1>Draft ready</h1>; }")
+        await asyncio.sleep(0.9)
+
+
 class SessionProgressTest(unittest.IsolatedAsyncioTestCase):
+
+    async def test_react_source_changes_publish_a_draft_before_verified_preview(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            cwd = Path(temporary)
+            (cwd / "src").mkdir()
+            (cwd / "src" / "App.jsx").write_text("export default function App(){ return <h1>Starting</h1>; }")
+            manager = SessionManager()
+            session = AppSession("demo", cwd, WritingAgent(cwd))
+            session.last_preview_fingerprint = frontend_fingerprint(cwd)
+            manager._sessions["demo"] = session
+
+            with (
+                patch("app.sessions.append_event", new=AsyncMock()),
+                patch("app.sessions.save_agent_history", new=AsyncMock()),
+                patch("app.sessions.bus.publish", new=AsyncMock()) as publish,
+                patch("app.sessions.workspace.build_frontend", new=AsyncMock(return_value=(True, "built"))),
+                patch("app.sessions.workspace.validate_frontend_contracts", new=AsyncMock(return_value=(True, "passed"))),
+                patch("app.sessions.workspace.validate_live_backend_endpoints", new=AsyncMock(return_value=(True, "live passed"))),
+            ):
+                await manager.run_turn("demo", "build a React screen")
+
+            previews = [call.args[2] for call in publish.await_args_list if call.args[1] == "preview"]
+            self.assertEqual("draft", previews[0]["stage"])
+            self.assertEqual("verified", previews[-1]["stage"])
+            self.assertIn("/draft/", previews[0]["url"])
 
     async def test_user_architecture_is_sent_to_agent_and_update_is_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

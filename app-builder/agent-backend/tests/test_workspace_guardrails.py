@@ -11,6 +11,7 @@ from app.workspace import (
     architecture_payload,
     live_verification_status,
     request_with_architecture,
+    refresh_workspace_context,
     save_user_architecture,
     scaffold,
     services_used_by_frontend,
@@ -20,6 +21,18 @@ from app.workspace import (
 
 
 class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
+
+    async def test_legacy_workspace_gets_react_instructions_without_losing_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            legacy = "<!doctype html><title>Keep me</title>"
+            (root / "index.html").write_text(legacy)
+            with patch("app.workspace.fetch_catalog", new=AsyncMock(return_value=([], {}))):
+                await refresh_workspace_context(root)
+
+            self.assertEqual(legacy, (root / "index.html").read_text())
+            self.assertFalse((root / "src").exists())
+            self.assertIn("migrating it into React", (root / "AGENTS.md").read_text())
 
     async def test_architecture_is_generated_from_the_same_detected_service_plugs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -84,6 +97,36 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
                 services_used_by_frontend(root),
             )
 
+    async def test_react_jsx_selects_service_smoke_tests(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "src").mkdir()
+            (root / "src" / "App.jsx").write_text(
+                'export function App(){ fetch(GATEWAY + "/auth/me"); return <main />; }'
+            )
+
+            self.assertEqual(["auth-service"], services_used_by_frontend(root))
+
+    async def test_visual_graph_plugs_a_service_into_gateway_and_updates_mermaid(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            generated = architecture_payload(root)
+            graph = generated["graph"]
+            graph["nodes"].append({
+                "id": "service:booking-service", "type": "service",
+                "serviceId": "booking-service", "label": "Booking", "x": 760, "y": 80,
+            })
+            graph["edges"].append({
+                "id": "gateway-booking-service", "source": "gateway", "target": "service:booking-service",
+            })
+
+            saved = save_user_architecture(root, graph=graph)
+
+            self.assertEqual("user", saved["origin"])
+            self.assertIn("booking-service", saved["source"])
+            self.assertIn("/bookings", saved["source"])
+            self.assertTrue(next(item for item in saved["catalog"] if item["id"] == "booking-service")["connected"])
+
     async def test_static_app_gets_a_fingerprinted_live_verification_record(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "workspaces" / "static-app"
@@ -134,6 +177,10 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(frontend.stat().st_mode & 0o100)
             self.assertTrue(backend.stat().st_mode & 0o100)
             self.assertTrue((workspace / "ARCHITECTURE.mmd").is_file())
+            self.assertTrue((workspace / "src" / "App.jsx").is_file())
+            self.assertTrue((workspace / "src" / "main.jsx").is_file())
+            self.assertIn("jsx: 'automatic'", (workspace / "vite.config.mjs").read_text())
+            self.assertIn("React", (workspace / "src" / "App.jsx").read_text())
             self.assertIn("verify-frontend-contracts.py", backend.read_text())
             self.assertIn("Do not edit, delete, weaken, or bypass", (workspace / "AGENTS.md").read_text())
 

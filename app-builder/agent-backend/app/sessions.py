@@ -1,7 +1,9 @@
-"""Session manager: one long-lived app agent per app, serialized turns,
-events relayed to the SSE bus. Emits a `preview` event whenever the agent writes
-a newer index.html so the UI can refresh the live preview (VoltEdge's checkpoint
-pattern, keyed on index.html mtime instead of circuit.json)."""
+"""Long-lived app-agent sessions with React draft checkpoints and release gates.
+
+While an agent is editing, source fingerprints are polled and safe React builds are
+published as draft previews. The verified URL is published only after the canonical
+contract linter and live backend smoke tests pass.
+"""
 
 import asyncio
 import logging
@@ -35,7 +37,8 @@ class AppSession:
     cwd: Path
     agent: AppAgent
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    last_index_mtime: float = 0.0
+    last_preview_fingerprint: str = ""
+    last_attempt_fingerprint: str = ""
 
 
 class SessionManager:
@@ -51,6 +54,8 @@ class SessionManager:
             cwd = workspace.workspace_dir(slug)
             if not cwd.exists():
                 await workspace.scaffold(slug)
+            else:
+                await workspace.refresh_workspace_context(cwd)
             history = await load_agent_history(cwd)
             async def publish(event_type: str, data: dict) -> None:
                 if event_type in PERSISTED_EVENT_TYPES:
@@ -58,8 +63,12 @@ class SessionManager:
                 await bus.publish(slug, event_type, data)
 
             agent = create_app_agent(cwd=cwd, publisher=publish, history=history)
-            session = AppSession(slug=slug, cwd=cwd, agent=agent,
-                                 last_index_mtime=workspace.index_mtime(cwd))
+            session = AppSession(
+                slug=slug,
+                cwd=cwd,
+                agent=agent,
+                last_preview_fingerprint=workspace.frontend_fingerprint(cwd),
+            )
             self._sessions[slug] = session
             return session
 
@@ -93,7 +102,16 @@ class SessionManager:
                 await append_event(session.cwd, "user", {"text": text})
                 await bus.publish(slug, "user", {"text": text})
                 workspace.invalidate_live_verification(session.cwd)
-                await session.agent.run(workspace.request_with_architecture(session.cwd, text))
+                if not session.last_preview_fingerprint:
+                    session.last_preview_fingerprint = workspace.frontend_fingerprint(session.cwd)
+                monitor_stop = asyncio.Event()
+                monitor = asyncio.create_task(self._monitor_draft_previews(session, monitor_stop))
+                try:
+                    await session.agent.run(workspace.request_with_architecture(session.cwd, text))
+                finally:
+                    monitor_stop.set()
+                    await monitor
+                await self._publish_draft_preview(session, force=True)
                 await save_agent_history(session.cwd, session.agent.history())
                 architecture = workspace.architecture_payload(session.cwd, refresh_generated=True)
                 await append_event(session.cwd, "architecture", architecture)
@@ -165,11 +183,40 @@ class SessionManager:
                 await bus.publish(slug, "build_complete", complete)
 
     async def _maybe_preview(self, session: AppSession) -> None:
-        mtime = workspace.index_mtime(session.cwd)
-        if mtime <= session.last_index_mtime:
+        built, report = await workspace.build_frontend(session.cwd)
+        if not built:
+            raise RuntimeError("React preview build failed: " + report[-1200:])
+        session.last_preview_fingerprint = workspace.frontend_fingerprint(session.cwd)
+        data = {"url": f"/apps/{session.slug}/", "stage": "verified"}
+        await append_event(session.cwd, "preview", data)
+        await bus.publish(session.slug, "preview", data)
+
+    async def _monitor_draft_previews(self, session: AppSession, stop: asyncio.Event) -> None:
+        while not stop.is_set():
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=0.8)
+            except asyncio.TimeoutError:
+                await self._publish_draft_preview(session)
+
+    async def _publish_draft_preview(self, session: AppSession, *, force: bool = False) -> None:
+        fingerprint = workspace.frontend_fingerprint(session.cwd)
+        if not fingerprint or fingerprint == session.last_preview_fingerprint:
             return
-        session.last_index_mtime = mtime
-        data = {"url": f"/apps/{session.slug}/"}
+        if not force and fingerprint == session.last_attempt_fingerprint:
+            return
+        session.last_attempt_fingerprint = fingerprint
+        valid, _ = await workspace.validate_frontend_contracts(session.cwd)
+        if not valid:
+            return
+        built, _ = await workspace.build_frontend(session.cwd)
+        if not built:
+            return
+        session.last_preview_fingerprint = fingerprint
+        data = {
+            "url": f"/apps/{session.slug}/draft/",
+            "stage": "draft",
+            "revision": fingerprint[:12],
+        }
         await append_event(session.cwd, "preview", data)
         await bus.publish(session.slug, "preview", data)
 

@@ -23,13 +23,21 @@ class BuilderExperienceTest(unittest.TestCase):
         self.assertIn("verification", PERSISTED_EVENT_TYPES)
         self.assertIn("data.userMessage", INDEX_HTML)
 
-    def test_editable_mermaid_architecture_is_visible_and_can_update_the_agent(self) -> None:
+    def test_drawio_style_architecture_canvas_is_visible_and_can_update_the_agent(self) -> None:
         self.assertIn('id="architectureTab"', INDEX_HTML)
+        self.assertIn('id="architectureNodes"', INDEX_HTML)
+        self.assertIn('id="architectureEdges"', INDEX_HTML)
+        self.assertIn('id="serviceList"', INDEX_HTML)
+        self.assertIn("toggleService", INDEX_HTML)
         self.assertIn('id="architectureSource"', INDEX_HTML)
-        self.assertIn("mermaid@11.12.2", INDEX_HTML)
         self.assertIn("Save &amp; update app", INDEX_HTML)
         self.assertIn("/architecture", INDEX_HTML)
         self.assertIn("architecture", PERSISTED_EVENT_TYPES)
+
+    def test_draft_react_checkpoints_are_explained_in_plain_language(self) -> None:
+        self.assertIn("Live React draft", INDEX_HTML)
+        self.assertIn("usable checkpoint is ready", INDEX_HTML)
+        self.assertIn("data.stage === 'draft'", INDEX_HTML)
 
 
 if __name__ == "__main__":

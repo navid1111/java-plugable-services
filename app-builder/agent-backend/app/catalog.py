@@ -30,10 +30,13 @@ from pathlib import Path
 
 
 def source_files(root: Path) -> list[Path]:
-    candidates = {*root.rglob("*.html"), *root.rglob("*.js")}
+    candidates = {
+        path for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".html", ".js", ".jsx", ".ts", ".tsx"}
+    }
     return sorted(
         path for path in candidates
-        if not any(part.startswith(".") for part in path.relative_to(root).parts)
+        if not any(part.startswith(".") or part == "node_modules" for part in path.relative_to(root).parts)
     )
 
 
@@ -413,7 +416,13 @@ def render_agents_md(plugs: list[dict], endpoints: dict[str, list[str]]) -> str:
     lines: list[str] = [
         "# App-builder workspace instructions",
         "",
-        "Build only the static frontend files in this directory. `index.html` is the entry point.",
+        "Build a React frontend in this directory. Keep `index.html` as the Vite entry and put UI code",
+        "in `src/App.jsx` plus small components/styles under `src/`.",
+        "App Builder owns dependency installation and Vite builds. Do not run npm install, change",
+        "package dependencies or `vite.config.mjs`, start a dev server, or write build output;",
+        "edit React source only.",
+        "If this is a legacy workspace without `src/main.jsx`, preserve its working interface and",
+        "behavior while migrating it into React during the requested update.",
         "",
         "## Backend ground truth",
         "",

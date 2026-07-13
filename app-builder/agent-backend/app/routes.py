@@ -26,7 +26,8 @@ class Message(BaseModel):
 
 
 class ArchitectureUpdate(BaseModel):
-    source: str
+    source: str = ""
+    graph: dict | None = None
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -86,7 +87,7 @@ async def update_architecture(slug: str, body: ArchitectureUpdate) -> dict:
     if not cwd.exists():
         raise HTTPException(404, "unknown app")
     try:
-        return workspace.save_user_architecture(cwd, body.source)
+        return workspace.save_user_architecture(cwd, body.source, body.graph)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 
@@ -111,12 +112,38 @@ async def events(slug: str, request: Request) -> StreamingResponse:
     return StreamingResponse(stream(), media_type="text/event-stream")
 
 
-# --- serve the generated static app -----------------------------------------
+# --- serve generated React draft and verified builds ------------------------
+
+@router.get("/apps/{slug}/draft/")
+async def serve_draft_index(slug: str):
+    cwd = workspace.workspace_dir(slug)
+    root = workspace.preview_root(cwd)
+    entry = workspace.safe_file(root, "index.html")
+    if entry is None:
+        raise HTTPException(404, "draft preview is not built yet")
+    return FileResponse(entry)
+
+
+@router.get("/apps/{slug}/draft/{path:path}")
+async def serve_draft_file(slug: str, path: str):
+    root = workspace.preview_root(workspace.workspace_dir(slug))
+    target = workspace.safe_file(root, path or "index.html")
+    if target is None:
+        raise HTTPException(404, "not found")
+    return FileResponse(target)
 
 @router.get("/apps/{slug}/")
 async def serve_index(slug: str):
     cwd = workspace.workspace_dir(slug)
-    entry = workspace.safe_file(cwd, "index.html")
+    built, build_report = await workspace.build_frontend(cwd)
+    if not built:
+        return HTMLResponse(
+            "<h1>React build failed</h1>"
+            f"<pre>{html.escape(build_report[:3000])}</pre>",
+            status_code=409,
+        )
+    root = workspace.preview_root(cwd)
+    entry = workspace.safe_file(root, "index.html")
     if entry is None:
         raise HTTPException(404, "app not built yet")
     valid, report = await workspace.validate_frontend_contracts(cwd)
@@ -143,7 +170,11 @@ async def serve_index(slug: str):
 @router.get("/apps/{slug}/{path:path}")
 async def serve_file(slug: str, path: str):
     cwd = workspace.workspace_dir(slug)
-    target = workspace.safe_file(cwd, path or "index.html")
+    root = workspace.preview_root(cwd)
+    target = workspace.safe_file(root, path or "index.html")
+    if target is None:
+        # Backward compatibility for old static workspaces and source assets.
+        target = workspace.safe_file(cwd, path or "index.html")
     if target is None:
         raise HTTPException(404, "not found")
     return FileResponse(target)

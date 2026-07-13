@@ -77,16 +77,37 @@ INDEX_HTML = """<!doctype html>
   [hidden] { display: none !important; }
   iframe { flex: 1; width: 100%; border: 0; background: #fff; }
   .architecture { flex: 1; min-height: 0; overflow: auto; padding: 22px; background: radial-gradient(circle at 50% 0%, rgba(105,226,255,.08), transparent 45%); }
-  .architecture-inner { width: min(1080px, 100%); margin: 0 auto; }
+  .architecture-inner { width: min(1240px, 100%); margin: 0 auto; }
   .architecture-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
   .architecture h2 { margin: 0; font-size: 20px; }
   .architecture p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
   .origin-badge { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--brand); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-  .diagram-surface { min-height: 240px; margin-top: 17px; padding: 18px; display: grid; place-items: center; overflow: auto; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.96); color: #0f172a; }
-  .diagram-surface svg { max-width: 100%; height: auto; }
-  .diagram-fallback { color: #475569; font-size: 13px; text-align: center; }
+  .architecture-workbench { display: grid; grid-template-columns: 220px minmax(540px, 1fr); gap: 14px; margin-top: 17px; min-height: 520px; }
+  .service-palette { padding: 14px; overflow: auto; border: 1px solid var(--line); border-radius: 15px; background: rgba(8,11,18,.72); }
+  .service-palette h3 { margin: 0; font-size: 12px; }
+  .service-palette p { margin: 5px 0 12px; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+  .service-list { display: grid; gap: 7px; }
+  .service-chip { min-width: 0; width: 100%; padding: 9px 10px; display: grid; gap: 3px; text-align: left; color: #dbe5f2; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+  .service-chip small { color: var(--muted); font-size: 9px; font-weight: 500; }
+  .service-chip.connected { color: var(--good); border-color: rgba(74,222,128,.28); }
+  .diagram-surface { position: relative; min-height: 520px; overflow: auto; border: 1px solid rgba(105,226,255,.2); border-radius: 15px; color: #0f172a; background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
+  #architectureEdges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  #architectureNodes { position: absolute; inset: 0; }
+  .architecture-node { position: absolute; width: 160px; min-height: 68px; padding: 11px 12px; display: grid; align-content: center; gap: 3px; border: 2px solid #cbd5e1; border-radius: 12px; background: white; box-shadow: 0 9px 24px rgba(15,23,42,.12); cursor: grab; user-select: none; touch-action: none; }
+  .architecture-node:active { cursor: grabbing; }
+  .architecture-node.gateway { color: white; border-color: #0891b2; background: linear-gradient(135deg,#0e7490,#4338ca); }
+  .architecture-node.app { border-color: #8b5cf6; }
+  .architecture-node.service { border-color: #22c55e; }
+  .architecture-node.actor { width: 120px; border-radius: 999px; text-align: center; }
+  .node-kind { color: #64748b; font-size: 8px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+  .gateway .node-kind { color: #bae6fd; }
+  .node-label { color: inherit; font-size: 12px; font-weight: 850; }
+  .node-path { color: #64748b; font: 9px ui-monospace, monospace; }
+  .node-remove { position: absolute; top: 4px; right: 5px; min-width: 21px; width: 21px; height: 21px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: #64748b; background: #eef2f7; }
+  .canvas-hint { position: absolute; left: 14px; bottom: 12px; color: #64748b; font-size: 10px; pointer-events: none; }
   .source-label { display: block; margin-top: 18px; color: #dbe5f2; font-size: 12px; font-weight: 750; }
-  #architectureSource { width: 100%; height: 230px; margin-top: 7px; resize: vertical; border-radius: 13px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .source-editor { margin-top: 14px; }
+  #architectureSource { width: 100%; height: 190px; margin-top: 7px; resize: vertical; border-radius: 13px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
   .architecture-actions { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 10px; }
   #architectureStatus { color: var(--muted); font-size: 11px; }
   .architecture-buttons { display: flex; gap: 8px; }
@@ -97,6 +118,8 @@ INDEX_HTML = """<!doctype html>
     body { height: auto; min-height: 100vh; grid-template-columns: 1fr; grid-template-rows: minmax(560px, auto) 70vh; }
     .side { border-right: 0; border-bottom: 1px solid var(--line); }
     .scroll { max-height: 480px; }
+    .architecture-workbench { grid-template-columns: 1fr; }
+    .service-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
   }
 </style></head><body>
 <aside class="side">
@@ -136,13 +159,27 @@ INDEX_HTML = """<!doctype html>
   <section id="architecturePane" class="architecture" hidden>
     <div class="architecture-inner">
       <div class="architecture-heading">
-        <div><h2>How your app is connected</h2><p id="servicesSummary">Build an app to detect its backend service plugs.</p></div>
+        <div><h2>Service architecture</h2><p id="servicesSummary">Add services from the palette and plug them into the gateway.</p></div>
         <span id="architectureOrigin" class="origin-badge">Generated</span>
       </div>
-      <div id="diagram" class="diagram-surface"><div class="diagram-fallback">The service diagram will appear after the workspace is created.</div></div>
-      <label class="source-label" for="architectureSource">Mermaid source</label>
-      <textarea id="architectureSource" spellcheck="false" aria-describedby="architectureHelp" placeholder="flowchart LR&#10;  App --> Gateway"></textarea>
-      <p id="architectureHelp">Edit this diagram to explain your intended architecture. Saved edits become context for the agent on the next update.</p>
+      <div class="architecture-workbench">
+        <aside class="service-palette">
+          <h3>Available service plugs</h3>
+          <p>Click a service to add or unplug it. Added services connect through Kong automatically.</p>
+          <div id="serviceList" class="service-list"></div>
+        </aside>
+        <div id="diagram" class="diagram-surface">
+          <svg id="architectureEdges" aria-hidden="true"></svg>
+          <div id="architectureNodes"></div>
+          <div class="canvas-hint">Drag nodes to arrange the diagram · click a connected service in the palette to unplug it</div>
+        </div>
+      </div>
+      <details class="source-editor">
+        <summary>Advanced Mermaid context</summary>
+        <label class="source-label" for="architectureSource">Mermaid source</label>
+        <textarea id="architectureSource" spellcheck="false" aria-describedby="architectureHelp" placeholder="flowchart LR&#10;  App --> Gateway"></textarea>
+        <p id="architectureHelp">You can still edit Mermaid directly. Direct edits become agent context while the visual layout remains available.</p>
+      </details>
       <div class="architecture-actions">
         <span id="architectureStatus" role="status">Not saved yet</span>
         <div class="architecture-buttons">
@@ -153,7 +190,6 @@ INDEX_HTML = """<!doctype html>
     </div>
   </section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js"></script>
 <script>
   const log = document.getElementById('log'), messages = document.getElementById('messages'),
         form = document.getElementById('f'), promptEl = document.getElementById('p'),
@@ -165,6 +201,8 @@ INDEX_HTML = """<!doctype html>
         eventCount = document.getElementById('eventCount'),
         previewTab = document.getElementById('previewTab'), architectureTab = document.getElementById('architectureTab'),
         architecturePane = document.getElementById('architecturePane'), diagram = document.getElementById('diagram'),
+        architectureEdges = document.getElementById('architectureEdges'), architectureNodes = document.getElementById('architectureNodes'),
+        serviceList = document.getElementById('serviceList'),
         architectureSource = document.getElementById('architectureSource'), servicesSummary = document.getElementById('servicesSummary'),
         architectureOrigin = document.getElementById('architectureOrigin'), architectureStatus = document.getElementById('architectureStatus'),
         saveArchitectureBtn = document.getElementById('saveArchitecture'), applyArchitectureBtn = document.getElementById('applyArchitecture');
@@ -180,7 +218,7 @@ INDEX_HTML = """<!doctype html>
   let slug = new URLSearchParams(location.search).get('app'), es = null;
   let building = false, startedAt = 0, progress = 0, progressTimer = null;
   let technicalEvents = 0, agentReportedError = false, lastPhase = '', architectureDirty = false;
-  if (window.mermaid) window.mermaid.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'neutral'});
+  let architectureSourceEdited = false, architectureGraph = {nodes: [], edges: []}, serviceCatalog = [];
 
   function addMessage(kind, text) {
     if (!text) return;
@@ -209,36 +247,109 @@ INDEX_HTML = """<!doctype html>
     if (architectureVisible) renderArchitecture();
   }
 
-  async function renderArchitecture() {
-    const source = architectureSource.value.trim();
-    if (!source) {
-      diagram.innerHTML = '<div class="diagram-fallback">Add Mermaid source to preview the architecture.</div>';
-      return;
+  function markArchitectureDirty(message) {
+    architectureDirty = true;
+    architectureOrigin.textContent = 'Unsaved';
+    architectureStatus.textContent = message || 'Unsaved visual changes';
+  }
+
+  function renderArchitecture() {
+    architectureNodes.replaceChildren();
+    const catalogById = Object.fromEntries(serviceCatalog.map(item => [item.id, item]));
+    const nodeById = Object.fromEntries((architectureGraph.nodes || []).map(node => [node.id, node]));
+
+    (architectureGraph.nodes || []).forEach(node => {
+      const element = document.createElement('div');
+      element.className = 'architecture-node ' + node.type;
+      element.dataset.nodeId = node.id;
+      element.style.left = (node.x || 0) + 'px'; element.style.top = (node.y || 0) + 'px';
+      const kind = document.createElement('span'); kind.className = 'node-kind'; kind.textContent = node.type;
+      const label = document.createElement('span'); label.className = 'node-label'; label.textContent = node.label || node.id;
+      element.append(kind, label);
+      if (node.type === 'service') {
+        const detail = catalogById[node.serviceId] || {};
+        const path = document.createElement('span'); path.className = 'node-path'; path.textContent = (detail.gatewayPaths || []).join(', ');
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'node-remove';
+        remove.title = 'Unplug service'; remove.textContent = '×';
+        remove.addEventListener('click', event => { event.stopPropagation(); toggleService(node.serviceId); });
+        element.append(path, remove);
+      }
+      element.addEventListener('pointerdown', event => beginNodeDrag(event, node.id));
+      architectureNodes.appendChild(element);
+    });
+
+    const width = Math.max(diagram.clientWidth, 900, ...(architectureGraph.nodes || []).map(node => (node.x || 0) + 200));
+    const height = Math.max(diagram.clientHeight, 520, ...(architectureGraph.nodes || []).map(node => (node.y || 0) + 105));
+    architectureEdges.style.width = width + 'px'; architectureEdges.style.height = height + 'px';
+    architectureNodes.style.width = width + 'px'; architectureNodes.style.height = height + 'px';
+    architectureEdges.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    architectureEdges.innerHTML = '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"></path></marker></defs>';
+    (architectureGraph.edges || []).forEach(edge => {
+      const source = nodeById[edge.source], target = nodeById[edge.target];
+      if (!source || !target) return;
+      const sourceWidth = source.type === 'actor' ? 120 : 160;
+      const targetWidth = target.type === 'actor' ? 120 : 160;
+      const x1 = (source.x || 0) + sourceWidth, y1 = (source.y || 0) + 34;
+      const x2 = (target.x || 0), y2 = (target.y || 0) + 34;
+      const bend = Math.max(28, Math.abs(x2 - x1) * .45);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#64748b'); path.setAttribute('stroke-width', '2');
+      path.setAttribute('marker-end', 'url(#arrow)'); architectureEdges.appendChild(path);
+    });
+
+    const connected = new Set((architectureGraph.nodes || []).filter(node => node.type === 'service').map(node => node.serviceId));
+    serviceList.replaceChildren();
+    serviceCatalog.forEach(service => {
+      const chip = document.createElement('button'); chip.type = 'button';
+      chip.className = 'service-chip' + (connected.has(service.id) ? ' connected' : '');
+      const label = document.createElement('span'); label.textContent = (connected.has(service.id) ? '✓ ' : '+ ') + service.displayName;
+      const paths = document.createElement('small'); paths.textContent = (service.gatewayPaths || []).join(', ');
+      chip.append(label, paths); chip.addEventListener('click', () => toggleService(service.id));
+      serviceList.appendChild(chip);
+    });
+  }
+
+  function beginNodeDrag(event, nodeId) {
+    if (event.button !== 0 || event.target.closest('.node-remove')) return;
+    const node = (architectureGraph.nodes || []).find(item => item.id === nodeId); if (!node) return;
+    event.preventDefault();
+    const startX = event.clientX, startY = event.clientY, originalX = node.x || 0, originalY = node.y || 0;
+    function move(moveEvent) {
+      const canvasWidth = Math.max(diagram.clientWidth, 900, ...architectureGraph.nodes.map(item => (item.x || 0) + 200));
+      const canvasHeight = Math.max(diagram.clientHeight, 520, ...architectureGraph.nodes.map(item => (item.y || 0) + 105));
+      node.x = Math.max(0, Math.min(canvasWidth - 120, originalX + moveEvent.clientX - startX));
+      node.y = Math.max(0, Math.min(canvasHeight - 68, originalY + moveEvent.clientY - startY));
+      renderArchitecture();
     }
-    if (!window.mermaid) {
-      diagram.innerHTML = '<div class="diagram-fallback">Diagram rendering is unavailable, but you can still edit and save the Mermaid source.</div>';
-      return;
+    function end() { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); markArchitectureDirty('Node layout changed'); }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', end, {once: true});
+  }
+
+  function toggleService(serviceId) {
+    const existing = (architectureGraph.nodes || []).find(node => node.serviceId === serviceId);
+    if (existing) {
+      architectureGraph.nodes = architectureGraph.nodes.filter(node => node.id !== existing.id);
+      architectureGraph.edges = architectureGraph.edges.filter(edge => edge.source !== existing.id && edge.target !== existing.id);
+    } else {
+      const catalogItem = serviceCatalog.find(item => item.id === serviceId); if (!catalogItem) return;
+      const count = architectureGraph.nodes.filter(node => node.type === 'service').length;
+      const nodeId = 'service:' + serviceId;
+      architectureGraph.nodes.push({id: nodeId, type: 'service', serviceId, label: catalogItem.displayName, x: 740, y: 55 + count * 92});
+      architectureGraph.edges.push({id: 'gateway-' + serviceId, source: 'gateway', target: nodeId});
     }
-    try {
-      const id = 'appArchitecture' + Date.now();
-      const rendered = await window.mermaid.render(id, source);
-      diagram.innerHTML = rendered.svg;
-      if (rendered.bindFunctions) rendered.bindFunctions(diagram);
-    } catch (error) {
-      diagram.textContent = 'Mermaid could not render this source: ' + String(error.message || error);
-      diagram.classList.add('diagram-fallback');
-      return;
-    }
-    diagram.classList.remove('diagram-fallback');
+    architectureSourceEdited = false; markArchitectureDirty(existing ? 'Service unplugged' : 'Service plugged into Kong'); renderArchitecture();
   }
 
   function setArchitecture(data, force) {
     data = data || {};
     if (force || !architectureDirty) {
       architectureSource.value = data.source || '';
-      architectureDirty = false;
+      architectureDirty = false; architectureSourceEdited = false;
     }
-    const services = data.services || [];
+    architectureGraph = data.graph || {nodes: [], edges: []};
+    serviceCatalog = data.catalog || [];
+    const services = data.connectedServices || data.services || [];
     servicesSummary.textContent = services.length
       ? 'Connected through Kong: ' + services.join(', ')
       : 'No backend service calls are detected in the current frontend yet.';
@@ -264,7 +375,9 @@ INDEX_HTML = """<!doctype html>
     architectureStatus.textContent = 'Saving…';
     const response = await fetch('/api/apps/' + encodeURIComponent(slug) + '/architecture', {
       method: 'PUT', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({source: architectureSource.value})
+      body: JSON.stringify(architectureSourceEdited
+        ? {source: architectureSource.value}
+        : {source: architectureSource.value, graph: architectureGraph})
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -354,7 +467,7 @@ INDEX_HTML = """<!doctype html>
     const text = ((data.tool || '') + ' ' + (data.input || '')).toLowerCase();
     if (/verify|test|curl|check|lint/.test(text)) return 'check';
     if (/fetch|api|backend|gateway|auth|upload|service/.test(text)) return 'connect';
-    if (/write|edit|patch|apply|css|html|javascript|app\\.js|index\\.html/.test(text)) return 'build';
+    if (/write|edit|patch|apply|css|html|javascript|jsx|tsx|react|app\\.js|index\\.html/.test(text)) return 'build';
     return 'plan';
   }
 
@@ -363,7 +476,7 @@ INDEX_HTML = """<!doctype html>
     if (type === 'tool_use') return (data.tool || 'tool') + (data.input ? ' — ' + data.input : '');
     if (type === 'tool_result') return (data.ok === false ? 'failed — ' : 'ok — ') + (data.summary || 'completed');
     if (type === 'error') return data.message || data.userMessage || 'Unknown error';
-    if (type === 'preview') return 'Preview updated: ' + (data.url || '');
+    if (type === 'preview') return (data.stage === 'draft' ? 'Draft checkpoint: ' : 'Verified preview: ') + (data.url || '');
     if (type === 'architecture') return 'Architecture updated: ' + ((data.services || []).join(', ') || 'no backend services');
     if (type === 'verification') return data.userMessage || data.report || 'Testing live backend endpoints';
     if (type === 'done' || type === 'build_complete') return data.is_error ? 'completed with errors' : 'completed';
@@ -400,7 +513,10 @@ INDEX_HTML = """<!doctype html>
       if (!options.replay) setArchitecture(data, false);
     } else if (type === 'preview') {
       frame.src = data.url + '?t=' + Date.now(); openLink.href = data.url; openLink.hidden = false;
-      if (building) { setPhase('check'); setProgress(94); }
+      if (data.stage === 'draft' && building) {
+        setPhase('build'); setProgress(Math.max(progress, 52)); statusEl.textContent = 'Live React draft · still building';
+        buildMessage.textContent = 'A usable checkpoint is ready. You can preview it while the builder continues.';
+      } else if (building) { setPhase('check'); setProgress(94); }
     } else if (type === 'error') {
       addMessage('error', data.userMessage || 'Something went wrong while building. Please try again.');
       agentReportedError = true;
@@ -478,11 +594,8 @@ INDEX_HTML = """<!doctype html>
     if (!building && slug && statusEl.textContent === 'Opening your app…') statusEl.textContent = 'Preview opened';
   });
 
-  let architectureRenderTimer = null;
   architectureSource.addEventListener('input', () => {
-    architectureDirty = true; architectureStatus.textContent = 'Unsaved changes';
-    clearTimeout(architectureRenderTimer);
-    architectureRenderTimer = setTimeout(renderArchitecture, 450);
+    architectureSourceEdited = true; markArchitectureDirty('Unsaved Mermaid changes');
   });
   previewTab.addEventListener('click', () => showView('preview'));
   architectureTab.addEventListener('click', () => showView('architecture'));
@@ -494,6 +607,7 @@ INDEX_HTML = """<!doctype html>
       if (building) finishBuild(true);
     }
   });
+  window.addEventListener('resize', () => { if (!architecturePane.hidden) renderArchitecture(); });
 
   if (slug) {
     statusEl.textContent = 'Opening your app…';

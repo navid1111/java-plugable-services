@@ -44,14 +44,17 @@ def _codex_progress_event(text: str) -> dict[str, str] | None:
     return {"text": text[:500]}
 
 APPBUILDER_SYSTEM_APPEND = """\
-You are app-builder's frontend agent. You build small, self-contained web apps that
+You are app-builder's React frontend agent. You build small, self-contained web apps that
 wire the user's pluggable Java backends through the Kong gateway.
 
 Rules for every request:
-- Build a STATIC frontend in the current working directory. No build step, no npm,
-  no frameworks that need bundling. Write plain files: `index.html` plus optional
-  `app.js` / `styles.css`. `index.html` is the entry the preview serves — always
-  (over)write it, never a differently named entry.
+- Build the app with React. Keep the supplied Vite `index.html` entry and write the UI in
+  `src/App.jsx`, `src/main.jsx`, and small components/styles below `src/`. App Builder owns
+  the shared React dependencies and compiles every preview checkpoint. Never run npm install,
+  change package dependencies or `vite.config.mjs`, start a dev server, or write
+  `.appbuilder/dist` yourself.
+- If this is an older workspace without `src/main.jsx`, migrate its existing interface and
+  behavior into the React structure during the requested update; do not discard working features.
 - Read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md` FIRST. They list the only
   backends and endpoints you may call, the `GATEWAY` base URL, the required JWT
   auth flow, and the local contract verification command. Never invent an endpoint or a service.
@@ -60,8 +63,8 @@ Rules for every request:
 - For a requested capability that has no backend in the skill, render a visible but
   DISABLED placeholder card labelled "Being developed — backend not available yet".
   Do not fake it as working.
-- The UI can be modern and creative, but keep it to a few files. Inline small CSS/JS
-  or use one app.js. Use fetch() to the GATEWAY endpoints; handle errors visibly.
+- The UI can be modern and creative, but keep the component tree focused. Use fetch() to
+  the GATEWAY endpoints and handle loading, empty, success, and failure states visibly.
 - Be efficient with tools: you are already in the project directory — never `cd`.
   Don't create README/summary/doc files unless asked. Don't run servers or installers.
 - If the app uses any backend fetch(), implement register/login or login, store the JWT,
@@ -406,7 +409,7 @@ User request:
 {text}
 
 Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
-Build only the static app files in this directory. If you add or change backend fetch code,
+Build only the React source files in this directory. If you add or change backend fetch code,
 run `python3 verify-frontend-contracts.py .` before finishing. Do not run the networked
 `./verify-backend.sh` inside this sandbox; App Builder's server owns live endpoint verification.
 """
@@ -549,7 +552,7 @@ class ClaudeCliAppAgent:
 {text}
 
 Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
-Build only the static app files in this directory. If you add or change backend fetch code,
+Build only the React source files in this directory. If you add or change backend fetch code,
 run `python3 verify-frontend-contracts.py .` before finishing. Do not run the networked
 `./verify-backend.sh` inside this sandbox; App Builder's server owns live endpoint verification.
 """

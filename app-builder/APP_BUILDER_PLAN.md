@@ -38,6 +38,15 @@ GET /api/plugs
 
 This gives Hermes and the generated frontend a grounded source of truth before promising a backend capability.
 
+## React preview and architecture workspace implemented
+
+- New app workspaces are React/Vite projects (`src/App.jsx`, `src/main.jsx`, and scoped styles).
+- App Builder owns one shared dependency/toolchain install and compiles workspaces; coding agents never install packages.
+- Safe source checkpoints are compiled and streamed into the preview while the agent is still working.
+- The final preview remains separately protected by canonical frontend-contract and live backend smoke gates.
+- Architecture is stored as a draggable node/edge graph. Users add or unplug available Java services from Kong,
+  arrange the canvas, and save the graph as agent context. Mermaid is generated from the graph for portability.
+
 ## Intended runtime architecture
 
 ```text
@@ -129,9 +138,9 @@ Create a workspace per generated app:
 
 The generated compose file should merge selected `*/plug/compose.plug.yml` fragments rather than inventing services.
 
-### Slice 5: Lovable/v0-style frontend
+### Slice 5: Lovable/v0-style frontend (implemented foundation)
 
-Start with a React/Vite generated frontend that reads `app.manifest.json` and renders:
+React/Vite workspaces now render:
 
 - polished page shell,
 - generated forms/tables/cards per capability,

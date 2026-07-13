@@ -1,8 +1,8 @@
-"""Per-app workspaces: a plain static-web folder the agent writes index.html/app.js
-into, with the `plugs` skill mounted so the agent is grounded in real backends.
+"""Per-app React workspaces, preview builds, and editable service architecture.
 
-No npm/build step — app-builder serves the folder directly, so a generated app is
-clickable the moment the agent writes index.html.
+Generated agents only edit the small React source tree. App Builder owns the shared
+Vite toolchain and compiles draft checkpoints, so agents never install dependencies
+and users can see safe intermediate previews while a turn is still running.
 """
 
 import asyncio
@@ -23,13 +23,52 @@ from .catalog import (
 )
 from .config import settings
 
-# Shown before the agent writes anything, so a fresh workspace isn't a blank 404.
 _PLACEHOLDER_INDEX = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Building…</title>
-<style>body{font-family:system-ui;background:#0b1020;color:#e2e8f0;display:grid;place-items:center;height:100vh;margin:0}</style>
-</head><body><div>The agent is building your app… this page updates when it writes <code>index.html</code>.</div></body></html>
+<html lang="en"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Generated React app</title></head>
+<body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
 """
+
+_PLACEHOLDER_MAIN = """import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import './styles.css';
+
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode><App /></React.StrictMode>,
+);
+"""
+
+_PLACEHOLDER_APP = """export default function App() {
+  return (
+    <main className="building-shell">
+      <span>React workspace ready</span>
+      <h1>Your app is being created</h1>
+      <p>Draft previews will refresh here as each usable checkpoint is built.</p>
+    </main>
+  );
+}
+"""
+
+_PLACEHOLDER_STYLES = """* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; font-family: Inter, system-ui, sans-serif;
+  color: #e2e8f0; background: radial-gradient(circle at top, #172554, #070b16 55%); }
+.building-shell { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 32px; text-align: center; }
+.building-shell span { color: #67e8f9; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.building-shell h1 { margin: 0; font-size: clamp(32px, 6vw, 64px); }
+.building-shell p { max-width: 560px; margin: 0; color: #94a3b8; font-size: 17px; }
+"""
+
+_VITE_CONFIG = """export default {
+  esbuild: { jsx: 'automatic' },
+};
+"""
+
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
+_VITE_ENTRY = _BACKEND_ROOT / "node_modules" / "vite" / "bin" / "vite.js"
+_PREVIEW_DIST = Path(".appbuilder") / "dist"
+_FRONTEND_SUFFIXES = {".html", ".js", ".jsx", ".ts", ".tsx", ".css"}
 
 
 def _slugify(value: str) -> str:
@@ -49,8 +88,9 @@ def workspace_dir(slug: str) -> Path:
 
 
 def index_mtime(cwd: Path) -> float:
-    entry = cwd / "index.html"
-    return entry.stat().st_mtime if entry.exists() else 0.0
+    """Legacy compatibility: newest React/static source modification time."""
+    sources = _frontend_sources(cwd)
+    return max((path.stat().st_mtime for path in sources), default=0.0)
 
 
 _SERVICE_PATH_MARKERS: dict[str, tuple[str, ...]] = {
@@ -79,13 +119,18 @@ _SERVICE_DISPLAY_NAMES: dict[str, str] = {
 _ARCHITECTURE_FILE = "ARCHITECTURE.mmd"
 _ARCHITECTURE_META = ".appbuilder/architecture.json"
 _MAX_ARCHITECTURE_CHARS = 30_000
+_MAX_ARCHITECTURE_NODES = 50
+_MAX_ARCHITECTURE_EDGES = 100
 
 
 def _frontend_sources(cwd: Path) -> list[Path]:
-    candidates = {*cwd.rglob("*.html"), *cwd.rglob("*.js")}
+    if not cwd.is_dir():
+        return []
     return sorted(
-        path for path in candidates
-        if not any(part.startswith(".") for part in path.relative_to(cwd).parts)
+        path for path in cwd.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in _FRONTEND_SUFFIXES
+        and not any(part.startswith(".") or part == "node_modules" for part in path.relative_to(cwd).parts)
     )
 
 
@@ -145,6 +190,109 @@ def generate_architecture(cwd: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _generated_architecture_graph(services: list[str]) -> dict:
+    nodes = [
+        {"id": "user", "type": "actor", "label": "User", "x": 60, "y": 210},
+        {"id": "app", "type": "app", "label": "React app", "x": 285, "y": 210},
+        {"id": "gateway", "type": "gateway", "label": "Kong API Gateway", "x": 520, "y": 210},
+    ]
+    edges = [
+        {"id": "user-app", "source": "user", "target": "app"},
+        {"id": "app-gateway", "source": "app", "target": "gateway"},
+    ]
+    for index, service in enumerate(services):
+        node_id = f"service:{service}"
+        nodes.append({
+            "id": node_id,
+            "type": "service",
+            "serviceId": service,
+            "label": _SERVICE_DISPLAY_NAMES.get(service, service),
+            "x": 760,
+            "y": 70 + index * 125,
+        })
+        edges.append({"id": f"gateway-{service}", "source": "gateway", "target": node_id})
+    return {"nodes": nodes, "edges": edges}
+
+
+def _valid_architecture_graph(value: object) -> bool:
+    return isinstance(value, dict) and isinstance(value.get("nodes"), list) and isinstance(value.get("edges"), list)
+
+
+def _normalize_architecture_graph(value: dict) -> dict:
+    nodes_raw = value.get("nodes", [])
+    edges_raw = value.get("edges", [])
+    if len(nodes_raw) > _MAX_ARCHITECTURE_NODES or len(edges_raw) > _MAX_ARCHITECTURE_EDGES:
+        raise ValueError("Architecture graph is too large")
+
+    nodes: list[dict] = []
+    ids: set[str] = set()
+    service_ids: set[str] = set()
+    for item in nodes_raw:
+        if not isinstance(item, dict):
+            raise ValueError("Every architecture node must be an object")
+        node_id = str(item.get("id", ""))[:100]
+        node_type = str(item.get("type", ""))
+        if not node_id or node_id in ids or node_type not in {"actor", "app", "gateway", "service"}:
+            raise ValueError("Architecture contains an invalid or duplicate node")
+        service_id = str(item.get("serviceId", ""))
+        if node_type == "service" and service_id not in _SERVICE_PATH_MARKERS:
+            raise ValueError(f"Unknown service plug: {service_id}")
+        if node_type == "service" and service_id in service_ids:
+            raise ValueError(f"Service plug is already present: {service_id}")
+        if node_type == "service":
+            service_ids.add(service_id)
+        ids.add(node_id)
+        node = {
+            "id": node_id,
+            "type": node_type,
+            "label": str(item.get("label", node_id))[:120],
+            "x": max(0, min(1600, int(float(item.get("x", 0))))),
+            "y": max(0, min(1200, int(float(item.get("y", 0))))),
+        }
+        if service_id:
+            node["serviceId"] = service_id
+        nodes.append(node)
+
+    if "app" not in ids or "gateway" not in ids:
+        raise ValueError("Architecture must keep the app and gateway nodes")
+
+    edges: list[dict] = []
+    edge_ids: set[str] = set()
+    for item in edges_raw:
+        if not isinstance(item, dict):
+            raise ValueError("Every architecture connection must be an object")
+        source = str(item.get("source", ""))
+        target = str(item.get("target", ""))
+        edge_id = str(item.get("id") or f"{source}-{target}")[:160]
+        if source not in ids or target not in ids or source == target or edge_id in edge_ids:
+            raise ValueError("Architecture contains an invalid connection")
+        edge_ids.add(edge_id)
+        edges.append({"id": edge_id, "source": source, "target": target})
+    return {"nodes": nodes, "edges": edges}
+
+
+def _mermaid_from_graph(graph: dict) -> str:
+    node_by_id = {node["id"]: node for node in graph["nodes"]}
+    aliases = {node_id: f"N{index}" for index, node_id in enumerate(node_by_id)}
+    lines = ["flowchart LR"]
+    for node_id, node in node_by_id.items():
+        label = str(node.get("label", node_id)).replace('"', "'")
+        if node.get("type") == "service":
+            label += f"<br/>{node.get('serviceId', '')}"
+        shape = f'(["{label}"])' if node.get("type") == "actor" else f'["{label}"]'
+        lines.append(f"  {aliases[node_id]}{shape}")
+    for edge in graph["edges"]:
+        source = aliases[edge["source"]]
+        target = aliases[edge["target"]]
+        target_node = node_by_id[edge["target"]]
+        if target_node.get("type") == "service":
+            paths = ", ".join(_SERVICE_PATH_MARKERS[target_node["serviceId"]])
+            lines.append(f'  {source} -->|"{paths}"| {target}')
+        else:
+            lines.append(f"  {source} --> {target}")
+    return "\n".join(lines) + "\n"
+
+
 def architecture_payload(cwd: Path, *, refresh_generated: bool = False) -> dict:
     """Return the editable diagram, preserving user changes across regeneration."""
     target = cwd / _ARCHITECTURE_FILE
@@ -157,27 +305,55 @@ def architecture_payload(cwd: Path, *, refresh_generated: bool = False) -> dict:
     untracked_existing = bool(existing and not last_generated_hash)
     user_owned = meta.get("origin") == "user" or manually_changed or untracked_existing
 
+    services = services_used_by_frontend(cwd)
+    graph = meta.get("graph") if _valid_architecture_graph(meta.get("graph")) else None
+
     if not existing or (refresh_generated and not user_owned):
-        existing = generate_architecture(cwd)
+        graph = _generated_architecture_graph(services)
+        existing = _mermaid_from_graph(graph)
         target.write_text(existing, encoding="utf-8")
         meta = {
             "origin": "generated",
             "lastGeneratedHash": _architecture_hash(existing),
+            "graph": graph,
         }
         _write_architecture_meta(cwd, meta)
     elif user_owned and meta.get("origin") != "user":
         meta["origin"] = "user"
         _write_architecture_meta(cwd, meta)
 
+    if graph is None:
+        graph = _generated_architecture_graph(services)
+        meta["graph"] = graph
+        _write_architecture_meta(cwd, meta)
+
+    connected = {
+        node.get("serviceId")
+        for node in graph["nodes"]
+        if node.get("type") == "service"
+    }
+    catalog = [
+        {
+            "id": service,
+            "displayName": _SERVICE_DISPLAY_NAMES.get(service, service),
+            "gatewayPaths": list(_SERVICE_PATH_MARKERS[service]),
+            "connected": service in connected,
+        }
+        for service in _SERVICE_PATH_MARKERS
+    ]
     return {
         "source": existing,
-        "services": services_used_by_frontend(cwd),
+        "services": services,
         "origin": meta.get("origin", "user" if user_owned else "generated"),
+        "graph": graph,
+        "catalog": catalog,
+        "connectedServices": sorted(service for service in connected if service),
     }
 
 
-def save_user_architecture(cwd: Path, source: str) -> dict:
-    normalized = source.strip() + "\n"
+def save_user_architecture(cwd: Path, source: str = "", graph: dict | None = None) -> dict:
+    normalized_graph = _normalize_architecture_graph(graph) if graph is not None else None
+    normalized = _mermaid_from_graph(normalized_graph) if normalized_graph is not None else source.strip() + "\n"
     if len(normalized) > _MAX_ARCHITECTURE_CHARS:
         raise ValueError(f"Mermaid source must be at most {_MAX_ARCHITECTURE_CHARS} characters")
     if not re.match(
@@ -190,6 +366,7 @@ def save_user_architecture(cwd: Path, source: str) -> dict:
     _write_architecture_meta(cwd, {
         "origin": "user",
         "lastGeneratedHash": _architecture_meta(cwd).get("lastGeneratedHash", ""),
+        "graph": normalized_graph or _architecture_meta(cwd).get("graph"),
     })
     return architecture_payload(cwd)
 
@@ -221,6 +398,38 @@ def _source_fingerprint(cwd: Path) -> str:
         digest.update(path.read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
+
+
+def frontend_fingerprint(cwd: Path) -> str:
+    return _source_fingerprint(cwd)
+
+
+def preview_root(cwd: Path) -> Path:
+    built = cwd / _PREVIEW_DIST
+    return built if (built / "index.html").is_file() else cwd
+
+
+async def build_frontend(cwd: Path) -> tuple[bool, str]:
+    """Compile a React workspace with the server-owned shared Vite toolchain."""
+    if not (cwd / "src" / "main.jsx").is_file():
+        return ((cwd / "index.html").is_file(), "legacy static workspace")
+    if not _VITE_ENTRY.is_file():
+        return False, "shared React toolchain is missing; run npm install in app-builder/agent-backend"
+    process = await asyncio.create_subprocess_exec(
+        "node", str(_VITE_ENTRY), "build", str(cwd),
+        "--base", "./", "--outDir", str(_PREVIEW_DIST), "--emptyOutDir",
+        cwd=str(_BACKEND_ROOT),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    try:
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=60)
+    except TimeoutError:
+        process.kill()
+        await process.communicate()
+        return False, "React preview build timed out"
+    report = stdout.decode(errors="replace").strip()
+    return process.returncode == 0, report
 
 
 def _verification_record(cwd: Path) -> Path:
@@ -360,7 +569,32 @@ async def scaffold(slug: str) -> Path:
     entry = cwd / "index.html"
     if not entry.exists():
         entry.write_text(_PLACEHOLDER_INDEX)
+    source_dir = cwd / "src"
+    source_dir.mkdir(exist_ok=True)
+    for name, source in (
+        ("main.jsx", _PLACEHOLDER_MAIN),
+        ("App.jsx", _PLACEHOLDER_APP),
+        ("styles.css", _PLACEHOLDER_STYLES),
+    ):
+        target = source_dir / name
+        if not target.exists():
+            target.write_text(source)
+    vite_config = cwd / "vite.config.mjs"
+    if not vite_config.exists():
+        vite_config.write_text(_VITE_CONFIG)
 
+    await refresh_workspace_context(cwd)
+    architecture_payload(cwd)
+    await build_frontend(cwd)
+    return cwd
+
+
+async def refresh_workspace_context(cwd: Path) -> None:
+    """Refresh generated instructions/guards without overwriting app source.
+
+    This is also the migration entry for legacy static workspaces: their next agent
+    turn receives the React contract while the currently working source remains intact.
+    """
     plugs, endpoints = await fetch_catalog()
     (cwd / "AGENTS.md").write_text(render_agents_md(plugs, endpoints))
     verifier = cwd / "verify-backend.sh"
@@ -373,8 +607,6 @@ async def scaffold(slug: str) -> Path:
     skill_dir = cwd / ".hermes" / "skills" / "plugs"
     skill_dir.mkdir(parents=True, exist_ok=True)
     (skill_dir / "SKILL.md").write_text(render_skill(plugs, endpoints))
-    architecture_payload(cwd)
-    return cwd
 
 
 def list_files(cwd: Path) -> list[str]:
