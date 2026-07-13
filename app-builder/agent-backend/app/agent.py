@@ -27,6 +27,22 @@ from .config import settings
 
 logger = logging.getLogger(__name__)
 
+_CONNECTION_RETRY_MESSAGE = "Connection interrupted briefly—continuing automatically."
+
+
+def _codex_progress_event(text: str) -> dict[str, str] | None:
+    """Turn Codex CLI diagnostics into safe, user-facing progress events."""
+    lowered = text.lower()
+    if "responses_retry" in lowered and "stream disconnected" in lowered:
+        return {
+            "text": _CONNECTION_RETRY_MESSAGE,
+            "userMessage": _CONNECTION_RETRY_MESSAGE,
+            "category": "connection_retry",
+        }
+    if "codex_core::" in lowered and any(level in lowered for level in (" warn ", " info ", " error ")):
+        return None
+    return {"text": text[:500]}
+
 APPBUILDER_SYSTEM_APPEND = """\
 You are app-builder's frontend agent. You build small, self-contained web apps that
 wire the user's pluggable Java backends through the Kong gateway.
@@ -51,6 +67,11 @@ Rules for every request:
   The verifier lints the actual generated HTML/JS before testing the live services. Never edit,
   delete, weaken, or bypass `verify-frontend-contracts.py` or `verify-backend.sh`. Treat any
   failure as a real frontend contract bug or infrastructure blocker; do not claim the app is wired.
+- The server independently reruns contract checks and the official smoke test for every backend
+  service referenced by the generated HTML/JS before it releases the preview. A successful CLI
+  response is not completion; fix every verifier failure and allow up to ten minutes for this gate.
+- In async DOM event handlers, capture `const form = event.currentTarget` before the first `await`.
+  Browsers may clear `event.currentTarget` after dispatch, so never access it after an `await`.
 - Backend writes followed immediately by dependent writes can cross an asynchronous projection
   boundary. Follow the exact bounded-retry rules in the plugs skill; never paper over a 4xx with
   arbitrary payload fallbacks or broad retries.
@@ -350,12 +371,23 @@ class CodexCliAppAgent:
 
     async def _read_output(self, process: asyncio.subprocess.Process) -> str:
         chunks: list[str] = []
+        published_categories: set[str] = set()
         assert process.stdout is not None
         while line := await process.stdout.readline():
             text = line.decode(errors="replace").rstrip()
-            chunks.append(text)
-            if text:
-                await self._publisher("thinking", {"text": text[:500]})
+            if not text:
+                continue
+            progress = _codex_progress_event(text)
+            if progress is None:
+                continue
+            category = progress.get("category")
+            if category:
+                if category in published_categories:
+                    continue
+                published_categories.add(category)
+            else:
+                chunks.append(text)
+            await self._publisher("thinking", progress)
         return "\n".join(chunks)
 
     def _read_last_message(self, path: Path) -> str:

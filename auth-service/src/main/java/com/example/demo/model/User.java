@@ -35,6 +35,9 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(nullable = false)
+    private String role = "USER";
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -69,6 +72,9 @@ public class User {
         this.passwordHash = passwordHash;
     }
     public boolean isActive() { return active; }
+    public String getRole() { return role; }
+    public boolean isAdmin() { return "ADMIN".equals(role); }
+    public void promoteToAdmin() { this.role = "ADMIN"; }
     public void rename(String username) { this.username = username; }
     public void deactivate() { this.active = false; }
     public long getVersion() { return version; }

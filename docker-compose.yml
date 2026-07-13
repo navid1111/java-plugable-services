@@ -74,7 +74,7 @@ services:
   users-db:
     image: postgres:16-alpine
     container_name: users-db
-    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media"]
+    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media", "leetcode"]
     environment:
       POSTGRES_USER: appuser
       POSTGRES_DB: appdb
@@ -91,7 +91,7 @@ services:
 
   # ---- Spring Boot upstream service (not exposed to host directly) ----
   auth-service:
-    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media"]
+    profiles: ["auth", "tweeter", "chat", "booking", "comments", "post-search", "media", "leetcode"]
     build:
       context: .
       dockerfile: auth-service/Dockerfile
@@ -111,6 +111,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_EXPIRATION_MINUTES: "60"
+      AUTH_ADMIN_USERNAME: ${AUTH_ADMIN_USERNAME:-admin}
+      AUTH_ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD:-change-admin-password}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
       RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}

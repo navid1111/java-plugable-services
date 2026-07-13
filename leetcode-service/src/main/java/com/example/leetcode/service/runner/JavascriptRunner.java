@@ -1,9 +1,17 @@
 package com.example.leetcode.service.runner;
 
 import org.springframework.stereotype.Component;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class JavascriptRunner implements CodeRunner {
+    private static final Pattern FUNCTION_DECLARATION = Pattern.compile(
+            "(?:function\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*\\(|"
+            + "(?:const|let|var)\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*=\\s*"
+            + "(?:async\\s*)?(?:function\\s*)?\\()");
 
     private final DockerProcessRunner dockerProcessRunner;
 
@@ -18,19 +26,24 @@ public class JavascriptRunner implements CodeRunner {
 
     @Override
     public ExecutionResult runCode(String code, String testCasesJson) {
+        Matcher function = FUNCTION_DECLARATION.matcher(code);
+        if (!function.find()) {
+            return new ExecutionResult("COMPILE_ERROR", 0, 0, 0,
+                    "Define a named JavaScript function, for example: function solve(input) { ... }");
+        }
+        String functionName = function.group(1) != null ? function.group(1) : function.group(2);
+        String encodedTestCases = Base64.getEncoder()
+                .encodeToString(testCasesJson.getBytes(StandardCharsets.UTF_8));
         String wrapper = String.join("\n",
                 "try {",
-                "    const testCases = JSON.parse(`" + testCasesJson + "`);",
+                "    const testCases = JSON.parse(Buffer.from('" + encodedTestCases + "', 'base64').toString('utf8'));",
                 "",
                 "    // --- User Code ---")
                 + "\n" + code + "\n"
                 + String.join("\n",
                 "    // -----------------",
                 "",
-                "    const candidates = [];",
-                "    if (typeof twoSum !== 'undefined') candidates.push(twoSum);",
-                "    if (typeof reverseString !== 'undefined') candidates.push(reverseString);",
-                "    const userFunc = candidates[0];",
+                "    const userFunc = typeof " + functionName + " === 'function' ? " + functionName + " : null;",
                 "    if (!userFunc) {",
                 "        throw new Error('No supported solution function found');",
                 "    }",

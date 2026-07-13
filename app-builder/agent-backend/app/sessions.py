@@ -23,6 +23,7 @@ PERSISTED_EVENT_TYPES = {
     "preview",
     "error",
     "done",
+    "build_complete",
 }
 
 
@@ -77,7 +78,12 @@ class SessionManager:
             session = await self.get_or_create(slug)
         except Exception as exc:
             logger.exception("could not start turn for app %s", slug)
-            await bus.publish(slug, "error", {"message": f"Could not start agent: {str(exc)[:400]}"})
+            error = {
+                "message": f"Could not start agent: {str(exc)[:400]}",
+                "userMessage": "The builder could not start. Check that an agent backend is running, then try again.",
+            }
+            await bus.publish(slug, "error", error)
+            await bus.publish(slug, "build_complete", {"is_error": True})
             return
 
         async with session.lock:
@@ -92,19 +98,34 @@ class SessionManager:
                         "Generated frontend was blocked by the server-owned contract verifier. "
                         + report[:1200]
                     )
-                    data = {"message": message}
+                    data = {
+                        "message": message,
+                        "userMessage": (
+                            "I found a backend connection problem during the final check, so the "
+                            "broken preview was blocked. Ask the builder to fix the reported issue."
+                        ),
+                    }
                     await append_event(session.cwd, "error", data)
                     await bus.publish(slug, "error", data)
-                    done = {"is_error": True, "validation": "frontend-contracts"}
-                    await append_event(session.cwd, "done", done)
-                    await bus.publish(slug, "done", done)
+                    complete = {"is_error": True, "validation": "frontend-contracts"}
+                    await append_event(session.cwd, "build_complete", complete)
+                    await bus.publish(slug, "build_complete", complete)
                     return
                 await self._maybe_preview(session)
+                complete = {"is_error": False, "validation": "frontend-contracts"}
+                await append_event(session.cwd, "build_complete", complete)
+                await bus.publish(slug, "build_complete", complete)
             except Exception as exc:
                 logger.exception("turn failed for app %s", slug)
-                data = {"message": str(exc)[:500]}
+                data = {
+                    "message": str(exc)[:500],
+                    "userMessage": "Something interrupted the build. You can retry the same request.",
+                }
                 await append_event(session.cwd, "error", data)
                 await bus.publish(slug, "error", data)
+                complete = {"is_error": True}
+                await append_event(session.cwd, "build_complete", complete)
+                await bus.publish(slug, "build_complete", complete)
 
     async def _maybe_preview(self, session: AppSession) -> None:
         mtime = workspace.index_mtime(session.cwd)

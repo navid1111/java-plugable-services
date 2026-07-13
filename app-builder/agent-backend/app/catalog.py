@@ -61,6 +61,11 @@ def lint(source: str) -> list[str]:
     if "postWithFallback" in source:
         problems.append("do not guess multiple write payloads; use the single documented request contract")
 
+    if re.search(r"await[\s\S]{0,1200}event\.currentTarget", source):
+        problems.append(
+            "event.currentTarget can become null after await; capture the form element before the first await"
+        )
+
     if re.search(
         r"['\"]Content-Type['\"]\s*\]?\s*[:=]\s*['\"]multipart/form-data",
         source,
@@ -68,7 +73,7 @@ def lint(source: str) -> list[str]:
     ):
         problems.append("do not set multipart/form-data manually when sending FormData; the browser adds its boundary")
 
-    protected = any(path in source for path in ("/posts", "/media", "/comments", "/post-search", "/bff"))
+    protected = any(path in source for path in ("/posts", "/media", "/comments", "/post-search", "/bff", "/leetcode"))
     if protected:
         for token, message in (
             ("appbuilder.jwt", "protected apps must load the JWT from appbuilder.jwt"),
@@ -102,17 +107,39 @@ def lint(source: str) -> list[str]:
 
     creates_posts = bool(re.search(r"['\"]/posts['\"]", source))
     writes_media = uses_media_intents or nearby_method(source, "/media/targets/", "POST")
-    has_summary = "/media/targets/" in source and "/summary" in source
+    writes_comments = nearby_method(source, "/comments/targets/", "POST")
+    has_summary = any(
+        target in source and "/summary" in source
+        for target in ("/media/targets/", "/comments/targets/")
+    )
     has_backoff = any(token in source for token in ("setTimeout", "sleep(", "pause("))
     handles_projection_race = "target does not exist or is deleted" in lowered
-    if creates_posts and writes_media and not (has_summary and has_backoff and handles_projection_race):
+    if creates_posts and (writes_media or writes_comments) and not (has_summary and has_backoff and handles_projection_race):
         problems.append(
-            "post -> media writes require bounded target-projection readiness retry for "
+            "post -> media/comment writes require bounded target-projection readiness retry for "
             "'target does not exist or is deleted'"
         )
 
     if nearby_method(source, "/follow", "PUT") and "username=" not in source:
         problems.append("follow PUT requires ?username={author.username} and the BFF author.userId")
+
+    if nearby_method(source, "/bookings", "POST"):
+        for token, message in (
+            ("slotId", "booking writes require {slotId}, not a resource id"),
+            ("slots", "booking UI must select an available slot from each resource"),
+        ):
+            if token not in source:
+                problems.append(message)
+
+    if "/leetcode/admin/problems" in source:
+        for token, message in (
+            ("ADMIN", "LeetCode admin UI must be gated by the ADMIN role from /auth/me"),
+            ("testCases", "LeetCode problem writes require structured testCases"),
+            ("codeStubs", "LeetCode problem writes require language codeStubs"),
+            ("hidden", "LeetCode test cases must explicitly mark public versus hidden cases"),
+        ):
+            if token not in source:
+                problems.append(message)
 
     return problems
 
@@ -258,6 +285,40 @@ def render_skill(plugs: list[dict], endpoints: dict[str, list[str]]) -> str:
         "- post-search for finding videos when that plug is AVAILABLE.",
         "",
     ]
+
+    if any(plug.get("id") == "leetcode-service" for plug in available):
+        lines += [
+            "## LeetCode problem and judge contract",
+            "",
+            "- Solver reads: `GET /leetcode/problems`, then `GET /leetcode/problems/{id}`.",
+            "  Detail includes `codeStubs` and only non-hidden `examples`.",
+            "- Submit with `POST /leetcode/problems/{id}/submit`, body",
+            "  `{\"language\":\"javascript\",\"code\":\"...\"}`, plus a unique `Idempotency-Key` header.",
+            "  Poll `GET /leetcode/submissions/{id}` while status is `QUEUED` or `RUNNING`.",
+            "- Show problem management only when `GET /auth/me` includes `ADMIN` in `roles`.",
+            "  Never infer administrator access from a username and never expose hidden cases in solver views.",
+            "- Admin create: `POST /leetcode/admin/problems`; update:",
+            "  `PUT /leetcode/admin/problems/{id}`. The exact body is:",
+            "  `{\"id\":\"two-sum\",\"title\":\"Two Sum\",\"description\":\"...\",",
+            "  `\"difficulty\":\"EASY\",\"tags\":[\"array\"],",
+            "  `\"codeStubs\":{\"javascript\":\"function twoSum(...) {}\"},",
+            "  `\"testCases\":[{\"input\":{...},\"output\":...,\"hidden\":false}]}`.",
+            "- Admin detail `GET /leetcode/admin/problems/{id}` returns all test cases, including hidden ones.",
+            "",
+        ]
+
+    if any(plug.get("id") == "booking-service" for plug in available):
+        lines += [
+            "## Booking contract",
+            "",
+            "- `GET /bookings/resources` returns an array of resources. Each resource has a `slots` array;",
+            "  each slot has its own numeric `id` and `available` flag.",
+            "- Create a booking with `POST /bookings` and exactly `{'slotId': <selected slot id>}`.",
+            "  A resource id is not a slot id. Only enable booking controls for available slots.",
+            "- `GET /bookings/mine` returns the current user's bookings and `DELETE /bookings/{id}`",
+            "  cancels one of those bookings.",
+            "",
+        ]
 
     if "bff" in {p["id"] for p in available}:
         lines += [

@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     claude_permission_mode: str = "bypassPermissions"
     claude_timeout_seconds: int = 600
 
+    # Server-owned release gate. Every backend service referenced by generated
+    # HTML/JS must pass its repository smoke test before preview is released.
+    service_smoke_root: Path = BACKEND_ROOT.parents[1]
+    backend_verification_timeout_seconds: int = 600
+
     host: str = "0.0.0.0"
     port: int = 8090
 

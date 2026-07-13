@@ -1,6 +1,8 @@
 package com.example.leetcode.service.runner;
 
 import org.springframework.stereotype.Component;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Component
 public class PythonRunner implements CodeRunner {
@@ -18,7 +20,10 @@ public class PythonRunner implements CodeRunner {
 
     @Override
     public ExecutionResult runCode(String code, String testCasesJson) {
+        String encodedTestCases = Base64.getEncoder()
+                .encodeToString(testCasesJson.getBytes(StandardCharsets.UTF_8));
         String wrapper = String.join("\n",
+                "import base64",
                 "import json",
                 "import sys",
                 "import time",
@@ -28,7 +33,7 @@ public class PythonRunner implements CodeRunner {
                 + String.join("\n",
                 "# -----------------",
                 "",
-                "test_cases = json.loads('''" + testCasesJson + "''')",
+                "test_cases = json.loads(base64.b64decode('" + encodedTestCases + "').decode('utf-8'))",
                 "results = []",
                 "",
                 "try:",

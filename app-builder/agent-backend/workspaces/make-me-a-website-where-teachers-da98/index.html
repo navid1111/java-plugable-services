@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classroom Loop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Teachers publish. Students reserve.</p>
+        <h1>Run a compact class marketplace through the live gateway.</h1>
+        <p class="hero-text">
+          Teachers can publish class listings, students can search and save seats, and everyone sees real backend errors instead of fake success states.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshAllBtn" class="button button-primary" type="button">Refresh live data</button>
+          <button id="logoutBtn" class="button button-secondary hidden" type="button">Log out</button>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="status-card">
+          <p class="status-label">Gateway</p>
+          <p class="status-value">http://localhost:18000</p>
+        </div>
+        <div class="status-card">
+          <p class="status-label">Signed in as</p>
+          <p id="identityText" class="status-value">Guest</p>
+        </div>
+        <div class="status-card">
+          <p class="status-label">Mode</p>
+          <p id="modeText" class="status-value">Browse classes</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel auth-panel">
+        <div class="panel-heading">
+          <h2>Access</h2>
+          <p>Register or log in before using class posts, search, or booking tools.</p>
+        </div>
+        <div id="authError" class="notice notice-error hidden"></div>
+        <div class="auth-grid">
+          <form id="loginForm" class="stack" autocomplete="on">
+            <h3>Login</h3>
+            <label>
+              <span>Username</span>
+              <input name="username" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" required>
+            </label>
+            <button class="button button-primary" type="submit">Sign in</button>
+          </form>
+
+          <form id="registerForm" class="stack" autocomplete="on">
+            <h3>Register</h3>
+            <label>
+              <span>Username</span>
+              <input name="username" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" required minlength="6">
+            </label>
+            <button class="button button-secondary" type="submit">Create account</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel composer-panel">
+        <div class="panel-heading">
+          <h2>Teacher class post</h2>
+          <p>Uses the posts service directly. Keep each listing under 280 characters.</p>
+        </div>
+        <div id="composerError" class="notice notice-error hidden"></div>
+        <div id="composerSuccess" class="notice notice-success hidden"></div>
+        <form id="postForm" class="stack">
+          <label>
+            <span>Class listing</span>
+            <textarea name="content" maxlength="280" rows="5" placeholder="Example: AP Calculus review, Thursday 6 PM, 12 seats, online, exam drill focus." required></textarea>
+          </label>
+          <button class="button button-primary" type="submit">Publish class</button>
+        </form>
+      </section>
+
+      <section class="panel search-panel">
+        <div class="panel-heading">
+          <h2>Search listings</h2>
+          <p>Uses the event-driven post search index. Results may lag briefly after a new post.</p>
+        </div>
+        <div id="searchError" class="notice notice-error hidden"></div>
+        <form id="searchForm" class="search-form">
+          <input id="searchInput" name="query" placeholder="Search by subject, level, or format" required>
+          <button class="button button-secondary" type="submit">Search</button>
+        </form>
+        <div id="searchResults" class="card-list empty-state">Sign in to search published classes.</div>
+      </section>
+
+      <section class="panel feed-panel">
+        <div class="panel-heading">
+          <h2>Published classes</h2>
+          <p>Read through the BFF so comments and media health degrade gracefully.</p>
+        </div>
+        <div id="feedError" class="notice notice-error hidden"></div>
+        <div id="feedList" class="card-list empty-state">Sign in to load classes.</div>
+      </section>
+
+      <section class="panel bookings-panel">
+        <div class="panel-heading">
+          <h2>Book a class</h2>
+          <p>Available booking resources come from the booking service. Your saved reservations appear below.</p>
+        </div>
+        <div id="bookingError" class="notice notice-error hidden"></div>
+        <div id="bookingSuccess" class="notice notice-success hidden"></div>
+        <div class="booking-columns">
+          <div>
+            <h3>Available resources</h3>
+            <div id="resourceList" class="card-list empty-state">Sign in to view bookable resources.</div>
+          </div>
+          <div>
+            <h3>My bookings</h3>
+            <div id="myBookings" class="card-list empty-state">Your reservations will appear here.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel placeholder-panel">
+        <div class="panel-heading">
+          <h2>Advanced classroom tools</h2>
+          <p>Messaging and rich class assets need additional backend composition before they can be enabled.</p>
+        </div>
+        <div class="placeholder-card" aria-disabled="true">
+          <strong>Being developed — backend not available yet</strong>
+          <span>Direct classroom chat, syllabus attachments, and moderation workflows are intentionally disabled.</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

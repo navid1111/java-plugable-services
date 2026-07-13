@@ -102,7 +102,10 @@ public class AuthController {
             JwtService.Identity identity = jwtService.extractIdentity(token);
             var user = findIdentity(identity);
             return user.filter(User::isActive)
-                    .map(u -> ResponseEntity.ok(Map.of("userId", u.getUserId().toString(), "username", u.getUsername())))
+                    .map(u -> ResponseEntity.ok(Map.of(
+                            "userId", u.getUserId().toString(),
+                            "username", u.getUsername(),
+                            "roles", u.isAdmin() ? java.util.List.of("USER", "ADMIN") : java.util.List.of("USER"))))
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "user not found")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "invalid or expired token"));

@@ -75,6 +75,31 @@ class ContractGuardrailTest(unittest.TestCase):
 
         self.assertTrue(any("target-projection readiness" in problem for problem in problems))
 
+    def test_comment_after_post_also_requires_projection_readiness(self) -> None:
+        source = '''
+        const token = localStorage.getItem("appbuilder.jwt");
+        const Authorization = "Bearer " + token;
+        api("/posts", {method: "POST", body: JSON.stringify({content: "problem"})});
+        api("/comments/targets/post/" + postId, {method: "POST", body: JSON.stringify({content: "solution"})});
+        '''
+
+        problems = frontend_lint(source)
+
+        self.assertTrue(any("target-projection readiness" in problem for problem in problems))
+
+    def test_leetcode_admin_requires_role_gate_and_complete_problem_contract(self) -> None:
+        incomplete = '''
+        const token = localStorage.getItem("appbuilder.jwt");
+        const Authorization = "Bearer " + token;
+        api("/leetcode/admin/problems", {method: "POST", body: "{}"});
+        '''
+
+        problems = frontend_lint(incomplete)
+
+        self.assertTrue(any("ADMIN role" in problem for problem in problems))
+        self.assertTrue(any("testCases" in problem for problem in problems))
+        self.assertTrue(any("codeStubs" in problem for problem in problems))
+
     def test_complete_upload_intent_flow_passes_lint(self) -> None:
         source = '''
         const token = localStorage.getItem("appbuilder.jwt");

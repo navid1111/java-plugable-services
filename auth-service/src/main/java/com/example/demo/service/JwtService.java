@@ -44,12 +44,16 @@ public class JwtService {
     public String issueToken(User user) {
         Instant now = Instant.now();
         Instant expiry = now.plus(expirationMinutes, ChronoUnit.MINUTES);
+        java.util.List<String> roles = user.isAdmin()
+                ? java.util.List.of("USER", "ADMIN")
+                : java.util.List.of("USER");
+        String scope = user.isAdmin() ? "user admin" : "user";
         return Jwts.builder()
                 .issuer(issuer)
                 .subject(user.getUserId().toString())
                 .claim("username", user.getUsername())
-                .claim("roles", java.util.List.of("USER"))
-                .claim("scope", "user")
+                .claim("roles", roles)
+                .claim("scope", scope)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(key, Jwts.SIG.HS256)
@@ -60,7 +64,7 @@ public class JwtService {
         return expirationMinutes;
     }
 
-    public record Identity(String subject, String username) {}
+    public record Identity(String subject, String username, java.util.Set<String> roles) {}
 
     /** Verify signature + expiry and return stable subject plus display username. */
     public Identity extractIdentity(String token) {
@@ -80,6 +84,7 @@ public class JwtService {
             throw new io.jsonwebtoken.JwtException("required user authority missing");
         }
         return new Identity(jws.getPayload().getSubject(),
-                jws.getPayload().get("username", String.class));
+                jws.getPayload().get("username", String.class),
+                java.util.Set.copyOf(roles.stream().map(String::valueOf).toList()));
     }
 }

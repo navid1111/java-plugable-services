@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StackRank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#"><span class="brand-mark">S</span><span>StackRank</span></a>
+    <nav>
+      <button class="nav-btn active" data-view="solve">Solve</button>
+      <button class="nav-btn" id="admin-nav" data-view="admin" hidden>Admin Studio</button>
+    </nav>
+    <div class="auth-summary"><span id="identity">Signed out</span><button id="logout" class="quiet" hidden>Log out</button></div>
+  </header>
+
+  <section id="auth-screen" class="auth-screen">
+    <div class="auth-copy">
+      <p class="eyebrow">Practice. Submit. Improve.</p>
+      <h1>A focused coding arena with a real judge.</h1>
+      <p>Solve curated problems, run code against public and hidden tests, and track the actual judge result.</p>
+    </div>
+    <form id="auth-form" class="card auth-card">
+      <div class="segmented"><button type="button" class="active" data-auth="login">Login</button><button type="button" data-auth="register">Register</button></div>
+      <label>Username<input id="username" autocomplete="username" required></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <button id="auth-submit" class="primary">Enter StackRank</button>
+      <p id="auth-message" class="message"></p>
+    </form>
+  </section>
+
+  <main id="app" hidden>
+    <section id="solve-view" class="workspace">
+      <aside class="problem-rail card">
+        <div class="section-head"><div><p class="eyebrow">Problem set</p><h2>Challenges</h2></div><span id="problem-count" class="pill">0</span></div>
+        <div id="problem-list" class="problem-list"></div>
+      </aside>
+      <section class="problem-pane card">
+        <div id="problem-empty" class="empty">Choose a problem to start solving.</div>
+        <article id="problem-detail" hidden>
+          <div class="section-head">
+            <div><p id="problem-difficulty" class="eyebrow"></p><h1 id="problem-title"></h1></div>
+            <button id="edit-problem" class="quiet" hidden>Edit in Admin Studio</button>
+          </div>
+          <div id="problem-tags" class="tag-row"></div>
+          <div id="problem-description" class="description"></div>
+          <section><h3>Examples</h3><div id="examples" class="examples"></div></section>
+        </article>
+      </section>
+      <section class="code-pane card">
+        <div class="section-head"><div><p class="eyebrow">Submission</p><h2>Code editor</h2></div><select id="language"></select></div>
+        <textarea id="code" spellcheck="false" aria-label="Solution code"></textarea>
+        <div class="submit-row"><span id="judge-state" class="message">Select a problem to submit.</span><button id="submit-code" class="primary" disabled>Submit</button></div>
+        <div id="judge-result" class="result" hidden></div>
+      </section>
+    </section>
+
+    <section id="admin-view" class="admin-layout" hidden>
+      <section class="card admin-intro">
+        <p class="eyebrow">Administrator only</p>
+        <h1>Problem Studio</h1>
+        <p>Create judge-ready problems and decide which test cases are shown to solvers. Hidden cases are stored by the LeetCode service and used by the asynchronous judge.</p>
+      </section>
+      <form id="problem-admin-form" class="card admin-form">
+        <div class="section-head"><div><p class="eyebrow">Problem definition</p><h2 id="admin-form-title">New problem</h2></div><button id="new-problem" type="button" class="quiet">Clear form</button></div>
+        <div class="form-grid">
+          <label>Problem ID<input id="admin-id" placeholder="two-sum" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required></label>
+          <label>Title<input id="admin-title" placeholder="Two Sum" required></label>
+          <label>Difficulty<select id="admin-difficulty"><option>EASY</option><option>MEDIUM</option><option>HARD</option></select></label>
+          <label>Tags<input id="admin-tags" placeholder="array, hash-table"></label>
+        </div>
+        <label>Description<textarea id="admin-description" rows="7" placeholder="Problem statement, constraints, and expected behavior" required></textarea></label>
+        <div class="stub-grid">
+          <label>JavaScript starter code<textarea id="admin-js" rows="8" spellcheck="false" placeholder="function solve(input) {&#10;  // ...&#10;}" required></textarea></label>
+          <label>Python starter code <span class="optional">optional</span><textarea id="admin-python" rows="8" spellcheck="false" placeholder="class Solution:&#10;    def solve(self, input):&#10;        pass"></textarea></label>
+        </div>
+        <div class="section-head test-head"><div><p class="eyebrow">Judge data</p><h2>Test cases</h2></div><button id="add-test" type="button" class="quiet">+ Add test case</button></div>
+        <div id="test-cases" class="test-cases"></div>
+        <div class="submit-row"><span id="admin-message" class="message"></span><button class="primary">Save problem</button></div>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

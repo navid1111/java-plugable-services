@@ -6,8 +6,12 @@ clickable the moment the agent writes index.html.
 """
 
 import asyncio
+import hashlib
+import json
+import os
 import re
 import sys
+import time
 from pathlib import Path
 
 from .catalog import (
@@ -47,6 +51,121 @@ def workspace_dir(slug: str) -> Path:
 def index_mtime(cwd: Path) -> float:
     entry = cwd / "index.html"
     return entry.stat().st_mtime if entry.exists() else 0.0
+
+
+_SERVICE_PATH_MARKERS: dict[str, tuple[str, ...]] = {
+    "auth-service": ("/auth/",),
+    "bff": ("/bff/",),
+    "booking-service": ("/bookings",),
+    "comment-service": ("/comments",),
+    "leetcode-service": ("/leetcode",),
+    "media-service": ("/media",),
+    "post-search-service": ("/post-search",),
+    "tweeter-service": ("/posts",),
+    "whatsapp-service": ("/chat",),
+}
+
+
+def _frontend_sources(cwd: Path) -> list[Path]:
+    candidates = {*cwd.rglob("*.html"), *cwd.rglob("*.js")}
+    return sorted(
+        path for path in candidates
+        if not any(part.startswith(".") for part in path.relative_to(cwd).parts)
+    )
+
+
+def services_used_by_frontend(cwd: Path) -> list[str]:
+    """Map generated browser calls to the official plug smoke tests they require."""
+    source = "\n".join(
+        path.read_text(encoding="utf-8", errors="replace")
+        for path in _frontend_sources(cwd)
+    )
+    return [
+        service for service, markers in _SERVICE_PATH_MARKERS.items()
+        if any(marker in source for marker in markers)
+    ]
+
+
+def _source_fingerprint(cwd: Path) -> str:
+    digest = hashlib.sha256()
+    for path in _frontend_sources(cwd):
+        digest.update(str(path.relative_to(cwd)).encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _verification_record(cwd: Path) -> Path:
+    return cwd.parent / ".verification" / f"{cwd.name}.json"
+
+
+def live_verification_status(cwd: Path) -> tuple[bool, str]:
+    """Return whether the exact currently-served sources passed live checks."""
+    record = _verification_record(cwd)
+    if not record.is_file():
+        return False, "live endpoint verification has not passed for this build"
+    try:
+        data = json.loads(record.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False, "live endpoint verification record is invalid"
+    if data.get("fingerprint") != _source_fingerprint(cwd):
+        return False, "frontend changed after live endpoint verification"
+    return True, "verified: " + ", ".join(data.get("services", []))
+
+
+async def validate_live_backend_endpoints(cwd: Path) -> tuple[bool, str]:
+    """Run official, server-owned smoke tests for every service used by the app.
+
+    The generated agent cannot edit these scripts: they live beside each Java
+    service, outside its workspace. A source fingerprint makes the pass stale as
+    soon as HTML or JavaScript changes.
+    """
+    record = _verification_record(cwd)
+    record.unlink(missing_ok=True)
+    services = services_used_by_frontend(cwd)
+    reports: list[str] = []
+    deadline = asyncio.get_running_loop().time() + settings.backend_verification_timeout_seconds
+    env = os.environ.copy()
+    env.update({
+        "KONG_URL": settings.gateway_url,
+        "GATEWAY_URL": settings.gateway_url,
+        "APPBUILDER_ORIGIN": f"http://localhost:{settings.port}",
+    })
+
+    for service in services:
+        script = settings.service_smoke_root / service / "plug" / "smoke.sh"
+        if not script.is_file():
+            return False, f"{service}: official smoke test is missing"
+        remaining = deadline - asyncio.get_running_loop().time()
+        if remaining <= 0:
+            return False, "live endpoint verification exceeded its time limit"
+        process = await asyncio.create_subprocess_exec(
+            "bash", str(script),
+            cwd=settings.service_smoke_root,
+            env=env,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        try:
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=remaining)
+        except TimeoutError:
+            process.kill()
+            await process.communicate()
+            return False, f"{service}: smoke test timed out"
+        output = stdout.decode(errors="replace").strip()
+        reports.append(f"[{service}]\n{output[-3000:]}")
+        if process.returncode != 0:
+            return False, "\n".join(reports)
+
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(json.dumps({
+        "fingerprint": _source_fingerprint(cwd),
+        "services": services,
+        "verifiedAt": int(time.time()),
+    }, indent=2), encoding="utf-8")
+    summary = "no backend calls" if not services else ", ".join(services)
+    return True, f"live endpoint verification passed: {summary}"
 
 
 async def validate_frontend_contracts(cwd: Path) -> tuple[bool, str]:
