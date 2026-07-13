@@ -22,6 +22,7 @@ from .catalog import (
     render_skill,
 )
 from .config import settings
+from .starter_kit import API_CLIENT, ASYNC_HOOK, KIT_CSS, PATTERN_COMPONENTS, UI_COMPONENTS
 
 _PLACEHOLDER_INDEX = """<!doctype html>
 <html lang="en"><head><meta charset="UTF-8" />
@@ -33,6 +34,7 @@ _PLACEHOLDER_INDEX = """<!doctype html>
 _PLACEHOLDER_MAIN = """import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
+import './appbuilder-kit.css';
 import './styles.css';
 
 createRoot(document.getElementById('root')).render(
@@ -40,24 +42,23 @@ createRoot(document.getElementById('root')).render(
 );
 """
 
-_PLACEHOLDER_APP = """export default function App() {
+_PLACEHOLDER_APP = """import { AppShell, Badge, Card, PageHeader, StatusNotice } from './components/AppBuilderUI.jsx';
+
+export default function App() {
   return (
-    <main className="building-shell">
-      <span>React workspace ready</span>
-      <h1>Your app is being created</h1>
-      <p>Draft previews will refresh here as each usable checkpoint is built.</p>
-    </main>
+    <AppShell>
+      <PageHeader eyebrow="React workspace" title="Your app is being created" description="Draft previews refresh as each usable checkpoint is built." actions={<Badge tone="success">Starter kit ready</Badge>} />
+      <Card className="building-card">
+        <StatusNotice title="Reusable components are ready">The builder can compose forms, cards, loading states, collections, and API calls without starting from scratch.</StatusNotice>
+      </Card>
+    </AppShell>
   );
 }
 """
 
 _PLACEHOLDER_STYLES = """* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; font-family: Inter, system-ui, sans-serif;
-  color: #e2e8f0; background: radial-gradient(circle at top, #172554, #070b16 55%); }
-.building-shell { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 32px; text-align: center; }
-.building-shell span { color: #67e8f9; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.building-shell h1 { margin: 0; font-size: clamp(32px, 6vw, 64px); }
-.building-shell p { max-width: 560px; margin: 0; color: #94a3b8; font-size: 17px; }
+body { margin: 0; min-width: 320px; min-height: 100vh; font-family: Inter, system-ui, sans-serif; }
+.building-card { max-width: 760px; }
 """
 
 _VITE_CONFIG = """export default {
@@ -134,6 +135,26 @@ def _frontend_sources(cwd: Path) -> list[Path]:
     )
 
 
+def ensure_component_library(cwd: Path) -> list[str]:
+    """Seed reusable primitives without overwriting app-owned customizations."""
+    files = {
+        "src/components/AppBuilderUI.jsx": UI_COMPONENTS,
+        "src/components/AppBuilderPatterns.jsx": PATTERN_COMPONENTS,
+        "src/hooks/useAsync.js": ASYNC_HOOK,
+        "src/lib/api.js": API_CLIENT,
+        "src/appbuilder-kit.css": KIT_CSS,
+    }
+    created: list[str] = []
+    for relative, source in files.items():
+        target = cwd / relative
+        if target.exists():
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source)
+        created.append(relative)
+    return created
+
+
 def services_used_by_frontend(cwd: Path) -> list[str]:
     """Map generated browser calls to the official plug smoke tests they require."""
     source = "\n".join(
@@ -200,7 +221,8 @@ def _generated_architecture_graph(services: list[str]) -> dict:
         {"id": "user-app", "source": "user", "target": "app"},
         {"id": "app-gateway", "source": "app", "target": "gateway"},
     ]
-    for index, service in enumerate(services):
+    connected = set(services)
+    for index, service in enumerate(_SERVICE_PATH_MARKERS):
         node_id = f"service:{service}"
         nodes.append({
             "id": node_id,
@@ -208,10 +230,34 @@ def _generated_architecture_graph(services: list[str]) -> dict:
             "serviceId": service,
             "label": _SERVICE_DISPLAY_NAMES.get(service, service),
             "x": 760,
-            "y": 70 + index * 125,
+            "y": 35 + index * 95,
         })
-        edges.append({"id": f"gateway-{service}", "source": "gateway", "target": node_id})
+        if service in connected:
+            edges.append({"id": f"gateway-{service}", "source": "gateway", "target": node_id})
     return {"nodes": nodes, "edges": edges}
+
+
+def _scaffold_service_nodes(graph: dict) -> bool:
+    """Keep the complete service shelf visible without changing its connections."""
+    present = {
+        node.get("serviceId")
+        for node in graph.get("nodes", [])
+        if node.get("type") == "service"
+    }
+    changed = False
+    for index, service in enumerate(_SERVICE_PATH_MARKERS):
+        if service in present:
+            continue
+        graph["nodes"].append({
+            "id": f"service:{service}",
+            "type": "service",
+            "serviceId": service,
+            "label": _SERVICE_DISPLAY_NAMES.get(service, service),
+            "x": 760,
+            "y": 35 + index * 95,
+        })
+        changed = True
+    return changed
 
 
 def _valid_architecture_graph(value: object) -> bool:
@@ -274,7 +320,13 @@ def _normalize_architecture_graph(value: dict) -> dict:
 def _mermaid_from_graph(graph: dict) -> str:
     node_by_id = {node["id"]: node for node in graph["nodes"]}
     aliases = {node_id: f"N{index}" for index, node_id in enumerate(node_by_id)}
-    lines = ["flowchart LR"]
+    connected_targets = {
+        edge["target"] for edge in graph["edges"] if edge.get("source") == "gateway"
+    }
+    lines = [
+        "flowchart LR",
+        "  %% Gateway edges are selected services; dashed nodes are available scaffolding.",
+    ]
     for node_id, node in node_by_id.items():
         label = str(node.get("label", node_id)).replace('"', "'")
         if node.get("type") == "service":
@@ -290,6 +342,14 @@ def _mermaid_from_graph(graph: dict) -> str:
             lines.append(f'  {source} -->|"{paths}"| {target}')
         else:
             lines.append(f"  {source} --> {target}")
+    available = [
+        aliases[node_id]
+        for node_id, node in node_by_id.items()
+        if node.get("type") == "service" and node_id not in connected_targets
+    ]
+    if available:
+        lines.append("  classDef available fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b")
+        lines.append(f"  class {','.join(available)} available")
     return "\n".join(lines) + "\n"
 
 
@@ -327,10 +387,21 @@ def architecture_payload(cwd: Path, *, refresh_generated: bool = False) -> dict:
         meta["graph"] = graph
         _write_architecture_meta(cwd, meta)
 
+    if _scaffold_service_nodes(graph):
+        if meta.get("origin") != "user":
+            existing = _mermaid_from_graph(graph)
+            target.write_text(existing, encoding="utf-8")
+            meta["lastGeneratedHash"] = _architecture_hash(existing)
+        meta["graph"] = graph
+        _write_architecture_meta(cwd, meta)
+
+    node_by_id = {node["id"]: node for node in graph["nodes"]}
     connected = {
-        node.get("serviceId")
-        for node in graph["nodes"]
-        if node.get("type") == "service"
+        node_by_id[edge["target"]].get("serviceId")
+        for edge in graph["edges"]
+        if edge.get("source") == "gateway"
+        and edge.get("target") in node_by_id
+        and node_by_id[edge["target"]].get("type") == "service"
     }
     catalog = [
         {
@@ -375,8 +446,9 @@ def request_with_architecture(cwd: Path, request: str) -> str:
     architecture = architecture_payload(cwd)
     if architecture["origin"] == "user":
         guidance = (
-            "The Mermaid diagram below is user-authored architecture intent. Use it as context, "
-            "but only wire services and endpoints present in the plugs skill."
+            "The Mermaid diagram below is user-authored architecture intent. Only service nodes "
+            "with an edge from the gateway are selected; dashed disconnected services are merely "
+            "available scaffolding. Use only endpoints present in the plugs skill."
         )
     else:
         guidance = (
@@ -582,6 +654,7 @@ async def scaffold(slug: str) -> Path:
     vite_config = cwd / "vite.config.mjs"
     if not vite_config.exists():
         vite_config.write_text(_VITE_CONFIG)
+    ensure_component_library(cwd)
 
     await refresh_workspace_context(cwd)
     architecture_payload(cwd)
@@ -595,6 +668,7 @@ async def refresh_workspace_context(cwd: Path) -> None:
     This is also the migration entry for legacy static workspaces: their next agent
     turn receives the React contract while the currently working source remains intact.
     """
+    ensure_component_library(cwd)
     plugs, endpoints = await fetch_catalog()
     (cwd / "AGENTS.md").write_text(render_agents_md(plugs, endpoints))
     verifier = cwd / "verify-backend.sh"
@@ -607,6 +681,7 @@ async def refresh_workspace_context(cwd: Path) -> None:
     skill_dir = cwd / ".hermes" / "skills" / "plugs"
     skill_dir.mkdir(parents=True, exist_ok=True)
     (skill_dir / "SKILL.md").write_text(render_skill(plugs, endpoints))
+    architecture_payload(cwd, refresh_generated=True)
 
 
 def list_files(cwd: Path) -> list[str]:

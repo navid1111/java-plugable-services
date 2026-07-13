@@ -97,7 +97,8 @@ INDEX_HTML = """<!doctype html>
   .architecture-node:active { cursor: grabbing; }
   .architecture-node.gateway { color: white; border-color: #0891b2; background: linear-gradient(135deg,#0e7490,#4338ca); }
   .architecture-node.app { border-color: #8b5cf6; }
-  .architecture-node.service { border-color: #22c55e; }
+  .architecture-node.service.connected { border-color: #22c55e; box-shadow: 0 9px 24px rgba(34,197,94,.18); }
+  .architecture-node.service.disconnected { border-style: dashed; border-color: #94a3b8; opacity: .7; }
   .architecture-node.actor { width: 120px; border-radius: 999px; text-align: center; }
   .node-kind { color: #64748b; font-size: 8px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
   .gateway .node-kind { color: #bae6fd; }
@@ -159,13 +160,13 @@ INDEX_HTML = """<!doctype html>
   <section id="architecturePane" class="architecture" hidden>
     <div class="architecture-inner">
       <div class="architecture-heading">
-        <div><h2>Service architecture</h2><p id="servicesSummary">Add services from the palette and plug them into the gateway.</p></div>
+        <div><h2>Service architecture</h2><p id="servicesSummary">Connect the scaffolded service nodes to show what the app should use.</p></div>
         <span id="architectureOrigin" class="origin-badge">Generated</span>
       </div>
       <div class="architecture-workbench">
         <aside class="service-palette">
           <h3>Available service plugs</h3>
-          <p>Click a service to add or unplug it. Added services connect through Kong automatically.</p>
+          <p>Every service is scaffolded on the canvas. Click one here to connect or disconnect it from Kong.</p>
           <div id="serviceList" class="service-list"></div>
         </aside>
         <div id="diagram" class="diagram-surface">
@@ -257,20 +258,23 @@ INDEX_HTML = """<!doctype html>
     architectureNodes.replaceChildren();
     const catalogById = Object.fromEntries(serviceCatalog.map(item => [item.id, item]));
     const nodeById = Object.fromEntries((architectureGraph.nodes || []).map(node => [node.id, node]));
+    const connectedNodeIds = new Set((architectureGraph.edges || []).filter(edge => edge.source === 'gateway').map(edge => edge.target));
 
     (architectureGraph.nodes || []).forEach(node => {
       const element = document.createElement('div');
-      element.className = 'architecture-node ' + node.type;
+      const isConnected = node.type !== 'service' || connectedNodeIds.has(node.id);
+      element.className = 'architecture-node ' + node.type + (node.type === 'service' ? (isConnected ? ' connected' : ' disconnected') : '');
       element.dataset.nodeId = node.id;
       element.style.left = (node.x || 0) + 'px'; element.style.top = (node.y || 0) + 'px';
-      const kind = document.createElement('span'); kind.className = 'node-kind'; kind.textContent = node.type;
+      const kind = document.createElement('span'); kind.className = 'node-kind';
+      kind.textContent = node.type === 'service' ? (isConnected ? 'service · connected' : 'service · available') : node.type;
       const label = document.createElement('span'); label.className = 'node-label'; label.textContent = node.label || node.id;
       element.append(kind, label);
       if (node.type === 'service') {
         const detail = catalogById[node.serviceId] || {};
         const path = document.createElement('span'); path.className = 'node-path'; path.textContent = (detail.gatewayPaths || []).join(', ');
         const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'node-remove';
-        remove.title = 'Unplug service'; remove.textContent = '×';
+        remove.title = isConnected ? 'Disconnect from Kong' : 'Connect to Kong'; remove.textContent = isConnected ? '−' : '+';
         remove.addEventListener('click', event => { event.stopPropagation(); toggleService(node.serviceId); });
         element.append(path, remove);
       }
@@ -298,7 +302,7 @@ INDEX_HTML = """<!doctype html>
       path.setAttribute('marker-end', 'url(#arrow)'); architectureEdges.appendChild(path);
     });
 
-    const connected = new Set((architectureGraph.nodes || []).filter(node => node.type === 'service').map(node => node.serviceId));
+    const connected = new Set((architectureGraph.nodes || []).filter(node => connectedNodeIds.has(node.id)).map(node => node.serviceId));
     serviceList.replaceChildren();
     serviceCatalog.forEach(service => {
       const chip = document.createElement('button'); chip.type = 'button';
@@ -327,18 +331,12 @@ INDEX_HTML = """<!doctype html>
   }
 
   function toggleService(serviceId) {
-    const existing = (architectureGraph.nodes || []).find(node => node.serviceId === serviceId);
-    if (existing) {
-      architectureGraph.nodes = architectureGraph.nodes.filter(node => node.id !== existing.id);
-      architectureGraph.edges = architectureGraph.edges.filter(edge => edge.source !== existing.id && edge.target !== existing.id);
-    } else {
-      const catalogItem = serviceCatalog.find(item => item.id === serviceId); if (!catalogItem) return;
-      const count = architectureGraph.nodes.filter(node => node.type === 'service').length;
-      const nodeId = 'service:' + serviceId;
-      architectureGraph.nodes.push({id: nodeId, type: 'service', serviceId, label: catalogItem.displayName, x: 740, y: 55 + count * 92});
-      architectureGraph.edges.push({id: 'gateway-' + serviceId, source: 'gateway', target: nodeId});
-    }
-    architectureSourceEdited = false; markArchitectureDirty(existing ? 'Service unplugged' : 'Service plugged into Kong'); renderArchitecture();
+    const node = (architectureGraph.nodes || []).find(item => item.serviceId === serviceId); if (!node) return;
+    const edgeId = 'gateway-' + serviceId;
+    const connected = architectureGraph.edges.some(edge => edge.source === 'gateway' && edge.target === node.id);
+    if (connected) architectureGraph.edges = architectureGraph.edges.filter(edge => !(edge.source === 'gateway' && edge.target === node.id));
+    else architectureGraph.edges.push({id: edgeId, source: 'gateway', target: node.id});
+    architectureSourceEdited = false; markArchitectureDirty(connected ? 'Service disconnected from Kong' : 'Service connected to Kong'); renderArchitecture();
   }
 
   function setArchitecture(data, force) {
@@ -352,7 +350,7 @@ INDEX_HTML = """<!doctype html>
     const services = data.connectedServices || data.services || [];
     servicesSummary.textContent = services.length
       ? 'Connected through Kong: ' + services.join(', ')
-      : 'No backend service calls are detected in the current frontend yet.';
+      : 'No services are connected yet. Use the palette or node buttons to define the app.';
     architectureOrigin.textContent = data.origin === 'user' ? 'User context' : 'Generated';
     architectureStatus.textContent = data.origin === 'user'
       ? 'Saved as agent context'

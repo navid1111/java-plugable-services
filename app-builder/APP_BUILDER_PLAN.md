@@ -41,11 +41,14 @@ This gives Hermes and the generated frontend a grounded source of truth before p
 ## React preview and architecture workspace implemented
 
 - New app workspaces are React/Vite projects (`src/App.jsx`, `src/main.jsx`, and scoped styles).
+- Every workspace includes dependency-free reusable UI primitives, common form/list/search patterns,
+  a JWT-aware gateway client, and an async-state hook so generation starts from working components.
 - App Builder owns one shared dependency/toolchain install and compiles workspaces; coding agents never install packages.
 - Safe source checkpoints are compiled and streamed into the preview while the agent is still working.
 - The final preview remains separately protected by canonical frontend-contract and live backend smoke gates.
-- Architecture is stored as a draggable node/edge graph. Users add or unplug available Java services from Kong,
-  arrange the canvas, and save the graph as agent context. Mermaid is generated from the graph for portability.
+- Architecture is stored as a draggable node/edge graph. The app, Kong gateway, and every available Java
+  service are pre-scaffolded; gateway edges select the services the app will use. Users connect/disconnect,
+  arrange the canvas, and save the graph as agent context. Mermaid is generated for portability.
 
 ## Intended runtime architecture
 

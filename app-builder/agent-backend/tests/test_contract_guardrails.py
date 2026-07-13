@@ -174,7 +174,9 @@ class ContractGuardrailTest(unittest.TestCase):
         self.assertIn('".tsx"', verifier)
         self.assertIn('part == "node_modules"', verifier)
         self.assertIn("Build a React frontend", render_agents_md([], {}))
+        self.assertIn("AppBuilderPatterns.jsx", render_agents_md([], {}))
         self.assertIn("React frontend agent", APPBUILDER_SYSTEM_APPEND)
+        self.assertIn("AppBuilderUI.jsx", APPBUILDER_SYSTEM_APPEND)
 
 
 if __name__ == "__main__":

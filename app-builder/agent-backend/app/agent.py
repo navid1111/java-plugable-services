@@ -55,6 +55,11 @@ Rules for every request:
   `.appbuilder/dist` yourself.
 - If this is an older workspace without `src/main.jsx`, migrate its existing interface and
   behavior into the React structure during the requested update; do not discard working features.
+- Reuse the supplied starter kit before creating equivalents: `components/AppBuilderUI.jsx`
+  provides shells, cards, fields, buttons, notices, skeletons, empty states, badges, avatars,
+  and modals; `components/AppBuilderPatterns.jsx` provides auth, search, composer, async,
+  collection, and pagination patterns; `lib/api.js` and `hooks/useAsync.js` provide the API
+  client and async state. Import `appbuilder-kit.css` once. Extend these files only when needed.
 - Read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md` FIRST. They list the only
   backends and endpoints you may call, the `GATEWAY` base URL, the required JWT
   auth flow, and the local contract verification command. Never invent an endpoint or a service.

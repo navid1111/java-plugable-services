@@ -1,0 +1,313 @@
+[
+  {
+    "type": "user",
+    "data": {
+      "text": "make a youtube clone"
+    },
+    "createdAt": 1783981996.1143296
+  },
+  {
+    "type": "preview",
+    "data": {
+      "url": "/apps/make-a-youtube-clone-a42a/draft/",
+      "stage": "draft",
+      "revision": "4aef77e64dbd"
+    },
+    "createdAt": 1783982162.369912
+  },
+  {
+    "type": "preview",
+    "data": {
+      "url": "/apps/make-a-youtube-clone-a42a/draft/",
+      "stage": "draft",
+      "revision": "6e01feb3643c"
+    },
+    "createdAt": 1783982163.5660954
+  },
+  {
+    "type": "assistant_text",
+    "data": {
+      "text": "Built a React YouTube-style frontend with auth, a BFF-backed home feed, search via `post-search`, video detail playback via `media-service`, comments via `comment-service`, and direct post publishing through `tweeter-service` plus projection-aware media attachment. The app also shows disabled “Being developed — backend not available yet” cards for subscriptions/playlists because those backends do not exist in the provided plug inventory.\n\n`python3 verify-frontend-contracts.py .` passed."
+    },
+    "createdAt": 1783982173.6125345
+  },
+  {
+    "type": "done",
+    "data": {
+      "is_error": false,
+      "num_turns": 1,
+      "cost_usd": null
+    },
+    "createdAt": 1783982173.6128821
+  },
+  {
+    "type": "architecture",
+    "data": {
+      "source": "flowchart LR\n  %% Gateway edges are selected services; dashed nodes are available scaffolding.\n  N0([\"User\"])\n  N1[\"React app\"]\n  N2[\"Kong API Gateway\"]\n  N3[\"Authentication<br/>auth-service\"]\n  N4[\"Backend for Frontend<br/>bff\"]\n  N5[\"Booking<br/>booking-service\"]\n  N6[\"Comments<br/>comment-service\"]\n  N7[\"Coding challenges<br/>leetcode-service\"]\n  N8[\"Media<br/>media-service\"]\n  N9[\"Search<br/>post-search-service\"]\n  N10[\"Posts<br/>tweeter-service\"]\n  N11[\"Chat<br/>whatsapp-service\"]\n  N0 --> N1\n  N1 --> N2\n  N2 -->|\"/auth/\"| N3\n  N2 -->|\"/bff/\"| N4\n  N2 -->|\"/comments\"| N6\n  N2 -->|\"/media\"| N8\n  N2 -->|\"/post-search\"| N9\n  N2 -->|\"/posts\"| N10\n  classDef available fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b\n  class N5,N7,N11 available\n",
+      "services": [
+        "auth-service",
+        "bff",
+        "comment-service",
+        "media-service",
+        "post-search-service",
+        "tweeter-service"
+      ],
+      "origin": "generated",
+      "graph": {
+        "nodes": [
+          {
+            "id": "user",
+            "type": "actor",
+            "label": "User",
+            "x": 60,
+            "y": 210
+          },
+          {
+            "id": "app",
+            "type": "app",
+            "label": "React app",
+            "x": 285,
+            "y": 210
+          },
+          {
+            "id": "gateway",
+            "type": "gateway",
+            "label": "Kong API Gateway",
+            "x": 520,
+            "y": 210
+          },
+          {
+            "id": "service:auth-service",
+            "type": "service",
+            "serviceId": "auth-service",
+            "label": "Authentication",
+            "x": 760,
+            "y": 35
+          },
+          {
+            "id": "service:bff",
+            "type": "service",
+            "serviceId": "bff",
+            "label": "Backend for Frontend",
+            "x": 760,
+            "y": 130
+          },
+          {
+            "id": "service:booking-service",
+            "type": "service",
+            "serviceId": "booking-service",
+            "label": "Booking",
+            "x": 760,
+            "y": 225
+          },
+          {
+            "id": "service:comment-service",
+            "type": "service",
+            "serviceId": "comment-service",
+            "label": "Comments",
+            "x": 760,
+            "y": 320
+          },
+          {
+            "id": "service:leetcode-service",
+            "type": "service",
+            "serviceId": "leetcode-service",
+            "label": "Coding challenges",
+            "x": 760,
+            "y": 415
+          },
+          {
+            "id": "service:media-service",
+            "type": "service",
+            "serviceId": "media-service",
+            "label": "Media",
+            "x": 760,
+            "y": 510
+          },
+          {
+            "id": "service:post-search-service",
+            "type": "service",
+            "serviceId": "post-search-service",
+            "label": "Search",
+            "x": 760,
+            "y": 605
+          },
+          {
+            "id": "service:tweeter-service",
+            "type": "service",
+            "serviceId": "tweeter-service",
+            "label": "Posts",
+            "x": 760,
+            "y": 700
+          },
+          {
+            "id": "service:whatsapp-service",
+            "type": "service",
+            "serviceId": "whatsapp-service",
+            "label": "Chat",
+            "x": 760,
+            "y": 795
+          }
+        ],
+        "edges": [
+          {
+            "id": "user-app",
+            "source": "user",
+            "target": "app"
+          },
+          {
+            "id": "app-gateway",
+            "source": "app",
+            "target": "gateway"
+          },
+          {
+            "id": "gateway-auth-service",
+            "source": "gateway",
+            "target": "service:auth-service"
+          },
+          {
+            "id": "gateway-bff",
+            "source": "gateway",
+            "target": "service:bff"
+          },
+          {
+            "id": "gateway-comment-service",
+            "source": "gateway",
+            "target": "service:comment-service"
+          },
+          {
+            "id": "gateway-media-service",
+            "source": "gateway",
+            "target": "service:media-service"
+          },
+          {
+            "id": "gateway-post-search-service",
+            "source": "gateway",
+            "target": "service:post-search-service"
+          },
+          {
+            "id": "gateway-tweeter-service",
+            "source": "gateway",
+            "target": "service:tweeter-service"
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "id": "auth-service",
+          "displayName": "Authentication",
+          "gatewayPaths": [
+            "/auth/"
+          ],
+          "connected": true
+        },
+        {
+          "id": "bff",
+          "displayName": "Backend for Frontend",
+          "gatewayPaths": [
+            "/bff/"
+          ],
+          "connected": true
+        },
+        {
+          "id": "booking-service",
+          "displayName": "Booking",
+          "gatewayPaths": [
+            "/bookings"
+          ],
+          "connected": false
+        },
+        {
+          "id": "comment-service",
+          "displayName": "Comments",
+          "gatewayPaths": [
+            "/comments"
+          ],
+          "connected": true
+        },
+        {
+          "id": "leetcode-service",
+          "displayName": "Coding challenges",
+          "gatewayPaths": [
+            "/leetcode"
+          ],
+          "connected": false
+        },
+        {
+          "id": "media-service",
+          "displayName": "Media",
+          "gatewayPaths": [
+            "/media"
+          ],
+          "connected": true
+        },
+        {
+          "id": "post-search-service",
+          "displayName": "Search",
+          "gatewayPaths": [
+            "/post-search"
+          ],
+          "connected": true
+        },
+        {
+          "id": "tweeter-service",
+          "displayName": "Posts",
+          "gatewayPaths": [
+            "/posts"
+          ],
+          "connected": true
+        },
+        {
+          "id": "whatsapp-service",
+          "displayName": "Chat",
+          "gatewayPaths": [
+            "/chat"
+          ],
+          "connected": false
+        }
+      ],
+      "connectedServices": [
+        "auth-service",
+        "bff",
+        "comment-service",
+        "media-service",
+        "post-search-service",
+        "tweeter-service"
+      ]
+    },
+    "createdAt": 1783982173.6165867
+  },
+  {
+    "type": "verification",
+    "data": {
+      "status": "running",
+      "userMessage": "The interface checks passed. Now testing every backend service used by this app; this can take several minutes."
+    },
+    "createdAt": 1783982173.645553
+  },
+  {
+    "type": "verification",
+    "data": {
+      "status": "passed",
+      "userMessage": "The real backend endpoint checks passed.",
+      "report": "live endpoint verification passed: auth-service, bff, comment-service, media-service, post-search-service, tweeter-service"
+    },
+    "createdAt": 1783982309.7839856
+  },
+  {
+    "type": "preview",
+    "data": {
+      "url": "/apps/make-a-youtube-clone-a42a/",
+      "stage": "verified"
+    },
+    "createdAt": 1783982310.2369506
+  },
+  {
+    "type": "build_complete",
+    "data": {
+      "is_error": false,
+      "validation": "live-endpoints"
+    },
+    "createdAt": 1783982310.237597
+  }
+]

@@ -9,6 +9,7 @@ from app.config import settings
 from app.routes import serve_index
 from app.workspace import (
     architecture_payload,
+    ensure_component_library,
     live_verification_status,
     request_with_architecture,
     refresh_workspace_context,
@@ -22,6 +23,21 @@ from app.workspace import (
 
 class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
 
+    async def test_component_starter_kit_is_seeded_without_overwriting_customizations(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            custom = root / "src" / "components" / "AppBuilderUI.jsx"
+            custom.parent.mkdir(parents=True)
+            custom.write_text("export const custom = true;")
+
+            created = ensure_component_library(root)
+
+            self.assertEqual("export const custom = true;", custom.read_text())
+            self.assertIn("src/components/AppBuilderPatterns.jsx", created)
+            self.assertTrue((root / "src" / "lib" / "api.js").is_file())
+            self.assertTrue((root / "src" / "hooks" / "useAsync.js").is_file())
+            self.assertTrue((root / "src" / "appbuilder-kit.css").is_file())
+
     async def test_legacy_workspace_gets_react_instructions_without_losing_source(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -31,7 +47,8 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
                 await refresh_workspace_context(root)
 
             self.assertEqual(legacy, (root / "index.html").read_text())
-            self.assertFalse((root / "src").exists())
+            self.assertFalse((root / "src" / "main.jsx").exists())
+            self.assertTrue((root / "src" / "components" / "AppBuilderUI.jsx").exists())
             self.assertIn("migrating it into React", (root / "AGENTS.md").read_text())
 
     async def test_architecture_is_generated_from_the_same_detected_service_plugs(self) -> None:
@@ -112,10 +129,6 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
             root = Path(temporary)
             generated = architecture_payload(root)
             graph = generated["graph"]
-            graph["nodes"].append({
-                "id": "service:booking-service", "type": "service",
-                "serviceId": "booking-service", "label": "Booking", "x": 760, "y": 80,
-            })
             graph["edges"].append({
                 "id": "gateway-booking-service", "source": "gateway", "target": "service:booking-service",
             })
@@ -126,6 +139,19 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("booking-service", saved["source"])
             self.assertIn("/bookings", saved["source"])
             self.assertTrue(next(item for item in saved["catalog"] if item["id"] == "booking-service")["connected"])
+
+    async def test_architecture_scaffolds_every_service_but_connects_only_detected_ones(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "src").mkdir()
+            (root / "src" / "App.jsx").write_text('fetch(GATEWAY + "/auth/me")')
+
+            architecture = architecture_payload(root, refresh_generated=True)
+            service_nodes = [node for node in architecture["graph"]["nodes"] if node["type"] == "service"]
+
+            self.assertEqual(9, len(service_nodes))
+            self.assertEqual(["auth-service"], architecture["connectedServices"])
+            self.assertIn("stroke-dasharray", architecture["source"])
 
     async def test_static_app_gets_a_fingerprinted_live_verification_record(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -179,6 +205,9 @@ class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue((workspace / "ARCHITECTURE.mmd").is_file())
             self.assertTrue((workspace / "src" / "App.jsx").is_file())
             self.assertTrue((workspace / "src" / "main.jsx").is_file())
+            self.assertTrue((workspace / "src" / "components" / "AppBuilderUI.jsx").is_file())
+            self.assertTrue((workspace / "src" / "components" / "AppBuilderPatterns.jsx").is_file())
+            self.assertTrue((workspace / "src" / "lib" / "api.js").is_file())
             self.assertIn("jsx: 'automatic'", (workspace / "vite.config.mjs").read_text())
             self.assertIn("React", (workspace / "src" / "App.jsx").read_text())
             self.assertIn("verify-frontend-contracts.py", backend.read_text())

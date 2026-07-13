@@ -29,6 +29,8 @@ class BuilderExperienceTest(unittest.TestCase):
         self.assertIn('id="architectureEdges"', INDEX_HTML)
         self.assertIn('id="serviceList"', INDEX_HTML)
         self.assertIn("toggleService", INDEX_HTML)
+        self.assertIn("service · available", INDEX_HTML)
+        self.assertIn("Connect to Kong", INDEX_HTML)
         self.assertIn('id="architectureSource"', INDEX_HTML)
         self.assertIn("Save &amp; update app", INDEX_HTML)
         self.assertIn("/architecture", INDEX_HTML)
