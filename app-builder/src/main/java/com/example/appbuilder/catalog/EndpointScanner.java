@@ -73,7 +73,10 @@ public class EndpointScanner {
         if (!full.startsWith("/")) {
             full = "/" + full;
         }
-        if (full.equals("/health")) {
+        // The generated browser app only has access to public Kong routes. Internal
+        // controllers use workload JWTs and are intentionally not routed through Kong;
+        // advertising them caused generated apps to call service-to-service APIs directly.
+        if (full.equals("/health") || full.equals("/internal") || full.startsWith("/internal/")) {
             return;
         }
         endpoints.add(verb.toUpperCase() + " " + full);

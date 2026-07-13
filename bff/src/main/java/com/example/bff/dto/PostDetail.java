@@ -17,7 +17,8 @@ public record PostDetail(
 
     public record PostSection(long id, String content, Instant createdAt, Instant updatedAt, long version) {}
 
-    public record AuthorSection(String username) {}
+    /** Public identity required by the tweeter follow endpoint. */
+    public record AuthorSection(String userId, String username) {}
 
     public record CommentSummary(long commentCount) {}
 

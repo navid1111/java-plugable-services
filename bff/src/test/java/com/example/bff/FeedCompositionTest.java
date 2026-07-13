@@ -52,9 +52,9 @@ class FeedCompositionTest {
     void boundedParallelFeedMeetsLatencyAndCarriesFreshnessWatermark() {
         wm.stubFor(get(urlPathEqualTo("/posts/feed")).willReturn(okJson("""
                 {"items":[
-                  {"id":1,"authorUsername":"alice","content":"one","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:01Z","deletedAt":null,"version":4},
-                  {"id":2,"authorUsername":"bob","content":"two","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:02Z","deletedAt":null,"version":7},
-                  {"id":3,"authorUsername":"carol","content":"three","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:03Z","deletedAt":null,"version":5}
+                  {"id":1,"authorUserId":"user-1","authorUsername":"alice","content":"one","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:01Z","deletedAt":null,"version":4},
+                  {"id":2,"authorUserId":"user-2","authorUsername":"bob","content":"two","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:02Z","deletedAt":null,"version":7},
+                  {"id":3,"authorUserId":"user-3","authorUsername":"carol","content":"three","createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:03Z","deletedAt":null,"version":5}
                 ],"nextCursor":"cursor-2"}
                 """)));
         for (long id = 1; id <= 3; id++) {
@@ -74,6 +74,7 @@ class FeedCompositionTest {
         assertNotNull(feed);
         assertEquals(3, feed.items().size());
         assertEquals("cursor-2", feed.nextCursor());
+        assertEquals("user-1", feed.items().getFirst().author().userId());
         assertEquals(7, feed.sourceVersionWatermark(),
                 "watermark exposes the freshest authoritative post version in the page");
         assertTrue(feed.items().stream().allMatch(item -> item.degraded().isEmpty()));
@@ -84,7 +85,7 @@ class FeedCompositionTest {
     @Test
     void oneOptionalFailureDegradesOnlyThatFeedItemSection() {
         wm.stubFor(get(urlPathEqualTo("/posts/feed")).willReturn(okJson("""
-                {"items":[{"id":9,"authorUsername":"alice","content":"nine",
+                {"items":[{"id":9,"authorUserId":"user-9","authorUsername":"alice","content":"nine",
                 "createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:01Z",
                 "deletedAt":null,"version":2}],"nextCursor":null}
                 """)));

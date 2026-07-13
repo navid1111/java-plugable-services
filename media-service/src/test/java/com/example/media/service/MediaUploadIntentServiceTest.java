@@ -21,14 +21,17 @@ class MediaUploadIntentServiceTest {
     void repeatedIdempotencyKeyReturnsSameIntentAndAbandonedIntentExpires() {
         var intents = mock(MediaUploadIntentRepository.class); var assets = mock(MediaAssetRepository.class);
         var targets = mock(TargetProjectionStore.class); var cloudinary = mock(CloudinaryClient.class);
+        when(cloudinary.qualifyPublicId(anyString())).thenAnswer(call -> "uploads/" + call.getArgument(0));
         when(cloudinary.authorizeDirectUpload(anyString(), anyString()))
-                .thenReturn(new CloudinaryClient.DirectUploadAuthorization("https://api.cloudinary.com/upload", "key", 1, "sig", "id", "folder"));
+                .thenReturn(new CloudinaryClient.DirectUploadAuthorization("https://api.cloudinary.com/upload", "key", 1, "sig", "uploads/id", ""));
         MediaUploadIntentService service = service(intents, assets, targets, cloudinary);
         var first = service.create(ALICE_ID, "alice", "post", "42", "request-1", "image", "png", 1000).intent();
+        assertTrue(first.getPublicId().startsWith("uploads/intent-"));
         when(intents.findByOwnerUserIdAndIdempotencyKey(ALICE_ID, "request-1")).thenReturn(Optional.of(first));
         var repeated = service.create(ALICE_ID, "alice-renamed", "post", "42", "request-1", "image", "png", 1000).intent();
         assertEquals(first.getId(), repeated.getId());
         verify(targets, times(1)).requireActiveOwnedBy("post", "42", ALICE_ID);
+        verify(cloudinary, times(2)).authorizeDirectUpload("image", first.getPublicId());
 
         MediaUploadIntent expired = new MediaUploadIntent(UUID.randomUUID(), ALICE_ID, "alice", "post", "42", "old",
                 "image", "png", 1000, "old-id", Instant.now().minusSeconds(1));

@@ -49,19 +49,14 @@ class SessionManager:
             if not cwd.exists():
                 await workspace.scaffold(slug)
             history = await load_agent_history(cwd)
-            session_holder: dict[str, AppSession] = {}
-
             async def publish(event_type: str, data: dict) -> None:
                 if event_type in PERSISTED_EVENT_TYPES:
                     await append_event(cwd, event_type, data)
                 await bus.publish(slug, event_type, data)
-                if event_type in ("tool_result", "done"):
-                    await self._maybe_preview(session_holder["session"])
 
             agent = create_app_agent(cwd=cwd, publisher=publish, history=history)
             session = AppSession(slug=slug, cwd=cwd, agent=agent,
                                  last_index_mtime=workspace.index_mtime(cwd))
-            session_holder["session"] = session
             self._sessions[slug] = session
             return session
 
@@ -91,6 +86,19 @@ class SessionManager:
                 await bus.publish(slug, "user", {"text": text})
                 await session.agent.run(text)
                 await save_agent_history(session.cwd, session.agent.history())
+                valid, report = await workspace.validate_frontend_contracts(session.cwd)
+                if not valid:
+                    message = (
+                        "Generated frontend was blocked by the server-owned contract verifier. "
+                        + report[:1200]
+                    )
+                    data = {"message": message}
+                    await append_event(session.cwd, "error", data)
+                    await bus.publish(slug, "error", data)
+                    done = {"is_error": True, "validation": "frontend-contracts"}
+                    await append_event(session.cwd, "done", done)
+                    await bus.publish(slug, "done", done)
+                    return
                 await self._maybe_preview(session)
             except Exception as exc:
                 logger.exception("turn failed for app %s", slug)

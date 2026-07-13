@@ -1,6 +1,7 @@
 """FastAPI routes: create an app, drive agent turns, stream events, serve the app."""
 
 import asyncio
+import html
 import json
 
 from fastapi import APIRouter, HTTPException, Request
@@ -95,6 +96,15 @@ async def serve_index(slug: str):
     entry = workspace.safe_file(cwd, "index.html")
     if entry is None:
         raise HTTPException(404, "app not built yet")
+    valid, report = await workspace.validate_frontend_contracts(cwd)
+    if not valid:
+        return HTMLResponse(
+            "<h1>Preview blocked</h1>"
+            "<p>The generated frontend violates a backend contract. "
+            "Ask the agent to fix the reported contract-verifier errors.</p>"
+            f"<pre>{html.escape(report[:2000])}</pre>",
+            status_code=409,
+        )
     return FileResponse(entry)
 
 

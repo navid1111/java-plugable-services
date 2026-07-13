@@ -48,7 +48,12 @@ Rules for every request:
   Don't create README/summary/doc files unless asked. Don't run servers or installers.
 - If the app uses any backend fetch(), implement register/login or login, store the JWT,
   attach `Authorization: Bearer <token>` on protected calls, then run `./verify-backend.sh`.
-  Treat a failing verifier as a real bug or infrastructure blocker; do not claim the app is wired.
+  The verifier lints the actual generated HTML/JS before testing the live services. Never edit,
+  delete, weaken, or bypass `verify-frontend-contracts.py` or `verify-backend.sh`. Treat any
+  failure as a real frontend contract bug or infrastructure blocker; do not claim the app is wired.
+- Backend writes followed immediately by dependent writes can cross an asynchronous projection
+  boundary. Follow the exact bounded-retry rules in the plugs skill; never paper over a 4xx with
+  arbitrary payload fallbacks or broad retries.
 - Finish with a 1-3 sentence summary of what you built and which backends it wires,
   not a long report.
 """

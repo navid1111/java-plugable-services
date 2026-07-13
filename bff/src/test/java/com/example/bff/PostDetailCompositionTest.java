@@ -26,6 +26,8 @@ import com.example.bff.dto.PostDetail;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PostDetailCompositionTest {
 
+    private static final String ALICE_ID = "00000000-0000-0000-0000-000000000001";
+
     static WireMockServer wm = new WireMockServer(WireMockConfiguration.options().dynamicPort());
 
     @LocalServerPort int port;
@@ -69,9 +71,9 @@ class PostDetailCompositionTest {
     private void stubPost(long id, String deletedAt) {
         String deleted = deletedAt == null ? "null" : "\"" + deletedAt + "\"";
         wm.stubFor(get(urlPathEqualTo("/posts/" + id)).willReturn(okJson("""
-                {"id":%d,"authorUsername":"alice","content":"hello world",
+                {"id":%d,"authorUserId":"%s","authorUsername":"alice","content":"hello world",
                  "createdAt":"2026-07-12T00:00:00Z","updatedAt":"2026-07-12T00:00:00Z",
-                 "deletedAt":%s,"version":1}""".formatted(id, deleted))));
+                 "deletedAt":%s,"version":1}""".formatted(id, ALICE_ID, deleted))));
     }
 
     private void stubCommentSummary(long id, long count) {
@@ -97,6 +99,7 @@ class PostDetailCompositionTest {
         assertNotNull(body);
         assertEquals(1, body.post().id());
         assertEquals("hello world", body.post().content());
+        assertEquals(ALICE_ID, body.author().userId());
         assertEquals("alice", body.author().username());
         assertEquals(3, body.comments().commentCount());
         assertEquals(2, body.media().mediaCount());

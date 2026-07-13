@@ -1,0 +1,1720 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PulseTube</title>
+  <style>
+    :root {
+      --bg: #0f0f10;
+      --bg-soft: #171718;
+      --panel: #1d1d1f;
+      --panel-2: #242427;
+      --panel-3: #2d2d31;
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f8f8f8;
+      --muted: #a7a7ad;
+      --muted-2: #7c7c82;
+      --brand: #ff2d55;
+      --brand-2: #ff4d4f;
+      --ok: #2ecc71;
+      --warn: #f5a623;
+      --bad: #ff6565;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      --radius: 20px;
+      --radius-sm: 14px;
+      font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top right, rgba(255, 45, 85, 0.18), transparent 24%),
+        radial-gradient(circle at top left, rgba(49, 101, 255, 0.12), transparent 18%),
+        linear-gradient(180deg, #0c0c0d, #131315 55%, #101012);
+      color: var(--text);
+    }
+
+    button, input, textarea { font: inherit; }
+    button {
+      border: 0;
+      cursor: pointer;
+      color: inherit;
+      background: none;
+    }
+    button:disabled, .disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+    img { display: block; max-width: 100%; }
+    [hidden] { display: none !important; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      height: 100vh;
+      padding: 22px 18px;
+      background: rgba(15, 15, 16, 0.92);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 30px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow: 0 14px 30px rgba(255, 45, 85, 0.32);
+    }
+
+    .brand-mark::before {
+      content: "";
+      width: 0;
+      height: 0;
+      margin-left: 4px;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 12px solid white;
+    }
+
+    .nav-group, .studio-card, .placeholder-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .nav-group {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav-button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: var(--muted);
+      text-align: left;
+      transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text);
+      transform: translateX(2px);
+    }
+
+    .nav-icon {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 1.05rem;
+    }
+
+    .studio-card, .placeholder-card {
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .studio-card strong, .placeholder-card strong { font-size: 0.96rem; }
+    .sidebar-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .muted-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-width: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 24px 14px;
+      background: linear-gradient(180deg, rgba(15, 15, 16, 0.98), rgba(15, 15, 16, 0.8));
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .searchbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+    }
+
+    .searchbar input {
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      padding: 14px 18px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .searchbar button {
+      min-width: 64px;
+      height: 100%;
+      padding: 0 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 800;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill, .ghost, .brand-button {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    .pill:active, .ghost:active, .brand-button:active { transform: translateY(1px); }
+    .pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      color: var(--muted);
+    }
+    .brand-button {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: white;
+      box-shadow: 0 14px 28px rgba(255, 45, 85, 0.25);
+    }
+
+    .statusbar {
+      padding: 12px 24px 0;
+    }
+
+    .status {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+    }
+
+    .status.success { color: #b6ffd0; border-color: rgba(46, 204, 113, 0.28); }
+    .status.error { color: #ffc1c1; border-color: rgba(255, 101, 101, 0.28); }
+    .status.loading { color: #ffe3b0; border-color: rgba(245, 166, 35, 0.28); }
+
+    .content {
+      padding: 22px 24px 32px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .watch-panel {
+      overflow: hidden;
+      display: grid;
+      gap: 0;
+      align-content: start;
+    }
+
+    .hero-player {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 45, 85, 0.18), transparent 26%),
+        linear-gradient(180deg, #242428, #121214);
+      overflow: hidden;
+    }
+
+    .hero-player video, .hero-player img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #050505;
+    }
+
+    .player-overlay {
+      position: absolute;
+      inset: auto 18px 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .overlay-chip {
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .watch-body {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .watch-title {
+      margin: 0;
+      font-size: clamp(1.3rem, 1rem + 1vw, 2rem);
+      line-height: 1.15;
+    }
+
+    .watch-meta, .creator-row, .composer, .feed-header, .list-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .watch-meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .creator-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .creator-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #4353ff, #8a59ff);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: white;
+      box-shadow: 0 14px 28px rgba(67, 83, 255, 0.22);
+      flex: 0 0 auto;
+    }
+
+    .creator-copy {
+      min-width: 0;
+    }
+    .creator-copy strong, .creator-copy span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .creator-copy span {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.92rem;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .description-box, .comment-panel, .feed-panel, .upload-panel {
+      padding: 20px;
+    }
+
+    .description-box {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.035);
+      line-height: 1.6;
+      color: #dfdfe4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .feed-panel, .upload-panel, .comment-panel {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .feed-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    .feed-title {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    .feed-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .video-card {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 14px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .video-card:hover,
+    .video-card.active {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .thumb {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(255, 45, 85, 0.22), rgba(67, 83, 255, 0.15)),
+        #202124;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumb-badge {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.72);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .card-copy { min-width: 0; }
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+    .card-lines {
+      color: var(--muted);
+      display: grid;
+      gap: 6px;
+      font-size: 0.88rem;
+    }
+
+    .placeholder {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .placeholder strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .empty-state {
+      padding: 24px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.028);
+      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .composer {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .field, .field textarea, .field input {
+      width: 100%;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input[type="text"], input[type="password"], textarea, input[type="file"] {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      padding: 13px 14px;
+      outline: 0;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tiny-status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .tiny-status.success { color: #bbffd0; }
+    .tiny-status.error { color: #ffb1b1; }
+
+    .comment-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .comment {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .comment strong {
+      font-size: 0.92rem;
+    }
+
+    .comment span, .comment p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .comment p {
+      color: #e5e5ea;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.66);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .modal-card {
+      width: min(460px, 100%);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, #1a1a1d, #131316);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-head h2, .section-head {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .modal-copy {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.94rem;
+    }
+
+    .mobile-sidebar {
+      display: none;
+      position: fixed;
+      inset: auto 14px 14px;
+      z-index: 30;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 8px;
+      width: calc(100% - 28px);
+      border-radius: 22px;
+      background: rgba(15, 15, 16, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .mobile-sidebar button {
+      padding: 10px 8px;
+      border-radius: 16px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .mobile-sidebar button.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    @media (max-width: 1180px) {
+      .content { grid-template-columns: 1fr; }
+      .feed-panel { order: 2; }
+      .upload-panel { order: 3; }
+    }
+
+    @media (max-width: 920px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { grid-template-columns: 1fr; }
+      .top-actions { justify-content: flex-start; }
+      .mobile-sidebar { display: grid; }
+      .main { padding-bottom: 92px; }
+    }
+
+    @media (max-width: 700px) {
+      .content, .topbar, .statusbar { padding-left: 14px; padding-right: 14px; }
+      .content { padding-top: 16px; }
+      .video-card { grid-template-columns: 1fr; }
+      .split, .creator-row, .feed-header { grid-template-columns: 1fr; }
+      .watch-body, .feed-panel, .upload-panel, .comment-panel { padding: 16px; }
+      .hero-player { border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <div>PulseTube</div>
+          <div class="muted-chip">Kong-wired video platform</div>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-button active" data-view-nav="home"><span class="nav-icon">⌂</span><span>Home feed</span></button>
+        <button class="nav-button" data-view-nav="watch"><span class="nav-icon">▶</span><span>Watch</span></button>
+        <button class="nav-button" data-view-nav="search"><span class="nav-icon">⌕</span><span>Search</span></button>
+        <button class="nav-button" data-view-nav="upload"><span class="nav-icon">⇪</span><span>Upload</span></button>
+      </div>
+
+      <div class="studio-card">
+        <strong>Creator Studio</strong>
+        <p class="sidebar-copy">Publish a post-backed video, attach thumbnail and video media, then index it into search.</p>
+        <button id="openUpload" class="brand-button">Upload Video</button>
+      </div>
+
+      <div class="placeholder-card disabled" aria-disabled="true">
+        <strong>Being developed — backend not available yet</strong>
+        <p class="sidebar-copy">Recommendations, analytics, and real view counts do not have backend support in this workspace.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <form id="searchForm" class="searchbar">
+          <input id="searchInput" type="text" placeholder="Search videos via post-search" autocomplete="off">
+          <button type="submit">Search</button>
+        </form>
+
+        <div class="top-actions">
+          <button id="refreshButton" class="ghost" type="button">Refresh</button>
+          <button id="authButton" class="pill" type="button">Sign in</button>
+          <button id="logoutButton" class="ghost" type="button" hidden>Logout</button>
+        </div>
+      </header>
+
+      <div class="statusbar">
+        <div id="globalStatus" class="status">Ready.</div>
+      </div>
+
+      <section class="content">
+        <section class="panel watch-panel">
+          <div class="hero-player" id="heroPlayer">
+            <img id="heroPoster" alt="Selected video thumbnail">
+            <video id="heroVideo" controls hidden></video>
+            <div class="player-overlay">
+              <span class="overlay-chip" id="heroBadge">Select a video</span>
+              <span class="overlay-chip">Views: Being developed — backend not available yet</span>
+            </div>
+          </div>
+
+          <div class="watch-body">
+            <div>
+              <h1 class="watch-title" id="watchTitle">Select a video from the feed</h1>
+              <div class="watch-meta" id="watchMeta">Feed items are loaded through the BFF for composite reads.</div>
+            </div>
+
+            <div class="creator-row">
+              <div class="creator-card">
+                <div class="avatar" id="creatorAvatar">PT</div>
+                <div class="creator-copy">
+                  <strong id="creatorName">PulseTube</strong>
+                  <span id="creatorLine">Sign in to subscribe or comment.</span>
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button id="subscribeButton" class="pill" type="button" disabled>Subscribe</button>
+                <button id="watchRefreshButton" class="ghost" type="button">Reload</button>
+              </div>
+            </div>
+
+            <div class="description-box" id="watchDescription">Video details, attached media, and comments appear here after a selection.</div>
+
+            <section class="comment-panel panel" style="padding:0;border:none;background:none;box-shadow:none;">
+              <div class="section-head">Comments</div>
+              <form id="commentForm" class="composer">
+                <div class="field">
+                  <label class="label" for="commentInput">Join the discussion</label>
+                  <textarea id="commentInput" placeholder="Add a comment backed by comment-service"></textarea>
+                </div>
+                <div class="action-row">
+                  <button id="commentSubmit" class="brand-button" type="submit">Post Comment</button>
+                </div>
+                <div id="commentStatus" class="tiny-status"></div>
+              </form>
+              <div id="commentList" class="comment-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section style="display:grid;gap:22px;align-content:start;">
+          <section class="panel feed-panel">
+            <div class="feed-header">
+              <div>
+                <h2 class="feed-title" id="feedTitle">Home feed</h2>
+                <p class="feed-subtitle" id="feedSubtitle">Read from `/bff/feed` with graceful degraded sections.</p>
+              </div>
+              <button id="homeButton" class="ghost" type="button">Reset Feed</button>
+            </div>
+            <div id="feedGrid" class="card-grid"></div>
+            <div class="placeholder">
+              <strong>Being developed — backend not available yet</strong>
+              Real recommendation ranking and watch-history personalization are intentionally disabled because no backend exists for them here.
+            </div>
+          </section>
+
+          <section class="panel upload-panel" id="uploadPanel">
+            <div>
+              <h2 class="section-head">Upload video</h2>
+              <p class="feed-subtitle">Creates a post and uploads video plus thumbnail through signed media intents. Search updates from the post event.</p>
+            </div>
+
+            <form id="uploadForm" class="composer">
+              <div class="field">
+                <label class="label" for="videoTitle">Title</label>
+                <input id="videoTitle" type="text" maxlength="80" placeholder="Night drive through the city">
+              </div>
+
+              <div class="field">
+                <label class="label" for="videoDescription">Description</label>
+                <textarea id="videoDescription" maxlength="100" placeholder="Describe the video, creators, and keywords"></textarea>
+              </div>
+
+              <div class="split">
+                <div class="field">
+                  <label class="label" for="videoFile">Video file</label>
+                  <input id="videoFile" type="file" accept="video/*">
+                </div>
+                <div class="field">
+                  <label class="label" for="thumbFile">Thumbnail image</label>
+                  <input id="thumbFile" type="file" accept="image/*">
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button id="uploadSubmit" class="brand-button" type="submit">Publish Video</button>
+              </div>
+              <div id="uploadStatus" class="tiny-status"></div>
+            </form>
+          </section>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-sidebar">
+    <button data-view-nav="home" class="active" type="button">Home</button>
+    <button data-view-nav="watch" type="button">Watch</button>
+    <button data-view-nav="search" type="button">Search</button>
+    <button data-view-nav="upload" type="button">Upload</button>
+  </nav>
+
+  <div id="authModal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>Register or sign in</h2>
+          <p class="modal-copy">Auth uses `auth-service`. Protected content requests attach `Authorization: Bearer &lt;jwt&gt;` from `localStorage`.</p>
+        </div>
+        <button id="closeAuth" class="ghost" type="button">Close</button>
+      </div>
+
+      <div class="field">
+        <label class="label" for="authUsername">Username</label>
+        <input id="authUsername" type="text" autocomplete="username">
+      </div>
+      <div class="field">
+        <label class="label" for="authPassword">Password</label>
+        <input id="authPassword" type="password" autocomplete="current-password">
+      </div>
+
+      <div class="action-row">
+        <button id="loginButton" class="pill" type="button">Login</button>
+        <button id="registerButton" class="brand-button" type="button">Register</button>
+      </div>
+      <div id="authStatus" class="tiny-status"></div>
+    </div>
+  </div>
+
+  <script>
+    const GATEWAY = "http://localhost:18000";
+    const state = {
+      token: localStorage.getItem("appbuilder.jwt") || "",
+      currentUser: null,
+      feed: [],
+      selectedId: null,
+      selectedPost: null,
+      selectedMedia: [],
+      comments: [],
+      subscriptions: loadSubscriptions(),
+      lastFeedMode: "home",
+      lastSearch: ""
+    };
+
+    const els = {};
+    [
+      "searchForm", "searchInput", "refreshButton", "authButton", "logoutButton",
+      "globalStatus", "heroPoster", "heroVideo", "heroBadge", "watchTitle",
+      "watchMeta", "creatorAvatar", "creatorName", "creatorLine", "subscribeButton",
+      "watchRefreshButton", "watchDescription", "commentForm", "commentInput",
+      "commentSubmit", "commentStatus", "commentList", "feedTitle", "feedSubtitle",
+      "homeButton", "feedGrid", "uploadPanel", "uploadForm", "videoTitle",
+      "videoDescription", "videoFile", "thumbFile", "uploadStatus", "openUpload",
+      "authModal", "closeAuth", "authUsername", "authPassword", "loginButton",
+      "registerButton", "authStatus"
+    ].forEach((id) => { els[id] = document.getElementById(id); });
+
+    document.querySelectorAll("[data-view-nav]").forEach((button) => {
+      button.addEventListener("click", () => focusSection(button.dataset.viewNav));
+    });
+
+    els.searchForm.addEventListener("submit", onSearch);
+    els.refreshButton.addEventListener("click", () => loadFeed(state.lastFeedMode === "search" ? "search" : "home"));
+    els.homeButton.addEventListener("click", () => {
+      els.searchInput.value = "";
+      state.lastSearch = "";
+      loadFeed("home");
+    });
+    els.watchRefreshButton.addEventListener("click", () => {
+      if (state.selectedId) selectVideo(state.selectedId, true);
+    });
+    els.commentForm.addEventListener("submit", postComment);
+    els.uploadForm.addEventListener("submit", publishVideo);
+    els.openUpload.addEventListener("click", () => focusSection("upload"));
+    els.authButton.addEventListener("click", () => toggleAuth(true));
+    els.closeAuth.addEventListener("click", () => toggleAuth(false));
+    els.loginButton.addEventListener("click", () => authenticate("login"));
+    els.registerButton.addEventListener("click", () => authenticate("register"));
+    els.logoutButton.addEventListener("click", logout);
+    els.subscribeButton.addEventListener("click", toggleSubscription);
+    els.feedGrid.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-post-id]");
+      if (card) selectVideo(card.dataset.postId);
+    });
+    els.authModal.addEventListener("click", (event) => {
+      if (event.target === els.authModal) toggleAuth(false);
+    });
+
+    bootstrap();
+
+    async function bootstrap() {
+      renderFeed();
+      setStatus("loading", "Checking auth and loading the feed...");
+      await loadCurrentUser();
+      await loadFeed("home");
+    }
+
+    async function api(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (!(options.body instanceof FormData)) headers["Content-Type"] = headers["Content-Type"] || "application/json";
+      if (state.token) headers.Authorization = "Bearer " + state.token;
+
+      let res;
+      try {
+        res = await fetch(GATEWAY + path, { ...options, headers });
+      } catch (error) {
+        throw new Error("Gateway request failed. Check Kong/CORS at " + GATEWAY + ". " + error.message);
+      }
+
+      const type = res.headers.get("content-type") || "";
+      const payload = res.status === 204 ? null : (type.includes("application/json")
+        ? await res.json().catch(() => null)
+        : await res.text().catch(() => ""));
+
+      if (!res.ok) {
+        const message = payload && typeof payload === "object"
+          ? (payload.message || payload.error || JSON.stringify(payload))
+          : String(payload || res.statusText || res.status);
+        throw new Error(res.status + " " + message);
+      }
+
+      return payload;
+    }
+
+    async function loadCurrentUser() {
+      if (!state.token) {
+        state.currentUser = null;
+        syncAuthUi();
+        return;
+      }
+
+      try {
+        const user = unwrap(await api("/auth/me"));
+        state.currentUser = user;
+      } catch (error) {
+        state.token = "";
+        localStorage.removeItem("appbuilder.jwt");
+        state.currentUser = null;
+        setStatus("error", "Saved session expired. " + cleanError(error));
+      }
+      syncAuthUi();
+    }
+
+    async function authenticate(mode) {
+      const username = els.authUsername.value.trim();
+      const password = els.authPassword.value;
+      if (!username || !password) {
+        setMini(els.authStatus, "error", "Username and password are required.");
+        return;
+      }
+
+      setMini(els.authStatus, "", mode === "login" ? "Signing in..." : "Creating account...");
+      try {
+        const path = mode === "login" ? "/auth/login" : "/auth/register";
+        let payload = await api(path, {
+          method: "POST",
+          body: JSON.stringify({ username, password })
+        });
+        if (mode === "register") {
+          payload = await api("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ username, password })
+          });
+        }
+        const token = findToken(payload);
+        if (token) {
+          state.token = token;
+          localStorage.setItem("appbuilder.jwt", token);
+        } else {
+          throw new Error("Login did not return access_token.");
+        }
+        await loadCurrentUser();
+        setMini(els.authStatus, "success", mode === "login" ? "Signed in." : "Account created.");
+        toggleAuth(false);
+        await loadFeed(state.lastFeedMode === "search" ? "search" : "home");
+      } catch (error) {
+        setMini(els.authStatus, "error", cleanError(error));
+      }
+    }
+
+    async function logout() {
+      state.token = "";
+      state.currentUser = null;
+      localStorage.removeItem("appbuilder.jwt");
+      syncAuthUi();
+      renderWatch();
+      setStatus("success", "Signed out locally.");
+    }
+
+    async function loadFeed(mode) {
+      state.lastFeedMode = mode;
+      if (!state.token) {
+        state.feed = [];
+        state.selectedId = null;
+        state.selectedPost = null;
+        renderFeed();
+        renderWatch();
+        setStatus("error", "Sign in required. Content services reject anonymous requests.");
+        return;
+      }
+
+      try {
+        if (mode === "search" && state.lastSearch) {
+          await performSearch(state.lastSearch);
+          return;
+        }
+
+        setStatus("loading", "Loading `/bff/feed`...");
+        const payload = await api("/bff/feed");
+        const items = asArray(payload.items || payload).map(normalizeBffPost).filter(Boolean);
+        state.feed = items;
+        renderFeed();
+        setStatus(items.length ? "success" : "", items.length ? "Home feed loaded." : "Feed is empty.");
+        if (items.length) {
+          await selectVideo(state.selectedId || items[0].id);
+        } else {
+          state.selectedId = null;
+          state.selectedPost = null;
+          renderWatch();
+        }
+      } catch (error) {
+        state.feed = [];
+        renderFeed();
+        renderWatch();
+        setStatus("error", cleanError(error));
+      }
+    }
+
+    async function onSearch(event) {
+      event.preventDefault();
+      const q = els.searchInput.value.trim();
+      if (!q) {
+        state.lastSearch = "";
+        loadFeed("home");
+        return;
+      }
+      state.lastSearch = q;
+      await performSearch(q);
+    }
+
+    async function performSearch(query) {
+      if (!state.token) {
+        setStatus("error", "Sign in required before searching `/post-search`.");
+        return;
+      }
+
+      setNav("search");
+      els.feedTitle.textContent = "Search results";
+      els.feedSubtitle.textContent = "Loaded from `/post-search?q=` and resolved via `/bff/posts/{id}`.";
+      setStatus("loading", "Searching videos...");
+      try {
+        const payload = await api("/post-search?q=" + encodeURIComponent(query));
+        const docs = asArray(payload).map(normalizeSearchDoc).filter(Boolean);
+        const ids = [...new Set(docs.map((doc) => doc.targetId).filter(Boolean))];
+        const posts = [];
+        for (const id of ids) {
+          try {
+            const detail = await api("/bff/posts/" + encodeURIComponent(id));
+            const normalized = normalizeBffPost(detail);
+            if (normalized) posts.push(normalized);
+          } catch (error) {
+          }
+        }
+        state.feed = posts;
+        state.lastFeedMode = "search";
+        renderFeed();
+        setStatus(posts.length ? "success" : "", posts.length ? "Search results loaded." : "No matching indexed videos.");
+        if (posts.length) await selectVideo(posts[0].id);
+      } catch (error) {
+        state.feed = [];
+        renderFeed();
+        setStatus("error", cleanError(error));
+      }
+    }
+
+    async function selectVideo(id, forceReload) {
+      if (!id) return;
+      state.selectedId = String(id);
+      setNav("watch");
+      renderFeed();
+      if (!forceReload && state.selectedPost && String(state.selectedPost.id) === String(id)) {
+        renderWatch();
+        return;
+      }
+
+      setStatus("loading", "Loading `/bff/posts/" + id + "`...");
+      try {
+        const detail = normalizeBffPost(await api("/bff/posts/" + encodeURIComponent(id)));
+        if (!detail) throw new Error("Video detail payload was empty.");
+        state.selectedPost = detail;
+        await Promise.all([loadMedia(id), loadComments(id)]);
+        renderWatch();
+        setStatus("success", "Video loaded.");
+      } catch (error) {
+        renderWatch();
+        setStatus("error", cleanError(error));
+      }
+    }
+
+    async function loadMedia(postId) {
+      try {
+        const payload = await api("/media/targets/post/" + encodeURIComponent(postId));
+        state.selectedMedia = asArray(payload).map(normalizeMedia).filter(Boolean);
+      } catch (error) {
+        state.selectedMedia = [];
+      }
+    }
+
+    async function loadComments(postId) {
+      try {
+        const payload = await api("/comments/targets/post/" + encodeURIComponent(postId));
+        state.comments = asArray(payload).map(normalizeComment).filter(Boolean);
+      } catch (error) {
+        state.comments = [];
+      }
+    }
+
+    async function postComment(event) {
+      event.preventDefault();
+      if (!state.token) {
+        setMini(els.commentStatus, "error", "Sign in required to comment.");
+        toggleAuth(true);
+        return;
+      }
+      const text = els.commentInput.value.trim();
+      if (!state.selectedId || !text) {
+        setMini(els.commentStatus, "error", "Select a video and enter a comment.");
+        return;
+      }
+
+      setMini(els.commentStatus, "", "Posting comment...");
+      try {
+        await api("/comments/targets/post/" + encodeURIComponent(state.selectedId), {
+          method: "POST",
+          body: JSON.stringify({ content: text })
+        });
+        els.commentInput.value = "";
+        await loadComments(state.selectedId);
+        renderComments();
+        setMini(els.commentStatus, "success", "Comment posted.");
+      } catch (error) {
+        setMini(els.commentStatus, "error", cleanError(error));
+      }
+    }
+
+    async function toggleSubscription() {
+      if (!state.currentUser) {
+        toggleAuth(true);
+        return;
+      }
+      const post = state.selectedPost;
+      if (!post || !post.authorUsername) return;
+      const userId = post.authorUserId;
+      if (!userId) {
+        setStatus("error", "Subscribe is unavailable because this older post response has no public creator id.");
+        return;
+      }
+
+      const key = subscriptionKey(post.authorUsername);
+      const subscribed = !!state.subscriptions[key];
+      els.subscribeButton.disabled = true;
+      try {
+        const path = "/posts/users/" + encodeURIComponent(userId) + "/follow"
+          + (subscribed ? "" : "?username=" + encodeURIComponent(post.authorUsername));
+        await api(path, {
+          method: subscribed ? "DELETE" : "PUT"
+        });
+        state.subscriptions[key] = !subscribed;
+        persistSubscriptions();
+        renderWatch();
+        setStatus("success", subscribed ? "Unsubscribed." : "Subscribed.");
+      } catch (error) {
+        setStatus("error", cleanError(error));
+      } finally {
+        els.subscribeButton.disabled = false;
+      }
+    }
+
+    async function publishVideo(event) {
+      event.preventDefault();
+      if (!state.token) {
+        setMini(els.uploadStatus, "error", "Sign in required before uploading.");
+        toggleAuth(true);
+        return;
+      }
+
+      const title = els.videoTitle.value.trim();
+      const description = els.videoDescription.value.trim();
+      const videoFile = els.videoFile.files[0];
+      const thumbFile = els.thumbFile.files[0];
+      if (!title || !description || !videoFile || !thumbFile) {
+        setMini(els.uploadStatus, "error", "Title, description, video, and thumbnail are all required.");
+        return;
+      }
+
+      const createdAt = new Date().toISOString();
+      const metadata = {
+        app: "pulsetube",
+        type: "video",
+        title,
+        description,
+        createdAt
+      };
+      const postContent = JSON.stringify(metadata);
+      if (postContent.length > 280) {
+        setMini(els.uploadStatus, "error", "Title and description exceed the 280-character post metadata limit.");
+        return;
+      }
+
+      setMini(els.uploadStatus, "", "Creating post...");
+      try {
+        const created = unwrap(await api("/posts", {
+          method: "POST",
+          body: JSON.stringify({ content: postContent })
+        }));
+        const postId = firstDefined(created.id, created.postId);
+        if (!postId) throw new Error("Post creation succeeded but did not return an id.");
+
+        setMini(els.uploadStatus, "", "Waiting for media-service to observe the new post...");
+        await waitForMediaTarget(postId);
+        setMini(els.uploadStatus, "", "Uploading video via upload intent...");
+        await uploadMediaIntent(postId, videoFile, "video");
+        setMini(els.uploadStatus, "", "Uploading thumbnail via upload intent...");
+        await uploadMediaIntent(postId, thumbFile, "thumbnail");
+
+        els.uploadForm.reset();
+        setMini(els.uploadStatus, "success", "Video published. Search will update from the post event.");
+        state.lastSearch = "";
+        await loadFeed("home");
+        await selectVideo(postId, true);
+      } catch (error) {
+        setMini(els.uploadStatus, "error", cleanError(error));
+      }
+    }
+
+    async function waitForMediaTarget(postId) {
+      const delays = [100, 200, 400, 800, 1200];
+      let lastError = null;
+      for (const delayMs of delays) {
+        await pause(delayMs);
+        try {
+          await api("/media/targets/post/" + encodeURIComponent(postId) + "/summary");
+          return;
+        } catch (error) {
+          lastError = error;
+          if (!cleanError(error).toLowerCase().includes("target does not exist or is deleted")) {
+            throw error;
+          }
+        }
+      }
+      throw new Error("The post was created, but media-service did not receive its target event in time. "
+        + "Wait a moment and publish again. " + cleanError(lastError));
+    }
+
+    async function uploadMediaIntent(postId, file, role) {
+      const resourceType = role === "video" ? "video" : "image";
+      const format = mediaFormat(file.name, resourceType);
+      const idempotencyKey = "pulsetube-" + postId + "-" + role + "-"
+        + (globalThis.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now());
+      const root = unwrap(await api("/media/upload-intents", {
+        method: "POST",
+        body: JSON.stringify({
+          targetType: "post",
+          targetId: String(postId),
+          idempotencyKey,
+          resourceType,
+          format,
+          bytes: file.size
+        })
+      }));
+      const intent = unwrap(root.intent || {});
+      const authorization = unwrap(root.authorization || {});
+      const intentId = firstDefined(intent.id, intent.intentId);
+      const uploadUrl = firstString(authorization.uploadUrl);
+      if (!intentId || !uploadUrl) {
+        throw new Error("Upload intent contract mismatch: expected intent.id and authorization.uploadUrl.");
+      }
+
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("api_key", authorization.apiKey);
+        form.append("timestamp", String(authorization.timestamp));
+        form.append("signature", authorization.signature);
+        form.append("public_id", authorization.publicId);
+        if (authorization.folder) form.append("folder", authorization.folder);
+        const uploadResponse = await fetch(uploadUrl, { method: "POST", body: form });
+        const uploaded = await uploadResponse.json().catch(() => ({}));
+        if (!uploadResponse.ok) {
+          throw new Error("Cloudinary upload failed with " + uploadResponse.status
+            + (uploaded.error && uploaded.error.message ? ": " + uploaded.error.message : ""));
+        }
+
+        await api("/media/upload-intents/" + encodeURIComponent(intentId) + "/finalize", {
+          method: "POST",
+          body: JSON.stringify({
+            publicId: uploaded.public_id,
+            resourceType: uploaded.resource_type,
+            format: uploaded.format,
+            secureUrl: uploaded.secure_url,
+            bytes: uploaded.bytes,
+            width: uploaded.width == null ? null : uploaded.width,
+            height: uploaded.height == null ? null : uploaded.height,
+            durationSeconds: uploaded.duration == null ? null : uploaded.duration,
+            originalFilename: uploaded.original_filename || file.name
+          })
+        });
+      } catch (error) {
+        try {
+          await api("/media/upload-intents/" + encodeURIComponent(intentId) + "/fail", {
+            method: "POST",
+            body: JSON.stringify({ reasonCode: "provider_failure" })
+          });
+        } catch (failError) {
+        }
+        throw error;
+      }
+    }
+
+    function renderFeed() {
+      setNav(state.lastFeedMode === "search" ? "search" : "home");
+      if (state.lastFeedMode !== "search") {
+        els.feedTitle.textContent = "Home feed";
+        els.feedSubtitle.textContent = "Read from `/bff/feed` with graceful degraded sections.";
+      }
+
+      if (!state.feed.length) {
+        els.feedGrid.innerHTML = '<div class="empty-state">No videos to show yet. Sign in and publish one, or search the index.</div>';
+        return;
+      }
+
+      els.feedGrid.innerHTML = state.feed.map((item) => {
+        const active = String(item.id) === String(state.selectedId) ? " active" : "";
+        const degraded = item.degraded.length ? "Partial: " + item.degraded.join(", ") + " unavailable" : relativeTime(item.createdAt);
+        return `
+          <article class="video-card${active}" data-post-id="${escapeHtml(item.id)}">
+            <div class="thumb">
+              ${item.thumbnailUrl ? `<img src="${escapeHtml(item.thumbnailUrl)}" alt="">` : ""}
+              <span class="thumb-badge">Video</span>
+            </div>
+            <div class="card-copy">
+              <h3 class="card-title">${escapeHtml(item.title)}</h3>
+              <div class="card-lines">
+                <span>${escapeHtml(item.authorUsername || "creator")}</span>
+                <span>Views: Being developed — backend not available yet</span>
+                <span>${escapeHtml(degraded)}</span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderWatch() {
+      const post = state.selectedPost;
+      if (!post) {
+        els.heroPoster.hidden = false;
+        els.heroPoster.removeAttribute("src");
+        els.heroVideo.hidden = true;
+        els.heroVideo.pause();
+        els.watchTitle.textContent = "Select a video from the feed";
+        els.watchMeta.textContent = "Watch view uses `/bff/posts/{id}`, `/media/targets/post/{id}`, and `/comments/targets/post/{id}`.";
+        els.watchDescription.textContent = "No video selected.";
+        els.heroBadge.textContent = "Waiting for selection";
+        els.creatorAvatar.textContent = "PT";
+        els.creatorName.textContent = "PulseTube";
+        els.creatorLine.textContent = state.currentUser ? "Choose a creator to subscribe." : "Sign in to subscribe or comment.";
+        els.subscribeButton.disabled = true;
+        els.subscribeButton.textContent = "Subscribe";
+        renderComments();
+        return;
+      }
+
+      const media = classifyMedia(state.selectedMedia);
+      const title = post.title;
+      const author = post.authorUsername || "creator";
+      const subscribed = !!state.subscriptions[subscriptionKey(author)];
+      const isOwnVideo = !!(state.currentUser && post.authorUserId
+        && String(state.currentUser.userId) === String(post.authorUserId));
+
+      if (media.video) {
+        els.heroVideo.hidden = false;
+        els.heroVideo.src = media.video.url;
+        els.heroPoster.hidden = true;
+      } else {
+        els.heroVideo.hidden = true;
+        els.heroVideo.removeAttribute("src");
+        els.heroVideo.load();
+        els.heroPoster.hidden = false;
+        if (media.thumbnail) els.heroPoster.src = media.thumbnail.url;
+        else els.heroPoster.removeAttribute("src");
+      }
+
+      if (!media.video && media.thumbnail) els.heroPoster.src = media.thumbnail.url;
+      els.watchTitle.textContent = title;
+      els.watchMeta.textContent = [
+        relativeTime(post.createdAt),
+        post.degraded.length ? "Temporarily unavailable: " + post.degraded.join(", ") : "Composite read healthy",
+        "Views: Being developed — backend not available yet"
+      ].join(" • ");
+      els.watchDescription.textContent = post.description || post.rawContent || "No description provided.";
+      els.heroBadge.textContent = media.video ? "Streaming attached media" : "Video file unavailable";
+      els.creatorAvatar.textContent = initials(author);
+      els.creatorName.textContent = author;
+      els.creatorLine.textContent = !state.currentUser
+        ? "Sign in to subscribe or comment."
+        : isOwnVideo
+          ? "This video belongs to your channel."
+          : post.authorUserId
+            ? "Subscription writes go to tweeter-service follow endpoints."
+            : "Creator id unavailable for this older response.";
+      els.subscribeButton.disabled = !state.currentUser || !post.authorUserId || isOwnVideo;
+      els.subscribeButton.textContent = subscribed ? "Unsubscribe" : "Subscribe";
+      renderComments();
+      updateFeedThumb(post.id, media.thumbnail && media.thumbnail.url);
+    }
+
+    function renderComments() {
+      if (!state.comments.length) {
+        els.commentList.innerHTML = '<div class="empty-state">No comments yet.</div>';
+      } else {
+        els.commentList.innerHTML = state.comments.map((comment) => `
+          <article class="comment">
+            <strong>${escapeHtml(comment.author || "viewer")}</strong>
+            <span>${escapeHtml(relativeTime(comment.createdAt))}</span>
+            <p>${escapeHtml(comment.text)}</p>
+          </article>
+        `).join("");
+      }
+    }
+
+    function syncAuthUi() {
+      const username = firstString(state.currentUser && state.currentUser.username, "");
+      els.authButton.textContent = username ? username : "Sign in";
+      els.logoutButton.hidden = !username;
+    }
+
+    function toggleAuth(open) {
+      els.authModal.hidden = !open;
+      if (open) els.authUsername.focus();
+      else setMini(els.authStatus, "", "");
+    }
+
+    function setStatus(kind, message) {
+      els.globalStatus.className = "status" + (kind ? " " + kind : "");
+      els.globalStatus.textContent = message;
+    }
+
+    function setMini(node, kind, message) {
+      node.className = "tiny-status" + (kind ? " " + kind : "");
+      node.textContent = message || "";
+    }
+
+    function focusSection(view) {
+      setNav(view);
+      const map = {
+        home: document.querySelector(".feed-panel"),
+        watch: document.querySelector(".watch-panel"),
+        search: document.querySelector(".topbar"),
+        upload: els.uploadPanel
+      };
+      const target = map[view];
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (view === "search") els.searchInput.focus();
+    }
+
+    function setNav(view) {
+      document.querySelectorAll("[data-view-nav]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.viewNav === view);
+      });
+    }
+
+    function normalizeBffPost(payload) {
+      const root = unwrap(payload);
+      const post = unwrap(root.post || root);
+      const author = unwrap(root.author || {});
+      const metadata = parseMetadata(firstString(post.content, root.content, ""));
+      const id = firstDefined(post.id, root.id);
+      if (id == null) return null;
+      return {
+        id: String(id),
+        title: firstString(metadata.title, truncate(metadata.description || post.content || "Untitled video", 76), "Untitled video"),
+        description: firstString(metadata.description, ""),
+        rawContent: firstString(post.content, ""),
+        createdAt: firstString(post.createdAt, root.createdAt, new Date().toISOString()),
+        authorUsername: firstString(author.username, root.authorUsername, metadata.authorUsername, "creator"),
+        authorUserId: firstString(author.userId, root.authorUserId, ""),
+        degraded: asArray(root.degraded).map(String),
+        thumbnailUrl: firstString(metadata.thumbnailUrl, ""),
+        videoUrl: firstString(metadata.videoUrl, "")
+      };
+    }
+
+    function normalizeSearchDoc(payload) {
+      const item = unwrap(payload);
+      const targetType = firstString(item.targetType, item.type, "post");
+      const targetId = firstDefined(item.targetId, item.id, item.postId, item.documentId);
+      if (!targetId || targetType !== "post") return null;
+      return { targetId: String(targetId) };
+    }
+
+    function normalizeMedia(payload) {
+      const item = unwrap(payload);
+      const id = firstDefined(item.id, item.mediaId);
+      const url = firstString(item.url, item.mediaUrl, item.downloadUrl, item.secureUrl);
+      const resourceType = firstString(item.resourceType, "");
+      const format = firstString(item.format, "");
+      const filename = firstString(item.originalFilename, item.filename, item.fileName, "");
+      if (id == null && !url) return null;
+      return {
+        id: id == null ? Math.random().toString(36).slice(2) : String(id),
+        url,
+        mimeType: firstString(item.mimeType, item.contentType, resourceType && format ? resourceType + "/" + format : resourceType),
+        filename,
+        kind: resourceType === "video" || resourceType === "image"
+          ? resourceType
+          : detectMediaKind(firstString(item.mimeType, item.contentType, ""), filename)
+      };
+    }
+
+    function normalizeComment(payload) {
+      const item = unwrap(payload);
+      const author = unwrap(item.author || {});
+      const text = firstString(item.content, item.text, item.body, "");
+      if (!text) return null;
+      return {
+        author: firstString(author.username, item.authorUsername, "viewer"),
+        createdAt: firstString(item.createdAt, new Date().toISOString()),
+        text
+      };
+    }
+
+    function classifyMedia(items) {
+      const media = { video: null, thumbnail: null };
+      items.forEach((item) => {
+        if (!media.video && item.kind === "video" && item.url) media.video = item;
+        if (!media.thumbnail && item.kind === "image" && item.url) media.thumbnail = item;
+      });
+      return media;
+    }
+
+    function updateFeedThumb(postId, url) {
+      if (!url) return;
+      state.feed = state.feed.map((item) => item.id === String(postId) ? { ...item, thumbnailUrl: item.thumbnailUrl || url } : item);
+      renderFeed();
+    }
+
+    function parseMetadata(content) {
+      if (!content) return {};
+      try {
+        const parsed = JSON.parse(content);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function unwrap(value) {
+      if (!value || typeof value !== "object") return value || {};
+      if (value.data && typeof value.data === "object") return value.data;
+      if (value.item && typeof value.item === "object") return value.item;
+      return value;
+    }
+
+    function asArray(value) {
+      if (Array.isArray(value)) return value;
+      if (value && Array.isArray(value.items)) return value.items;
+      if (value && Array.isArray(value.content)) return value.content;
+      return [];
+    }
+
+    function findToken(payload) {
+      const root = unwrap(payload);
+      return firstString(root.access_token, root.accessToken, root.token, "");
+    }
+
+    function firstDefined(...values) {
+      for (const value of values) if (value !== undefined && value !== null) return value;
+      return null;
+    }
+
+    function firstString(...values) {
+      for (const value of values) {
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+      return "";
+    }
+
+    function pause(milliseconds) {
+      return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+
+    function cleanError(error) {
+      const message = error && error.message ? error.message : String(error || "Unknown error");
+      return message.includes("Failed to fetch")
+        ? "Gateway request failed, likely CORS or Kong is unavailable."
+        : message;
+    }
+
+    function initials(name) {
+      return name.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("") || "PT";
+    }
+
+    function relativeTime(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "Unknown time";
+      const diff = Date.now() - date.getTime();
+      const mins = Math.round(diff / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return mins + "m ago";
+      const hours = Math.round(mins / 60);
+      if (hours < 24) return hours + "h ago";
+      const days = Math.round(hours / 24);
+      if (days < 30) return days + "d ago";
+      const months = Math.round(days / 30);
+      if (months < 12) return months + "mo ago";
+      return Math.round(months / 12) + "y ago";
+    }
+
+    function truncate(text, max) {
+      const value = String(text || "").trim();
+      if (value.length <= max) return value;
+      return value.slice(0, max - 1).trimEnd() + "…";
+    }
+
+    function detectMediaKind(mimeType, filename) {
+      const value = (mimeType || filename || "").toLowerCase();
+      if (value.includes("video")) return "video";
+      if (value.includes("image") || /\.(png|jpe?g|gif|webp|avif)$/i.test(filename || "")) return "image";
+      return "file";
+    }
+
+    function mediaFormat(filename, resourceType) {
+      const match = String(filename || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+      let format = match ? match[1] : (resourceType === "image" ? "jpg" : "mp4");
+      if (format === "jpeg") format = "jpg";
+      if (resourceType === "image" && !["jpg", "png", "gif", "webp"].includes(format)) return "jpg";
+      if (resourceType === "video" && !["mp4", "mov", "webm"].includes(format)) return "mp4";
+      return format;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function loadSubscriptions() {
+      try {
+        return JSON.parse(localStorage.getItem("pulsetube.subscriptions") || "{}");
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function persistSubscriptions() {
+      localStorage.setItem("pulsetube.subscriptions", JSON.stringify(state.subscriptions));
+    }
+
+    function subscriptionKey(username) {
+      const owner = firstString(state.currentUser && state.currentUser.username, "guest");
+      return owner + "::" + username;
+    }
+  </script>
+</body>
+</html>

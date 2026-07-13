@@ -31,7 +31,10 @@ class Settings(BaseSettings):
     # e.g. APPBUILDER_AGENT_BACKEND="codex-cli,claude-cli,hermes" tries Codex, then
     # falls back to Claude Code, then Hermes. A single value (e.g. "hermes") pins one.
     agent_backend: str = "codex-cli,claude-cli,hermes"
-    model: str = ""
+    # Pin the embedded CLI to a model verified with the locally installed Codex
+    # version. Leaving this blank inherits ~/.codex/config.toml, which may name a
+    # model introduced by a newer CLI and make every generation fail at startup.
+    model: str = "gpt-5.4"
     provider: str = ""
     max_turns: int = 30
     hermes_source_path: Path = Path(os.environ.get("HERMES_AGENT_HOME", "~/.hermes/hermes-agent")).expanduser()

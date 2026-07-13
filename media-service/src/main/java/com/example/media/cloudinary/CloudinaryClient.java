@@ -63,15 +63,26 @@ public class CloudinaryClient {
     public record DirectUploadAuthorization(String uploadUrl, String apiKey, long timestamp,
             String signature, String publicId, String folder) {}
 
+    /**
+     * Cloudinary prefixes returned public IDs with the configured asset folder. Persist that
+     * canonical ID in the upload intent so provider results can be verified and later deleted.
+     */
+    public String qualifyPublicId(String publicId) {
+        String value = publicId == null ? "" : publicId.trim();
+        if (uploadFolder.isBlank() || value.startsWith(uploadFolder + "/")) return value;
+        return uploadFolder + "/" + value;
+    }
+
     public DirectUploadAuthorization authorizeDirectUpload(String resourceType, String publicId) {
         requireConfigured();
         long timestamp = Instant.now().getEpochSecond();
         Map<String, String> params = new LinkedHashMap<>();
         params.put("public_id", publicId);
         params.put("timestamp", String.valueOf(timestamp));
-        if (!uploadFolder.isBlank()) params.put("folder", uploadFolder);
+        // publicId is already folder-qualified. Sending folder as a second parameter would make
+        // Cloudinary return folder/publicId while the intent stores only publicId.
         return new DirectUploadAuthorization(API_BASE + "/" + urlEncodePath(cloudName) + "/"
-                + resourceType + "/upload", apiKey, timestamp, sign(params), publicId, uploadFolder);
+                + resourceType + "/upload", apiKey, timestamp, sign(params), publicId, "");
     }
 
     public UploadResult upload(MultipartFile file, String resourceType) {

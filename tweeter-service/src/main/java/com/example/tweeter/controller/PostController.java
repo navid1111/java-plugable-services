@@ -49,10 +49,10 @@ public class PostController {
             long expectedVersion) {
     }
 
-    public record PostResponse(Long id, String authorUsername, String content, Instant createdAt,
+    public record PostResponse(Long id, String authorUserId, String authorUsername, String content, Instant createdAt,
             Instant updatedAt, Instant deletedAt, long version) {
         static PostResponse from(Post post) {
-            return new PostResponse(post.getId(), post.getAuthorUsername(), post.getContent(),
+            return new PostResponse(post.getId(), post.getAuthorUserId(), post.getAuthorUsername(), post.getContent(),
                     post.getCreatedAt(), post.getUpdatedAt(), post.getDeletedAt(), post.getVersion() + 1);
         }
     }

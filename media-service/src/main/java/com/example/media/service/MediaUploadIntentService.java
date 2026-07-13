@@ -62,8 +62,9 @@ public class MediaUploadIntentService {
         if (!allowed.contains(normalizedFormat)) throw new IllegalArgumentException("unsupported media format");
         if (requestedBytes <= 0 || requestedBytes > limit) throw new IllegalArgumentException("requested upload size exceeds limit");
         UUID id = UUID.randomUUID();
+        String publicId = cloudinary.qualifyPublicId("intent-" + id);
         MediaUploadIntent intent = new MediaUploadIntent(id, stableOwnerId, owner, type, targetId, idempotencyKey.trim(),
-                resource, normalizedFormat, limit, "intent-" + id, Instant.now().plus(Duration.ofMinutes(15)));
+                resource, normalizedFormat, limit, publicId, Instant.now().plus(Duration.ofMinutes(15)));
         intents.save(intent); return result(intent);
     }
 

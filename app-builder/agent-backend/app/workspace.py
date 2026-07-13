@@ -5,10 +5,18 @@ No npm/build step — app-builder serves the folder directly, so a generated app
 clickable the moment the agent writes index.html.
 """
 
+import asyncio
 import re
+import sys
 from pathlib import Path
 
-from .catalog import fetch_catalog, render_agents_md, render_backend_verifier, render_skill
+from .catalog import (
+    fetch_catalog,
+    render_agents_md,
+    render_backend_verifier,
+    render_frontend_contract_verifier,
+    render_skill,
+)
 from .config import settings
 
 # Shown before the agent writes anything, so a fresh workspace isn't a blank 404.
@@ -41,6 +49,26 @@ def index_mtime(cwd: Path) -> float:
     return entry.stat().st_mtime if entry.exists() else 0.0
 
 
+async def validate_frontend_contracts(cwd: Path) -> tuple[bool, str]:
+    """Run the server-owned contract linter against a generated workspace.
+
+    The canonical verifier is passed directly to Python instead of trusting the
+    workspace copy, which prevents a generated agent from weakening its own
+    checks to make an invalid app appear healthy.
+    """
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        render_frontend_contract_verifier(),
+        str(cwd),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+    report = (stdout + stderr).decode(errors="replace").strip()
+    return process.returncode == 0, report
+
+
 async def scaffold(slug: str) -> Path:
     """Create the workspace, seed a placeholder, and mount the freshly-rendered plugs skill."""
     cwd = workspace_dir(slug)
@@ -55,6 +83,9 @@ async def scaffold(slug: str) -> Path:
     verifier = cwd / "verify-backend.sh"
     verifier.write_text(render_backend_verifier())
     verifier.chmod(0o755)
+    frontend_verifier = cwd / "verify-frontend-contracts.py"
+    frontend_verifier.write_text(render_frontend_contract_verifier())
+    frontend_verifier.chmod(0o755)
 
     skill_dir = cwd / ".hermes" / "skills" / "plugs"
     skill_dir.mkdir(parents=True, exist_ok=True)

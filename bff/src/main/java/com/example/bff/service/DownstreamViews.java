@@ -6,7 +6,7 @@ import java.util.List;
 /** Minimal projections of the downstream service responses the composer consumes. */
 public final class DownstreamViews {
 
-    public record PostView(Long id, String authorUsername, String content, Instant createdAt,
+    public record PostView(Long id, String authorUserId, String authorUsername, String content, Instant createdAt,
             Instant updatedAt, Instant deletedAt, long version) {}
 
     public record CommentSummaryView(String targetType, String targetId, long commentCount) {}

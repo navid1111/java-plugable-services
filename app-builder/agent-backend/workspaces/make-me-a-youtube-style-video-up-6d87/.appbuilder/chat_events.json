@@ -1,0 +1,48 @@
+[
+  {
+    "type": "user",
+    "data": {
+      "text": "make me a youtube style video upload platform with comment and subscribe"
+    },
+    "createdAt": 1783894550.878418
+  },
+  {
+    "type": "assistant_text",
+    "data": {
+      "text": "ath with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.069452Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.069463Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.069901Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.069908Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.070388Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.070395Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:15:55.585107Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json\n2026-07-12T22:15:55.595934Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json\n2026-07-12T22:15:55.595985Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json\nERROR: {\"type\":\"error\",\"status\":400,\"error\":{\"type\":\"invalid_request_error\",\"message\":\"The 'gpt-5.6-sol' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again.\"}}\nERROR: {\"type\":\"error\",\"status\":400,\"error\":{\"type\":\"invalid_request_error\",\"message\":\"The 'gpt-5.6-sol' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again.\"}}"
+    },
+    "createdAt": 1783894556.9042
+  },
+  {
+    "type": "done",
+    "data": {
+      "is_error": true,
+      "num_turns": 1,
+      "cost_usd": null
+    },
+    "createdAt": 1783894556.904556
+  },
+  {
+    "type": "user",
+    "data": {
+      "text": "make me a youtube style video upload platform with comment and subscribe"
+    },
+    "createdAt": 1783894677.178589
+  },
+  {
+    "type": "assistant_text",
+    "data": {
+      "text": "er plugin assets/\n2026-07-12T22:18:31.131095Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.131647Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.131664Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.132260Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.132274Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.132904Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.132915Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.133564Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.133575Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/\n2026-07-12T22:18:31.741188Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json\n2026-07-12T22:18:31.753311Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json\n2026-07-12T22:18:31.753365Z  WARN codex_core_plugins::manifest: ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters path=/home/navid/.codex/.tmp/plugins/plugins/ngs-analysis/.codex-plugin/plugin.json"
+    },
+    "createdAt": 1783894855.9014192
+  },
+  {
+    "type": "done",
+    "data": {
+      "is_error": true,
+      "num_turns": 1,
+      "cost_usd": null
+    },
+    "createdAt": 1783894855.9018438
+  }
+]

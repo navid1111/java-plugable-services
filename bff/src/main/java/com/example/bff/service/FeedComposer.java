@@ -64,7 +64,7 @@ public class FeedComposer {
             items.add(new PostDetail(
                     new PostDetail.PostSection(post.id(), post.content(), post.createdAt(),
                             post.updatedAt(), post.version()),
-                    new PostDetail.AuthorSection(post.authorUsername()),
+                    new PostDetail.AuthorSection(post.authorUserId(), post.authorUsername()),
                     comments == null ? null : new PostDetail.CommentSummary(comments.commentCount()),
                     mediaView == null ? null : new PostDetail.MediaSummary(mediaView.mediaCount()),
                     List.copyOf(degraded)));
