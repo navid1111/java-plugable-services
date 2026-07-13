@@ -33,6 +33,7 @@ class SessionProgressTest(unittest.IsolatedAsyncioTestCase):
                 patch("app.sessions.save_agent_history", new=AsyncMock()),
                 patch("app.sessions.bus.publish", new=AsyncMock()) as publish,
                 patch("app.sessions.workspace.validate_frontend_contracts", new=AsyncMock(return_value=(True, "passed"))),
+                patch("app.sessions.workspace.validate_live_backend_endpoints", new=AsyncMock(return_value=(True, "live passed"))),
             ):
                 await manager.run_turn("demo", "build it")
 
@@ -56,6 +57,7 @@ class SessionProgressTest(unittest.IsolatedAsyncioTestCase):
                     "app.sessions.workspace.validate_frontend_contracts",
                     new=AsyncMock(return_value=(False, "bad backend contract")),
                 ),
+                patch("app.sessions.workspace.validate_live_backend_endpoints", new=AsyncMock()),
             ):
                 await manager.run_turn("demo", "build it")
 
@@ -63,6 +65,31 @@ class SessionProgressTest(unittest.IsolatedAsyncioTestCase):
             complete = publish.await_args_list[-1].args[2]
             self.assertIn("final check", error["userMessage"])
             self.assertTrue(complete["is_error"])
+
+    async def test_live_endpoint_failure_blocks_preview_and_completion(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            cwd = Path(temporary)
+            (cwd / "index.html").write_text("<!doctype html><title>Ready</title>")
+            manager = SessionManager()
+            manager._sessions["demo"] = AppSession("demo", cwd, FakeAgent())
+
+            with (
+                patch("app.sessions.append_event", new=AsyncMock()),
+                patch("app.sessions.save_agent_history", new=AsyncMock()),
+                patch("app.sessions.bus.publish", new=AsyncMock()) as publish,
+                patch("app.sessions.workspace.validate_frontend_contracts", new=AsyncMock(return_value=(True, "passed"))),
+                patch(
+                    "app.sessions.workspace.validate_live_backend_endpoints",
+                    new=AsyncMock(return_value=(False, "booking-service returned 503")),
+                ),
+            ):
+                await manager.run_turn("demo", "build it")
+
+            event_types = [call.args[1] for call in publish.await_args_list]
+            self.assertIn("verification", event_types)
+            self.assertNotIn("preview", event_types)
+            self.assertEqual("live-endpoints", publish.await_args_list[-1].args[2]["validation"])
+            self.assertTrue(publish.await_args_list[-1].args[2]["is_error"])
 
 
 if __name__ == "__main__":

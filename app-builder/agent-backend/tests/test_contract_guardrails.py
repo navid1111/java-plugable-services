@@ -50,6 +50,28 @@ class ContractGuardrailTest(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(frontend_lint(source), name)
 
+    def test_async_handlers_must_capture_current_target_before_await(self) -> None:
+        broken = '''
+        async function submit(event) {
+          await api("/auth/register", {method: "POST"});
+          event.currentTarget.reset();
+        }
+        '''
+
+        self.assertTrue(any("currentTarget" in problem for problem in frontend_lint(broken)))
+
+    def test_booking_write_requires_a_selected_slot(self) -> None:
+        broken = '''
+        const token = localStorage.getItem("appbuilder.jwt");
+        const Authorization = "Bearer " + token;
+        api("/bookings", {method: "POST", body: JSON.stringify({resourceId})});
+        '''
+
+        problems = frontend_lint(broken)
+
+        self.assertTrue(any("slotId" in problem for problem in problems))
+        self.assertTrue(any("available slot" in problem for problem in problems))
+
     def test_incomplete_upload_intent_and_projection_flow_fails_lint(self) -> None:
         source = '''
         const token = localStorage.getItem("appbuilder.jwt");

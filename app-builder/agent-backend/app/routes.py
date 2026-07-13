@@ -105,6 +105,15 @@ async def serve_index(slug: str):
             f"<pre>{html.escape(report[:2000])}</pre>",
             status_code=409,
         )
+    live_valid, live_report = workspace.live_verification_status(cwd)
+    if not live_valid:
+        return HTMLResponse(
+            "<h1>Preview is still being checked</h1>"
+            "<p>The builder has not released this version because its real backend endpoint tests "
+            "have not passed yet.</p>"
+            f"<pre>{html.escape(live_report[:2000])}</pre>",
+            status_code=409,
+        )
     return FileResponse(entry)
 
 

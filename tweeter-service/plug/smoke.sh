@@ -54,6 +54,12 @@ if [ -z "$ALICE_TOKEN" ] || [ -z "$BOB_TOKEN" ]; then
   echo "Failed to get tokens"
   exit 1
 fi
+BOB_ID="$(curl -fsS "${BASE}/auth/me" -H "Authorization: Bearer ${BOB_TOKEN}" \
+  | sed -n 's/.*"userId":"\([^"]*\)".*/\1/p')"
+if [ -z "$BOB_ID" ]; then
+  echo "Failed to resolve Bob's public user id"
+  exit 1
+fi
 
 echo "[3/8] Verifying Kong rejects missing token..."
 HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/posts/feed")"
@@ -63,7 +69,7 @@ if [ "$HTTP_CODE" != "401" ]; then
 fi
 
 echo "[4/8] Alice follows Bob..."
-curl -fsS -X PUT "${BASE}/posts/users/${BOB}/follow" \
+curl -fsS -X PUT "${BASE}/posts/users/${BOB_ID}/follow?username=${BOB}" \
   -H "Authorization: Bearer ${ALICE_TOKEN}" >/dev/null
 
 echo "[5/8] Bob creates posts..."
@@ -85,7 +91,7 @@ echo "[6/8] Reading post and author listing..."
 POST_BODY="$(curl -fsS "${BASE}/posts/${POST_ID}" -H "Authorization: Bearer ${ALICE_TOKEN}")"
 require_contains "$POST_BODY" "$C1" "post lookup"
 
-AUTHOR_POSTS="$(curl -fsS "${BASE}/posts?author=${BOB}" -H "Authorization: Bearer ${ALICE_TOKEN}")"
+AUTHOR_POSTS="$(curl -fsS "${BASE}/posts?authorUserId=${BOB_ID}" -H "Authorization: Bearer ${ALICE_TOKEN}")"
 require_contains "$AUTHOR_POSTS" "$C3" "author listing"
 
 echo "[7/8] Reading feed with cursor paging..."
@@ -104,7 +110,7 @@ FEED2="$(curl -fsS "${BASE}/posts/feed?pageSize=2&cursor=${CURSOR}" -H "Authoriz
 require_contains "$FEED2" "$C1" "second feed page"
 
 echo "[8/8] Unfollow removes Bob from Alice's feed..."
-curl -fsS -X DELETE "${BASE}/posts/users/${BOB}/follow" \
+curl -fsS -X DELETE "${BASE}/posts/users/${BOB_ID}/follow" \
   -H "Authorization: Bearer ${ALICE_TOKEN}" >/dev/null
 EMPTY_FEED="$(curl -fsS "${BASE}/posts/feed" -H "Authorization: Bearer ${ALICE_TOKEN}")"
 if printf '%s' "$EMPTY_FEED" | grep -F "$C3" >/dev/null; then

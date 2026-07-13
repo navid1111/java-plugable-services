@@ -410,11 +410,13 @@ services:
   booking-service:
     profiles: ["booking"]
     build:
-      context: ./booking-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: booking-service/Dockerfile
     container_name: booking-service
     depends_on:
       bookings-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://bookings-db:5432/bookingsdb
@@ -422,6 +424,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: bookingspass
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER:-springboot-auth}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_ADMIN_USERNAME:-platform}
+      RABBITMQ_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:-platformpass}
     expose:
       - "8080"
     healthcheck:

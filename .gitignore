@@ -41,3 +41,8 @@ build/
 
 # Generated Graphify indexes, reports, visualizations, and caches
 graphify-out/
+
+# App Builder runtime verification state and Python bytecode
+app-builder/agent-backend/workspaces/.verification/
+**/__pycache__/
+*.py[cod]

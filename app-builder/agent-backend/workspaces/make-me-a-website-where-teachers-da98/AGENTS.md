@@ -101,3 +101,7 @@ async function login(username, password) {
 Do not edit, delete, weaken, or bypass `verify-frontend-contracts.py` or the verifier.
 After writing or changing backend fetch code, run `./verify-backend.sh` from this directory.
 Do not claim the backend is wired until it passes. If it fails, fix the frontend contract or report the exact blocker.
+The App Builder server also runs the official smoke test for every referenced service before releasing
+the preview. This can take up to ten minutes. A failed smoke test blocks the preview.
+In async event handlers, capture `const form = event.currentTarget` before the first `await`;
+do not read `event.currentTarget` after an asynchronous boundary.

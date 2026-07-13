@@ -91,7 +91,7 @@ INDEX_HTML = """<!doctype html>
         <div class="state-icon" id="stateIcon" aria-hidden="true"></div>
         <div><div id="buildTitle">Getting things ready</div><div id="buildMessage">Reading your request and checking available features.</div></div>
       </div>
-      <div class="progress-row"><span>Estimated progress</span><span id="timeLabel">Usually 1–3 minutes</span></div>
+      <div class="progress-row"><span>Estimated progress</span><span id="timeLabel">Usually 5–10 minutes with backend tests</span></div>
       <div class="track" role="progressbar" aria-label="Estimated build progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressBar"></div></div>
       <div class="steps">
         <div class="step" data-step="0">Prepare</div><div class="step" data-step="1">Build</div>
@@ -182,13 +182,13 @@ INDEX_HTML = """<!doctype html>
     startedAt = Date.now(); progress = 0; buildCard.hidden = false;
     buildCard.className = 'build-card building'; btn.disabled = true; btn.textContent = 'Building…';
     document.getElementById('stateIcon').textContent = '';
-    timeLabel.textContent = 'Usually 1–3 minutes'; statusEl.textContent = 'Building your app…';
+    timeLabel.textContent = 'Usually 5–10 minutes with backend tests'; statusEl.textContent = 'Building your app…';
     setPhase('prepare');
     clearInterval(progressTimer);
     progressTimer = setInterval(() => {
       const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-      timeLabel.textContent = elapsedText(seconds) + ' · usually 1–3 min';
-      const estimate = Math.min(89, 12 + 78 * (1 - Math.exp(-seconds / 95)));
+      timeLabel.textContent = elapsedText(seconds) + ' · usually 5–10 min';
+      const estimate = Math.min(89, 12 + 78 * (1 - Math.exp(-seconds / 240)));
       setProgress(estimate);
       if (seconds > 150 && lastPhase !== 'check') {
         buildMessage.textContent = 'Still working—larger apps can take a little longer. Your progress is safe.';
@@ -232,6 +232,7 @@ INDEX_HTML = """<!doctype html>
     if (type === 'tool_result') return (data.ok === false ? 'failed — ' : 'ok — ') + (data.summary || 'completed');
     if (type === 'error') return data.message || data.userMessage || 'Unknown error';
     if (type === 'preview') return 'Preview updated: ' + (data.url || '');
+    if (type === 'verification') return data.userMessage || data.report || 'Testing live backend endpoints';
     if (type === 'done' || type === 'build_complete') return data.is_error ? 'completed with errors' : 'completed';
     return JSON.stringify(data || {});
   }
@@ -256,6 +257,11 @@ INDEX_HTML = """<!doctype html>
       if (building) {
         setPhase('check');
         buildMessage.textContent = 'A check found something to fix. The builder is working on it.';
+      }
+    } else if (type === 'verification') {
+      if (building) {
+        setPhase('check'); setProgress(data.status === 'passed' ? 96 : 90);
+        buildMessage.textContent = data.userMessage || 'Testing the real backend endpoints used by this app.';
       }
     } else if (type === 'preview') {
       frame.src = data.url + '?t=' + Date.now(); openLink.href = data.url; openLink.hidden = false;
@@ -296,7 +302,7 @@ INDEX_HTML = """<!doctype html>
   function connect() {
     if (es) es.close();
     es = new EventSource('/api/apps/' + encodeURIComponent(slug) + '/events');
-    ['user','thinking','assistant_text','assistant_delta','tool_use','tool_result','preview','error','done','build_complete']
+    ['user','thinking','assistant_text','assistant_delta','tool_use','tool_result','verification','preview','error','done','build_complete']
       .forEach(type => es.addEventListener(type, event => renderEvent(type, JSON.parse(event.data))));
     es.onerror = () => {
       if (building) buildMessage.textContent = 'Reconnecting to the builder… your work is still safe.';

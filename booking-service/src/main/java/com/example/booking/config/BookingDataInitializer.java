@@ -31,28 +31,75 @@ public class BookingDataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        migrateLegacyVenueSchema();
         jdbcTemplate.execute("""
                 CREATE UNIQUE INDEX IF NOT EXISTS uk_bookings_active_slot
                 ON bookings (slot_id)
                 WHERE status = 'active'
                 """);
 
-        if (resources.count() > 0) {
-            return;
+        List<Resource> bookableResources = resources.findAllByOrderByNameAscIdAsc();
+        if (bookableResources.isEmpty()) {
+            // Seed a deliberately mixed set of resource types: this service books
+            // anything with time slots (rooms, courts, appointments, ...).
+            bookableResources = List.of(
+                    resources.save(new Resource("Meeting Room A", "HQ, 3rd Floor")),
+                    resources.save(new Resource("Tennis Court 1", "City Sports Club")),
+                    resources.save(new Resource("Consultation Room 2", "Downtown Clinic")));
         }
 
-        // Seed a deliberately mixed set of resource types: this service books
-        // anything with time slots (rooms, courts, appointments, ...).
-        Resource room = resources.save(new Resource("Meeting Room A", "HQ, 3rd Floor"));
-        Resource court = resources.save(new Resource("Tennis Court 1", "City Sports Club"));
-        Resource clinic = resources.save(new Resource("Consultation Room 2", "Downtown Clinic"));
-
+        // Development volumes are long-lived. Always ensure every resource has
+        // future inventory instead of leaving only yesterday's seeded slots.
         Instant base = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.HOURS);
         List<Slot> seededSlots = new ArrayList<>();
-        seededSlots.addAll(slotsFor(room.getId(), base));
-        seededSlots.addAll(slotsFor(court.getId(), base.plus(1, ChronoUnit.DAYS)));
-        seededSlots.addAll(slotsFor(clinic.getId(), base.plus(2, ChronoUnit.DAYS)));
+        for (int index = 0; index < bookableResources.size(); index++) {
+            Resource resource = bookableResources.get(index);
+            if (!slots.existsByResourceIdAndStartTimeAfter(resource.getId(), Instant.now())) {
+                seededSlots.addAll(slotsFor(resource.getId(), base.plus(index, ChronoUnit.DAYS)));
+            }
+        }
         slots.saveAll(seededSlots);
+    }
+
+    /**
+     * The service was generalized from venues to resources. Existing development
+     * volumes still have slots.venue_id, which Hibernate cannot safely infer is a
+     * rename. Make that migration idempotent before repositories seed/read data.
+     */
+    private void migrateLegacyVenueSchema() {
+        jdbcTemplate.execute("""
+                DO $$
+                BEGIN
+                  IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'slots' AND column_name = 'venue_id'
+                  ) AND NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'slots' AND column_name = 'resource_id'
+                  ) THEN
+                    ALTER TABLE slots RENAME COLUMN venue_id TO resource_id;
+                  END IF;
+
+                  IF to_regclass('public.venues') IS NOT NULL
+                     AND to_regclass('public.resources') IS NOT NULL THEN
+                    INSERT INTO resources (id, name, location, created_at)
+                    SELECT id, name, location, created_at FROM venues
+                    ON CONFLICT (id) DO NOTHING;
+                  END IF;
+                END $$
+                """);
+        jdbcTemplate.execute("DROP INDEX IF EXISTS idx_slots_venue_start");
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_slots_resource_start
+                ON slots (resource_id, start_time)
+                """);
+        jdbcTemplate.execute("""
+                SELECT setval(
+                  pg_get_serial_sequence('resources', 'id'),
+                  GREATEST(COALESCE((SELECT MAX(id) FROM resources), 1), 1),
+                  EXISTS (SELECT 1 FROM resources)
+                )
+                """);
     }
 
     private List<Slot> slotsFor(Long resourceId, Instant dayStart) {

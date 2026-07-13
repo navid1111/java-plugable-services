@@ -11,7 +11,7 @@ class BuilderExperienceTest(unittest.TestCase):
     def test_progress_is_plain_language_and_clearly_estimated(self) -> None:
         self.assertIn('role="progressbar"', INDEX_HTML)
         self.assertIn("Estimated progress", INDEX_HTML)
-        self.assertIn("Usually 1–3 minutes", INDEX_HTML)
+        self.assertIn("Usually 5–10 minutes with backend tests", INDEX_HTML)
         self.assertIn("Your app is ready", INDEX_HTML)
         self.assertIn("larger apps can take a little longer", INDEX_HTML)
 
@@ -20,6 +20,7 @@ class BuilderExperienceTest(unittest.TestCase):
         self.assertIn("Technical details", INDEX_HTML)
         self.assertIn("'build_complete'", INDEX_HTML)
         self.assertIn("build_complete", PERSISTED_EVENT_TYPES)
+        self.assertIn("verification", PERSISTED_EVENT_TYPES)
         self.assertIn("data.userMessage", INDEX_HTML)
 
 

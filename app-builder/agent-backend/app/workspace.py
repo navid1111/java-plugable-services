@@ -100,6 +100,29 @@ def _verification_record(cwd: Path) -> Path:
     return cwd.parent / ".verification" / f"{cwd.name}.json"
 
 
+def _service_verification_record(cwd: Path) -> Path:
+    return cwd.parent / ".verification" / "service-smokes.json"
+
+
+def _load_service_verifications(cwd: Path) -> dict[str, int]:
+    record = _service_verification_record(cwd)
+    try:
+        data = json.loads(record.read_text(encoding="utf-8"))
+        return {str(key): int(value) for key, value in data.items()}
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return {}
+
+
+def _save_service_verifications(cwd: Path, values: dict[str, int]) -> None:
+    record = _service_verification_record(cwd)
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(json.dumps(values, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def invalidate_live_verification(cwd: Path) -> None:
+    _verification_record(cwd).unlink(missing_ok=True)
+
+
 def live_verification_status(cwd: Path) -> tuple[bool, str]:
     """Return whether the exact currently-served sources passed live checks."""
     record = _verification_record(cwd)
@@ -122,9 +145,10 @@ async def validate_live_backend_endpoints(cwd: Path) -> tuple[bool, str]:
     soon as HTML or JavaScript changes.
     """
     record = _verification_record(cwd)
-    record.unlink(missing_ok=True)
+    invalidate_live_verification(cwd)
     services = services_used_by_frontend(cwd)
     reports: list[str] = []
+    service_verifications = _load_service_verifications(cwd)
     deadline = asyncio.get_running_loop().time() + settings.backend_verification_timeout_seconds
     env = os.environ.copy()
     env.update({
@@ -134,29 +158,42 @@ async def validate_live_backend_endpoints(cwd: Path) -> tuple[bool, str]:
     })
 
     for service in services:
+        last_pass = service_verifications.get(service, 0)
+        if int(time.time()) - last_pass <= settings.backend_verification_cache_seconds:
+            reports.append(f"[{service}] recent server-owned smoke pass reused")
+            continue
         script = settings.service_smoke_root / service / "plug" / "smoke.sh"
         if not script.is_file():
             return False, f"{service}: official smoke test is missing"
-        remaining = deadline - asyncio.get_running_loop().time()
-        if remaining <= 0:
-            return False, "live endpoint verification exceeded its time limit"
-        process = await asyncio.create_subprocess_exec(
-            "bash", str(script),
-            cwd=settings.service_smoke_root,
-            env=env,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-        )
-        try:
-            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=remaining)
-        except TimeoutError:
-            process.kill()
-            await process.communicate()
-            return False, f"{service}: smoke test timed out"
-        output = stdout.decode(errors="replace").strip()
-        reports.append(f"[{service}]\n{output[-3000:]}")
-        if process.returncode != 0:
-            return False, "\n".join(reports)
+        for attempt in range(1, 4):
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                return False, "live endpoint verification exceeded its time limit"
+            process = await asyncio.create_subprocess_exec(
+                "bash", str(script),
+                cwd=settings.service_smoke_root,
+                env=env,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=remaining)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                return False, f"{service}: smoke test timed out"
+            output = stdout.decode(errors="replace").strip()
+            reports.append(f"[{service} attempt {attempt}]\n{output[-3000:]}")
+            if process.returncode == 0:
+                service_verifications[service] = int(time.time())
+                _save_service_verifications(cwd, service_verifications)
+                break
+            if "429" not in output or attempt == 3:
+                return False, "\n".join(reports)
+            delay = settings.backend_verification_rate_limit_retry_seconds
+            if asyncio.get_running_loop().time() + delay >= deadline:
+                return False, "\n".join(reports) + "\nrate limit did not reset before the verification deadline"
+            await asyncio.sleep(delay)
 
     record.parent.mkdir(parents=True, exist_ok=True)
     record.write_text(json.dumps({

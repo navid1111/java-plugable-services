@@ -24,6 +24,7 @@ PERSISTED_EVENT_TYPES = {
     "error",
     "done",
     "build_complete",
+    "verification",
 }
 
 
@@ -90,6 +91,7 @@ class SessionManager:
             try:
                 await append_event(session.cwd, "user", {"text": text})
                 await bus.publish(slug, "user", {"text": text})
+                workspace.invalidate_live_verification(session.cwd)
                 await session.agent.run(text)
                 await save_agent_history(session.cwd, session.agent.history())
                 valid, report = await workspace.validate_frontend_contracts(session.cwd)
@@ -111,8 +113,39 @@ class SessionManager:
                     await append_event(session.cwd, "build_complete", complete)
                     await bus.publish(slug, "build_complete", complete)
                     return
+                checking = {
+                    "status": "running",
+                    "userMessage": (
+                        "The interface checks passed. Now testing every backend service used by this app; "
+                        "this can take several minutes."
+                    ),
+                }
+                await append_event(session.cwd, "verification", checking)
+                await bus.publish(slug, "verification", checking)
+                live_valid, live_report = await workspace.validate_live_backend_endpoints(session.cwd)
+                if not live_valid:
+                    data = {
+                        "message": "Live endpoint verification failed. " + live_report[:5000],
+                        "userMessage": (
+                            "The app was built, but a real backend test failed, so I did not release the preview. "
+                            "Ask the builder to fix the backend verification report."
+                        ),
+                    }
+                    await append_event(session.cwd, "error", data)
+                    await bus.publish(slug, "error", data)
+                    complete = {"is_error": True, "validation": "live-endpoints"}
+                    await append_event(session.cwd, "build_complete", complete)
+                    await bus.publish(slug, "build_complete", complete)
+                    return
+                verified = {
+                    "status": "passed",
+                    "userMessage": "The real backend endpoint checks passed.",
+                    "report": live_report[:1200],
+                }
+                await append_event(session.cwd, "verification", verified)
+                await bus.publish(slug, "verification", verified)
                 await self._maybe_preview(session)
-                complete = {"is_error": False, "validation": "frontend-contracts"}
+                complete = {"is_error": False, "validation": "live-endpoints"}
                 await append_event(session.cwd, "build_complete", complete)
                 await bus.publish(slug, "build_complete", complete)
             except Exception as exc:

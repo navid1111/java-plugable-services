@@ -7,10 +7,64 @@ from unittest.mock import AsyncMock, patch
 
 from app.config import settings
 from app.routes import serve_index
-from app.workspace import scaffold, validate_frontend_contracts
+from app.workspace import (
+    live_verification_status,
+    scaffold,
+    services_used_by_frontend,
+    validate_frontend_contracts,
+    validate_live_backend_endpoints,
+)
 
 
 class WorkspaceGuardrailTest(unittest.IsolatedAsyncioTestCase):
+
+    async def test_frontend_services_select_their_official_smoke_tests(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "index.html").write_text('<script src="app.js"></script>')
+            (root / "app.js").write_text(
+                'fetch(GATEWAY + "/auth/me"); fetch(GATEWAY + "/bookings/resources"); '
+                'fetch(GATEWAY + "/posts/feed");'
+            )
+
+            self.assertEqual(
+                ["auth-service", "booking-service", "tweeter-service"],
+                services_used_by_frontend(root),
+            )
+
+    async def test_static_app_gets_a_fingerprinted_live_verification_record(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "workspaces" / "static-app"
+            root.mkdir(parents=True)
+            source = root / "index.html"
+            source.write_text("<!doctype html><title>Static</title>")
+
+            valid, _ = await validate_live_backend_endpoints(root)
+            self.assertTrue(valid)
+            self.assertTrue(live_verification_status(root)[0])
+
+            source.write_text("<!doctype html><title>Changed</title>")
+            self.assertFalse(live_verification_status(root)[0])
+
+    async def test_recent_server_owned_smoke_pass_is_reused_without_consuming_rate_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            workspace = base / "workspaces" / "auth-app"
+            workspace.mkdir(parents=True)
+            (workspace / "app.js").write_text('fetch(GATEWAY + "/auth/me")')
+            script = base / "services" / "auth-service" / "plug" / "smoke.sh"
+            script.parent.mkdir(parents=True)
+            script.write_text("#!/usr/bin/env bash\nexit 0\n")
+
+            with (
+                patch.object(settings, "service_smoke_root", base / "services"),
+                patch.object(settings, "backend_verification_cache_seconds", 300),
+            ):
+                self.assertTrue((await validate_live_backend_endpoints(workspace))[0])
+                script.unlink()
+                valid, _ = await validate_live_backend_endpoints(workspace)
+
+            self.assertTrue(valid)
 
     async def test_every_scaffold_contains_executable_contract_and_backend_verifiers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

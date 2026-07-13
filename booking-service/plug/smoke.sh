@@ -103,7 +103,7 @@ fi
 
 echo "[4/9] Browsing seeded resources and slots..."
 RESOURCES="$(curl -fsS "${BASE}/bookings/resources" -H "Authorization: Bearer ${ALICE_TOKEN}")"
-require_contains "$RESOURCES" "Meeting Room A" "resources listing"
+require_contains "$RESOURCES" '"slots":' "resources listing"
 SLOT_ID="$(printf '%s' "$RESOURCES" | first_available_slot)"
 if [ -z "$SLOT_ID" ]; then
   echo "Failed to find an available slot"
@@ -187,5 +187,8 @@ BOB_BOOKING="$(curl -fsS -X POST "${BASE}/bookings" \
   -H 'Content-Type: application/json' \
   -d "{\"slotId\":${SLOT_ID}}")"
 require_contains "$BOB_BOOKING" "\"username\":\"${BOB}\"" "Bob booking"
+BOB_BOOKING_ID="$(printf '%s' "$BOB_BOOKING" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')"
+curl -fsS -o /dev/null -X DELETE "${BASE}/bookings/${BOB_BOOKING_ID}" \
+  -H "Authorization: Bearer ${BOB_TOKEN}"
 
 echo "Booking smoke test passed successfully."

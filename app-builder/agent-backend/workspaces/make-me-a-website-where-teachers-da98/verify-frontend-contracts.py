@@ -22,6 +22,26 @@ def nearby_method(source: str, marker: str, method: str) -> bool:
     return False
 
 
+def async_blocks(source: str) -> list[str]:
+    starts = []
+    for pattern in (
+        r"async\s+function\s+[A-Za-z_$][\w$]*\s*\([^)]*\)\s*\{",
+        r"async\s*\([^)]*\)\s*=>\s*\{",
+    ):
+        starts.extend(match.end() - 1 for match in re.finditer(pattern, source))
+    blocks = []
+    for start in sorted(starts):
+        depth = 0
+        for index in range(start, len(source)):
+            if source[index] == "{": depth += 1
+            elif source[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(source[start + 1:index])
+                    break
+    return blocks
+
+
 def lint(source: str) -> list[str]:
     problems: list[str] = []
     lowered = source.lower()
@@ -38,6 +58,13 @@ def lint(source: str) -> list[str]:
     if "postWithFallback" in source:
         problems.append("do not guess multiple write payloads; use the single documented request contract")
 
+    if any(
+        "await" in block and "event.currentTarget" in block
+        and block.index("await") < block.rindex("event.currentTarget")
+        for block in async_blocks(source)
+    ):
+        problems.append("event.currentTarget can become null after await; capture the form element before the first await")
+
     if re.search(
         r"['\"]Content-Type['\"]\s*\]?\s*[:=]\s*['\"]multipart/form-data",
         source,
@@ -45,7 +72,9 @@ def lint(source: str) -> list[str]:
     ):
         problems.append("do not set multipart/form-data manually when sending FormData; the browser adds its boundary")
 
-    protected = any(path in source for path in ("/posts", "/media", "/comments", "/post-search", "/bff", "/leetcode"))
+    protected = any(path in source for path in (
+        "/posts", "/media", "/comments", "/post-search", "/bff", "/leetcode", "/bookings", "/chat"
+    ))
     if protected:
         for token, message in (
             ("appbuilder.jwt", "protected apps must load the JWT from appbuilder.jwt"),
@@ -94,6 +123,12 @@ def lint(source: str) -> list[str]:
 
     if nearby_method(source, "/follow", "PUT") and "username=" not in source:
         problems.append("follow PUT requires ?username={author.username} and the BFF author.userId")
+
+    if nearby_method(source, "/bookings", "POST"):
+        if "slotId" not in source:
+            problems.append("booking writes require {slotId}, not a resource id")
+        if "slots" not in source:
+            problems.append("booking UI must select an available slot from each resource")
 
     if "/leetcode/admin/problems" in source:
         for token, message in (

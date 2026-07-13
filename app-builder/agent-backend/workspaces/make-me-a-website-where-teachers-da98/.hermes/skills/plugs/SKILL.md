@@ -161,6 +161,14 @@ Reuse this pattern to compose apps. For example, a YouTube-style app should comp
   `"testCases":[{"input":{...},"output":...,"hidden":false}]}`.
 - Admin detail `GET /leetcode/admin/problems/{id}` returns all test cases, including hidden ones.
 
+## Booking contract
+
+- `GET /bookings/resources` returns an array of resources, each containing a `slots` array.
+- Each slot has its own numeric `id` and `available` flag. Render and select available slots.
+- Create a booking with `POST /bookings` and exactly `{"slotId": <selected slot id>}`.
+  A resource ID is not a slot ID.
+- `GET /bookings/mine` returns the current user's bookings. Cancel with `DELETE /bookings/{id}`.
+
 ## Prefer the BFF for composite reads
 
 The **BFF** (`/bff`) composes reads across tweeter + comments + media on the server, with a strict deadline and graceful partial responses. When it is AVAILABLE, use it for read screens instead of fanning out to each service and stitching on the client — one call replaces several and handles slow/failing optional sections for you.

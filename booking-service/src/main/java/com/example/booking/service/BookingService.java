@@ -78,7 +78,8 @@ public class BookingService {
                                         slot.getId(),
                                         slot.getStartTime(),
                                         slot.getEndTime(),
-                                        !unavailableSlotIds.contains(slot.getId())))
+                                        slot.getStartTime().isAfter(Instant.now())
+                                                && !unavailableSlotIds.contains(slot.getId())))
                                 .toList()))
                 .toList();
     }

@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     # HTML/JS must pass its repository smoke test before preview is released.
     service_smoke_root: Path = BACKEND_ROOT.parents[1]
     backend_verification_timeout_seconds: int = 600
+    backend_verification_rate_limit_retry_seconds: int = 65
+    backend_verification_cache_seconds: int = 300
 
     host: str = "0.0.0.0"
     port: int = 8090

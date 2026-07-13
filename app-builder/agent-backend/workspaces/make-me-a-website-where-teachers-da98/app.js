@@ -163,6 +163,17 @@ function renderResources() {
   el.className = "card-list";
   el.innerHTML = state.resources.map((resource) => {
     const resourceId = getResourceId(resource);
+    const slots = asArray(resource.slots);
+    const slotControls = slots.length
+      ? slots.map((slot) => `
+          <div class="card-topline">
+            <span class="meta">${escapeHtml(formatDate(slot.startTime))}–${escapeHtml(new Date(slot.endTime).toLocaleTimeString())}</span>
+            <button class="button ${slot.available ? "button-primary" : "button-ghost"}" type="button"
+              data-book-slot="${escapeHtml(slot.id)}" ${slot.available ? "" : "disabled"}>
+              ${slot.available ? "Book this slot" : "Already booked"}
+            </button>
+          </div>`).join("")
+      : '<p class="meta">No scheduled slots are available.</p>';
     return `
       <article class="resource-card">
         <div class="card-topline">
@@ -177,10 +188,7 @@ function renderResources() {
               .join("")}
           </div>
         </div>
-        <pre class="meta">${escapeHtml(JSON.stringify(resource, null, 2))}</pre>
-        <div class="card-actions">
-          <button class="button button-primary" type="button" data-book-resource="${escapeHtml(resourceId)}">Book this class</button>
-        </div>
+        <div class="stack">${slotControls}</div>
       </article>
     `;
   }).join("");
@@ -205,7 +213,7 @@ function renderBookings() {
       <article class="booking-card">
         <div class="card-topline">
           <div>
-            <h3>${escapeHtml(booking.title || summarizeResource(booking))}</h3>
+            <h3>${escapeHtml(booking.resourceName || booking.title || summarizeResource(booking))}</h3>
             <p class="meta">Booking ID: ${escapeHtml(bookingId)}</p>
           </div>
           <span class="tag tag-muted">${escapeHtml(formatDate(booking.startsAt || booking.createdAt))}</span>
@@ -294,8 +302,9 @@ async function refreshAll() {
 
 async function handleRegister(event) {
   event.preventDefault();
+  const registerForm = event.currentTarget;
   setNotice("authError", "");
-  const form = new FormData(event.currentTarget);
+  const form = new FormData(registerForm);
   const username = String(form.get("username") || "").trim();
   const password = String(form.get("password") || "");
   try {
@@ -304,23 +313,31 @@ async function handleRegister(event) {
       body: JSON.stringify({ username, password })
     });
     await login(username, password);
-    event.currentTarget.reset();
+    registerForm.reset();
     $("loginForm").reset();
     await refreshAll();
   } catch (error) {
-    setNotice("authError", `Registration failed: ${error.message}`);
+    if (String(error.message).startsWith("409")) {
+      setNotice("authError", "That username already exists. Use the Login form or choose a different username.");
+      const loginUsername = $("loginForm").elements.username;
+      loginUsername.value = username;
+      loginUsername.focus();
+    } else {
+      setNotice("authError", `Registration failed: ${error.message}`);
+    }
   }
 }
 
 async function handleLogin(event) {
   event.preventDefault();
+  const loginForm = event.currentTarget;
   setNotice("authError", "");
-  const form = new FormData(event.currentTarget);
+  const form = new FormData(loginForm);
   const username = String(form.get("username") || "").trim();
   const password = String(form.get("password") || "");
   try {
     await login(username, password);
-    event.currentTarget.reset();
+    loginForm.reset();
     await refreshAll();
   } catch (error) {
     setNotice("authError", `Login failed: ${error.message}`);
@@ -329,20 +346,21 @@ async function handleLogin(event) {
 
 async function handlePost(event) {
   event.preventDefault();
+  const postForm = event.currentTarget;
   setNotice("composerError", "");
   setNotice("composerSuccess", "");
   if (!state.me) {
     setNotice("composerError", "Sign in before publishing a class.");
     return;
   }
-  const form = new FormData(event.currentTarget);
+  const form = new FormData(postForm);
   const content = String(form.get("content") || "").trim();
   try {
     await api("/posts", {
       method: "POST",
       body: JSON.stringify({ content })
     });
-    event.currentTarget.reset();
+    postForm.reset();
     setNotice("composerSuccess", "Class published.");
     await refreshFeed();
   } catch (error) {
@@ -368,23 +386,23 @@ async function handleSearch(event) {
   renderSearch();
 }
 
-async function handleBook(resourceId) {
+async function handleBook(slotId) {
   setNotice("bookingError", "");
   setNotice("bookingSuccess", "");
   if (!state.me) {
     setNotice("bookingError", "Sign in before booking a class.");
     return;
   }
-  if (!resourceId) {
-    setNotice("bookingError", "This resource does not expose a usable id.");
+  if (!slotId) {
+    setNotice("bookingError", "This class does not expose a usable slot id.");
     return;
   }
   try {
     await api("/bookings", {
       method: "POST",
-      body: JSON.stringify({ resourceId })
+      body: JSON.stringify({ slotId: Number(slotId) })
     });
-    setNotice("bookingSuccess", `Booked resource ${resourceId}.`);
+    setNotice("bookingSuccess", "Class slot booked.");
     await refreshBookings();
   } catch (error) {
     setNotice("bookingError", `Could not create booking: ${error.message}`);
@@ -415,9 +433,9 @@ function bindEvents() {
     await refreshAll();
   });
   document.body.addEventListener("click", (event) => {
-    const bookButton = event.target.closest("[data-book-resource]");
+    const bookButton = event.target.closest("[data-book-slot]");
     if (bookButton) {
-      handleBook(bookButton.getAttribute("data-book-resource"));
+      handleBook(bookButton.getAttribute("data-book-slot"));
       return;
     }
     const cancelButton = event.target.closest("[data-cancel-booking]");

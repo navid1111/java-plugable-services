@@ -45,6 +45,29 @@ def nearby_method(source: str, marker: str, method: str) -> bool:
     return False
 
 
+def async_blocks(source: str) -> list[str]:
+    """Extract brace-balanced async function bodies for small browser sources."""
+    starts = []
+    patterns = (
+        r"async\s+function\s+[A-Za-z_$][\w$]*\s*\([^)]*\)\s*\{",
+        r"async\s*\([^)]*\)\s*=>\s*\{",
+    )
+    for pattern in patterns:
+        starts.extend(match.end() - 1 for match in re.finditer(pattern, source))
+    blocks = []
+    for start in sorted(starts):
+        depth = 0
+        for index in range(start, len(source)):
+            if source[index] == "{":
+                depth += 1
+            elif source[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(source[start + 1:index])
+                    break
+    return blocks
+
+
 def lint(source: str) -> list[str]:
     problems: list[str] = []
     lowered = source.lower()
@@ -61,7 +84,12 @@ def lint(source: str) -> list[str]:
     if "postWithFallback" in source:
         problems.append("do not guess multiple write payloads; use the single documented request contract")
 
-    if re.search(r"await[\s\S]{0,1200}event\.currentTarget", source):
+    if any(
+        "await" in block
+        and "event.currentTarget" in block
+        and block.index("await") < block.rindex("event.currentTarget")
+        for block in async_blocks(source)
+    ):
         problems.append(
             "event.currentTarget can become null after await; capture the form element before the first await"
         )
@@ -73,7 +101,9 @@ def lint(source: str) -> list[str]:
     ):
         problems.append("do not set multipart/form-data manually when sending FormData; the browser adds its boundary")
 
-    protected = any(path in source for path in ("/posts", "/media", "/comments", "/post-search", "/bff", "/leetcode"))
+    protected = any(path in source for path in (
+        "/posts", "/media", "/comments", "/post-search", "/bff", "/leetcode", "/bookings", "/chat"
+    ))
     if protected:
         for token, message in (
             ("appbuilder.jwt", "protected apps must load the JWT from appbuilder.jwt"),
