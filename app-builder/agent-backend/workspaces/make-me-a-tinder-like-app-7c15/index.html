@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flare</title>
+  <style>
+    :root {
+      --bg: #f7efe5;
+      --panel: rgba(255, 252, 247, 0.88);
+      --panel-strong: #fffaf3;
+      --ink: #26170f;
+      --muted: #725b4f;
+      --line: rgba(74, 49, 36, 0.14);
+      --accent: #ff6b57;
+      --accent-2: #ffad66;
+      --green: #169873;
+      --shadow: 0 24px 80px rgba(68, 35, 18, 0.16);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 174, 102, 0.35), transparent 30%),
+        radial-gradient(circle at top right, rgba(255, 107, 87, 0.22), transparent 24%),
+        linear-gradient(180deg, #fff7ed 0%, #f4eadf 48%, #eadfce 100%);
+    }
+
+    .shell {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr) 300px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .left, .right {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .brand {
+      padding: 22px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .brand::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -40% 50%;
+      height: 160px;
+      background: linear-gradient(90deg, rgba(255, 107, 87, 0.22), rgba(255, 173, 102, 0.08));
+      filter: blur(18px);
+      transform: rotate(-10deg);
+    }
+
+    .eyebrow {
+      font: 700 11px/1.2 Arial, sans-serif;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 2.6rem; line-height: 0.92; max-width: 8ch; }
+    .subtle { color: var(--muted); font: 400 0.98rem/1.5 Arial, sans-serif; }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 12px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font: 600 0.84rem/1.2 Arial, sans-serif;
+    }
+
+    input, textarea, button {
+      font: inherit;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.8);
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 92px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: Arial, sans-serif;
+      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #ff836d);
+      box-shadow: 0 14px 26px rgba(255, 107, 87, 0.28);
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.74);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      padding-inline: 0;
+    }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .topbar .search {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .topbar input {
+      max-width: 280px;
+    }
+
+    .card-stage {
+      padding: 20px;
+      min-height: 720px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .profile-card {
+      position: relative;
+      min-height: 520px;
+      padding: 28px;
+      border-radius: 32px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.78)),
+        linear-gradient(160deg, rgba(255, 173, 102, 0.6), rgba(255, 107, 87, 0.84));
+      color: white;
+      overflow: hidden;
+      box-shadow: 0 22px 65px rgba(87, 34, 18, 0.24);
+      display: grid;
+      align-content: end;
+      isolation: isolate;
+    }
+
+    .profile-card::before,
+    .profile-card::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      z-index: -1;
+    }
+
+    .profile-card::before {
+      width: 240px;
+      height: 240px;
+      top: -60px;
+      right: -50px;
+    }
+
+    .profile-card::after {
+      width: 180px;
+      height: 180px;
+      left: -40px;
+      bottom: 60px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      font: 700 0.78rem/1 Arial, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .profile-card h2 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      line-height: 0.95;
+      margin-top: 14px;
+      max-width: 8ch;
+    }
+
+    .profile-card .bio {
+      margin-top: 12px;
+      max-width: 42ch;
+      color: rgba(255,255,255,0.9);
+      font: 400 1rem/1.5 Arial, sans-serif;
+    }
+
+    .meta-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meta {
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(45, 14, 7, 0.2);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .meta strong, .mini strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .meta span, .mini span {
+      font: 400 0.78rem/1.45 Arial, sans-serif;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .action {
+      padding: 16px;
+      border-radius: 22px;
+    }
+
+    .action.reject {
+      background: #fff7f2;
+      color: #9d4c31;
+      border: 1px solid rgba(157, 76, 49, 0.14);
+    }
+
+    .action.like {
+      background: linear-gradient(135deg, #ff6b57, #ff9c6e);
+      color: white;
+    }
+
+    .action.note {
+      background: #f5faf8;
+      color: #1f6a57;
+      border: 1px solid rgba(22, 152, 115, 0.16);
+    }
+
+    .mini-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mini {
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.7);
+    }
+
+    .disabled-card {
+      opacity: 0.72;
+      background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(246, 237, 227, 0.9));
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid var(--line);
+      font: 700 0.74rem/1 Arial, sans-serif;
+      color: var(--muted);
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .item {
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      display: grid;
+      gap: 8px;
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .tiny {
+      color: var(--muted);
+      font: 400 0.78rem/1.45 Arial, sans-serif;
+    }
+
+    .notice {
+      padding: 14px 16px;
+      border-radius: 18px;
+      font: 600 0.84rem/1.45 Arial, sans-serif;
+      display: none;
+    }
+
+    .notice.show { display: block; }
+    .notice.error { background: #fff1ef; color: #8d3328; border: 1px solid rgba(141, 51, 40, 0.16); }
+    .notice.ok { background: #ecfaf5; color: #155a47; border: 1px solid rgba(21, 90, 71, 0.16); }
+
+    .empty {
+      padding: 24px;
+      border-radius: 24px;
+      border: 1px dashed var(--line);
+      text-align: center;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+      .left, .right {
+        position: static;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .topbar .search {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100vw - 16px, 100%);
+        margin: 8px auto 18px;
+        gap: 12px;
+      }
+      .left, .right, .card-stage, .topbar {
+        padding: 16px;
+      }
+      .actions, .meta-grid, .stat-row {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="left">
+      <section class="panel brand">
+        <div class="eyebrow">Tinder-like social discovery</div>
+        <h1>Flare</h1>
+        <p class="subtle">Swipe through prompt cards, like authors, drop an opener, and publish your own profile card through the live gateway.</p>
+      </section>
+
+      <section class="panel stack" style="padding:20px">
+        <div class="stat-row">
+          <div class="stat"><strong id="feedCount">0</strong><span class="tiny">cards loaded</span></div>
+          <div class="stat"><strong id="likedCount">0</strong><span class="tiny">likes sent</span></div>
+          <div class="stat"><strong id="skippedCount">0</strong><span class="tiny">passes</span></div>
+        </div>
+        <div id="status" class="notice" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel stack" style="padding:20px">
+        <div>
+          <div class="eyebrow">Account</div>
+          <h3 id="accountTitle">Sign in or create an account</h3>
+          <p id="accountMeta" class="subtle">Protected reads and writes require a JWT.</p>
+        </div>
+        <form id="authForm" class="stack">
+          <label>Username
+            <input type="text" name="username" placeholder="flame.seeker" required>
+          </label>
+          <label>Password
+            <input type="password" name="password" placeholder="••••••••" required>
+          </label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <button class="primary" type="submit" name="intent" value="login">Log in</button>
+            <button class="secondary" type="submit" name="intent" value="register">Register</button>
+            <button class="ghost" type="button" id="logoutBtn">Log out</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel stack" style="padding:20px">
+        <div>
+          <div class="eyebrow">Create card</div>
+          <p class="subtle">Your dating card is stored as a post. Keep it under 280 characters.</p>
+        </div>
+        <form id="profileForm" class="stack">
+          <label>Card text
+            <textarea name="content" maxlength="280" placeholder="Sunrise runs, ramen loyalty, and looking for someone who will split playlists with me." required></textarea>
+          </label>
+          <button class="primary" type="submit">Publish card</button>
+        </form>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel topbar">
+        <div>
+          <div class="eyebrow">Discovery deck</div>
+          <p class="subtle">Feed reads use the BFF. Likes write directly to the posts service.</p>
+        </div>
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Search vibes, hobbies, cities">
+          <button id="searchBtn" class="secondary" type="button">Search</button>
+          <button id="clearSearchBtn" class="ghost" type="button">Clear</button>
+          <button id="refreshBtn" class="secondary" type="button">Refresh feed</button>
+        </div>
+      </section>
+
+      <section class="panel card-stage">
+        <div id="cardHost"></div>
+        <div class="actions">
+          <button id="skipBtn" class="action reject" type="button">Pass</button>
+          <button id="likeBtn" class="action like" type="button">Like author</button>
+          <button id="commentToggleBtn" class="action note" type="button">Send opener</button>
+        </div>
+        <form id="commentForm" class="stack" style="display:none">
+          <label>Opener
+            <textarea name="content" maxlength="280" placeholder="Your card had me at rooftop noodles. Want a coffee rec swap?" required></textarea>
+          </label>
+          <button class="primary" type="submit">Send comment</button>
+        </form>
+      </section>
+    </main>
+
+    <aside class="right">
+      <section class="panel stack" style="padding:20px">
+        <div>
+          <div class="eyebrow">Liked authors</div>
+          <p class="subtle">A like maps to follow/unfollow on the backend.</p>
+        </div>
+        <div id="likedList" class="list"></div>
+      </section>
+
+      <section class="panel stack" style="padding:20px">
+        <div>
+          <div class="eyebrow">Search results</div>
+          <p class="subtle">Search projection updates asynchronously after post writes.</p>
+        </div>
+        <div id="searchResults" class="list"></div>
+      </section>
+
+      <section class="panel mini-grid" style="padding:20px">
+        <div class="mini disabled-card">
+          <strong>Match queue</strong>
+          <span>Being developed — backend not available yet</span>
+        </div>
+        <div class="mini disabled-card">
+          <strong>Distance radar</strong>
+          <span>Being developed — backend not available yet</span>
+        </div>
+        <div class="mini disabled-card">
+          <strong>Super likes</strong>
+          <span>Being developed — backend not available yet</span>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    const GATEWAY = "http://localhost:18000";
+    const state = {
+      me: null,
+      feed: [],
+      index: 0,
+      likedAuthors: new Map(),
+      skipped: 0,
+      searchResults: []
+    };
+
+    function setStatus(message, type = "ok") {
+      const box = document.getElementById("status");
+      box.textContent = message;
+      box.className = "notice show " + type;
+    }
+
+    function clearStatus() {
+      const box = document.getElementById("status");
+      box.textContent = "";
+      box.className = "notice";
+    }
+
+    function getToken() {
+      return localStorage.getItem("appbuilder.jwt");
+    }
+
+    async function api(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = headers["Content-Type"] || "application/json";
+      }
+      const token = getToken();
+      if (token) headers.Authorization = "Bearer " + token;
+      const res = await fetch(GATEWAY + path, { ...options, headers });
+      if (!res.ok) {
+        throw new Error(res.status + " " + await res.text());
+      }
+      return res.status === 204 ? null : res.json();
+    }
+
+    async function login(username, password) {
+      const res = await fetch(GATEWAY + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) {
+        throw new Error(res.status + " " + await res.text());
+      }
+      const data = await res.json();
+      localStorage.setItem("appbuilder.jwt", data.access_token);
+    }
+
+    function pause(ms) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    }
+
+    function formatTime(value) {
+      try {
+        return new Date(value).toLocaleString();
+      } catch (_error) {
+        return value;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function currentCard() {
+      return state.feed[state.index] || null;
+    }
+
+    function updateStats() {
+      document.getElementById("feedCount").textContent = String(state.feed.length);
+      document.getElementById("likedCount").textContent = String(state.likedAuthors.size);
+      document.getElementById("skippedCount").textContent = String(state.skipped);
+    }
+
+    function renderAccount() {
+      const title = document.getElementById("accountTitle");
+      const meta = document.getElementById("accountMeta");
+      if (state.me) {
+        title.textContent = "Signed in as @" + state.me.username;
+        meta.textContent = "Roles: " + (state.me.roles || []).join(", ");
+      } else {
+        title.textContent = "Sign in or create an account";
+        meta.textContent = "Protected reads and writes require a JWT.";
+      }
+    }
+
+    function renderLikedAuthors() {
+      const host = document.getElementById("likedList");
+      const items = Array.from(state.likedAuthors.values());
+      if (!items.length) {
+        host.innerHTML = '<div class="empty">No likes sent yet.</div>';
+        return;
+      }
+      host.innerHTML = items.map((author) => {
+        return '<div class="item"><div class="item-top"><strong>@' + escapeHtml(author.username) + '</strong><button class="ghost" type="button" data-unlike="' + escapeHtml(author.userId) + '">Undo</button></div><div class="tiny">userId: ' + escapeHtml(author.userId) + '</div></div>';
+      }).join("");
+    }
+
+    function renderSearchResults() {
+      const host = document.getElementById("searchResults");
+      if (!state.searchResults.length) {
+        host.innerHTML = '<div class="empty">Run a search after logging in.</div>';
+        return;
+      }
+      host.innerHTML = state.searchResults.map((item) => {
+        const content = item.content || item.postContent || item.snippet || "No preview available.";
+        return '<div class="item"><div class="item-top"><strong>' + escapeHtml(item.username || item.authorUsername || "Unknown") + '</strong><span class="tiny">#' + escapeHtml(item.targetId || item.id || "?") + '</span></div><div>' + escapeHtml(content) + '</div></div>';
+      }).join("");
+    }
+
+    function renderCard() {
+      const host = document.getElementById("cardHost");
+      const card = currentCard();
+      if (!card) {
+        host.innerHTML = '<div class="empty">No more cards in this stack. Refresh the feed or publish a new card.</div>';
+        return;
+      }
+      const commentsLabel = card.comments ? String(card.comments.commentCount) : "Temp";
+      const mediaLabel = card.media ? String(card.media.mediaCount) : "Temp";
+      const degraded = Array.isArray(card.degraded) ? card.degraded : [];
+      host.innerHTML = [
+        '<article class="profile-card">',
+        '<div class="pill">' + escapeHtml(card.author.username) + '</div>',
+        '<h2>@' + escapeHtml(card.author.username) + '</h2>',
+        '<p class="bio">' + escapeHtml(card.post.content) + '</p>',
+        '<div class="meta-grid">',
+        '<div class="meta"><strong>#' + escapeHtml(card.post.id) + '</strong><span>card id</span></div>',
+        '<div class="meta"><strong>' + escapeHtml(commentsLabel) + '</strong><span>' + (card.comments ? 'openers' : 'comments unavailable') + '</span></div>',
+        '<div class="meta"><strong>' + escapeHtml(mediaLabel) + '</strong><span>' + (card.media ? 'media items' : 'media unavailable') + '</span></div>',
+        '</div>',
+        '<div class="chip-list" style="margin-top:16px">',
+        '<span class="chip">posted ' + escapeHtml(formatTime(card.post.createdAt)) + '</span>',
+        '<span class="chip">version ' + escapeHtml(card.post.version) + '</span>',
+        degraded.map((name) => '<span class="chip">' + escapeHtml(name) + ' temporarily unavailable</span>').join(""),
+        '</div>',
+        '</article>'
+      ].join("");
+    }
+
+    function syncUi() {
+      renderAccount();
+      renderLikedAuthors();
+      renderSearchResults();
+      renderCard();
+      updateStats();
+    }
+
+    async function loadMe() {
+      if (!getToken()) {
+        state.me = null;
+        renderAccount();
+        return;
+      }
+      state.me = await api("/auth/me");
+      renderAccount();
+    }
+
+    async function loadFeed() {
+      if (!getToken()) {
+        state.feed = [];
+        state.index = 0;
+        syncUi();
+        return;
+      }
+      const data = await api("/bff/feed");
+      state.feed = Array.isArray(data.items) ? data.items.filter((item) => item && item.post && item.author) : [];
+      state.index = 0;
+      syncUi();
+    }
+
+    async function searchPosts(query) {
+      if (!query.trim()) {
+        state.searchResults = [];
+        renderSearchResults();
+        return;
+      }
+      const data = await api("/post-search?q=" + encodeURIComponent(query.trim()));
+      state.searchResults = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+      renderSearchResults();
+    }
+
+    async function followAuthor(author) {
+      await api("/posts/users/" + encodeURIComponent(author.userId) + "/follow?username=" + encodeURIComponent(author.username), {
+        method: "PUT"
+      });
+      state.likedAuthors.set(author.userId, author);
+      state.index += 1;
+      syncUi();
+    }
+
+    async function unfollowAuthor(userId) {
+      const author = state.likedAuthors.get(userId);
+      if (!author) return;
+      await api("/posts/users/" + encodeURIComponent(author.userId) + "/follow?username=" + encodeURIComponent(author.username), {
+        method: "DELETE"
+      });
+      state.likedAuthors.delete(userId);
+      syncUi();
+    }
+
+    async function sendComment(postId, content) {
+      await ensureCommentTargetReady(postId);
+      await api("/comments/targets/post/" + encodeURIComponent(postId), {
+        method: "POST",
+        body: JSON.stringify({ content })
+      });
+    }
+
+    async function createCard(content) {
+      await api("/posts", {
+        method: "POST",
+        body: JSON.stringify({ content })
+      });
+    }
+
+    async function ensureCommentTargetReady(postId) {
+      const waits = [120, 260, 520, 900];
+      for (let attempt = 0; attempt < waits.length; attempt += 1) {
+        try {
+          await api("/comments/targets/post/" + encodeURIComponent(postId) + "/summary");
+          return;
+        } catch (error) {
+          const isProjectionRace = error.message.toLowerCase().includes("target does not exist or is deleted");
+          if (!isProjectionRace || attempt === waits.length - 1) {
+            throw error;
+          }
+          await pause(waits[attempt]);
+        }
+      }
+    }
+
+    document.getElementById("authForm").addEventListener("submit", async (event) => {
+      const form = event.currentTarget;
+      event.preventDefault();
+      clearStatus();
+      const submitter = event.submitter;
+      const data = new FormData(form);
+      const username = String(data.get("username") || "");
+      const password = String(data.get("password") || "");
+      try {
+        if (submitter && submitter.value === "register") {
+          await api("/auth/register", {
+            method: "POST",
+            body: JSON.stringify({ username, password })
+          });
+          await login(username, password);
+          setStatus("Account created and signed in.");
+        } else {
+          await login(username, password);
+          setStatus("Signed in.");
+        }
+        await loadMe();
+        await loadFeed();
+        form.reset();
+      } catch (error) {
+        setStatus("Auth failed: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("appbuilder.jwt");
+      state.me = null;
+      state.feed = [];
+      state.index = 0;
+      state.searchResults = [];
+      clearStatus();
+      syncUi();
+    });
+
+    document.getElementById("profileForm").addEventListener("submit", async (event) => {
+      const form = event.currentTarget;
+      event.preventDefault();
+      const data = new FormData(form);
+      const content = String(data.get("content") || "").trim();
+      if (!content) return;
+      try {
+        await createCard(content);
+        setStatus("Card published. Search may lag briefly while projection catches up.");
+        form.reset();
+        await loadFeed();
+      } catch (error) {
+        setStatus("Could not publish card: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("skipBtn").addEventListener("click", () => {
+      if (!currentCard()) return;
+      state.skipped += 1;
+      state.index += 1;
+      syncUi();
+    });
+
+    document.getElementById("likeBtn").addEventListener("click", async () => {
+      const card = currentCard();
+      if (!card) return;
+      try {
+        await followAuthor(card.author);
+        setStatus("Liked @" + card.author.username + ".");
+      } catch (error) {
+        setStatus("Could not send like: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("commentToggleBtn").addEventListener("click", () => {
+      const form = document.getElementById("commentForm");
+      form.style.display = form.style.display === "none" ? "grid" : "none";
+    });
+
+    document.getElementById("commentForm").addEventListener("submit", async (event) => {
+      const form = event.currentTarget;
+      event.preventDefault();
+      const card = currentCard();
+      if (!card) return;
+      const data = new FormData(form);
+      const content = String(data.get("content") || "").trim();
+      if (!content) return;
+      try {
+        await sendComment(card.post.id, content);
+        setStatus("Opener sent to @" + card.author.username + ".");
+        form.reset();
+        form.style.display = "none";
+        await loadFeed();
+      } catch (error) {
+        setStatus("Could not send opener: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("likedList").addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-unlike]");
+      if (!button) return;
+      const userId = button.getAttribute("data-unlike");
+      try {
+        await unfollowAuthor(userId);
+        setStatus("Like removed.");
+      } catch (error) {
+        setStatus("Could not undo like: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("searchBtn").addEventListener("click", async () => {
+      const query = document.getElementById("searchInput").value;
+      try {
+        await searchPosts(query);
+        if (query.trim()) setStatus("Search complete.");
+      } catch (error) {
+        setStatus("Search failed: " + error.message, "error");
+      }
+    });
+
+    document.getElementById("clearSearchBtn").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      state.searchResults = [];
+      renderSearchResults();
+      clearStatus();
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", async () => {
+      try {
+        await loadFeed();
+        setStatus("Feed refreshed.");
+      } catch (error) {
+        setStatus("Feed refresh failed: " + error.message, "error");
+      }
+    });
+
+    window.addEventListener("load", async () => {
+      syncUi();
+      if (!getToken()) return;
+      try {
+        await loadMe();
+        await loadFeed();
+      } catch (error) {
+        setStatus("Gateway error: " + error.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

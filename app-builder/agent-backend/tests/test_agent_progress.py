@@ -5,10 +5,18 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from app.agent import CodexCliAppAgent, _codex_progress_event
+from app.agent import ClaudeCliAppAgent, CodexCliAppAgent, _codex_progress_event
 
 
 class AgentProgressTest(unittest.TestCase):
+
+    def test_cli_prompts_keep_live_network_checks_outside_the_agent_sandbox(self) -> None:
+        for agent_type in (CodexCliAppAgent, ClaudeCliAppAgent):
+            agent = object.__new__(agent_type)
+            prompt = agent._prompt("update the app")
+            self.assertIn("python3 verify-frontend-contracts.py .", prompt)
+            self.assertIn("Do not run the networked", prompt)
+            self.assertIn("server owns live endpoint verification", prompt)
 
     def test_stream_retry_warning_becomes_one_plain_language_status(self) -> None:
         event = _codex_progress_event(

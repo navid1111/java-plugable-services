@@ -71,7 +71,27 @@ INDEX_HTML = """<!doctype html>
   .bar { min-height: 48px; padding: 10px 16px; border-bottom: 1px solid var(--line); color: var(--muted); display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: 12px; }
   .bar-right { display: flex; gap: 12px; align-items: center; }
   .bar a { color: var(--brand); text-decoration: none; font-weight: 700; }
+  .view-tab { min-width: auto; padding: 7px 10px; border: 1px solid transparent; border-radius: 9px; color: var(--muted); background: transparent; font-size: 11px; }
+  .view-tab.active { color: var(--text); border-color: var(--line); background: var(--panel-2); }
+  .view-tab:disabled { cursor: not-allowed; }
+  [hidden] { display: none !important; }
   iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  .architecture { flex: 1; min-height: 0; overflow: auto; padding: 22px; background: radial-gradient(circle at 50% 0%, rgba(105,226,255,.08), transparent 45%); }
+  .architecture-inner { width: min(1080px, 100%); margin: 0 auto; }
+  .architecture-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+  .architecture h2 { margin: 0; font-size: 20px; }
+  .architecture p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .origin-badge { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--brand); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+  .diagram-surface { min-height: 240px; margin-top: 17px; padding: 18px; display: grid; place-items: center; overflow: auto; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.96); color: #0f172a; }
+  .diagram-surface svg { max-width: 100%; height: auto; }
+  .diagram-fallback { color: #475569; font-size: 13px; text-align: center; }
+  .source-label { display: block; margin-top: 18px; color: #dbe5f2; font-size: 12px; font-weight: 750; }
+  #architectureSource { width: 100%; height: 230px; margin-top: 7px; resize: vertical; border-radius: 13px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .architecture-actions { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 10px; }
+  #architectureStatus { color: var(--muted); font-size: 11px; }
+  .architecture-buttons { display: flex; gap: 8px; }
+  .secondary-button, .apply-button { min-width: auto; min-height: 36px; padding: 7px 12px; border-radius: 10px; font-size: 11px; }
+  .secondary-button { color: var(--text); border: 1px solid var(--line); background: var(--panel-2); }
 
   @media (max-width: 850px) {
     body { height: auto; min-height: 100vh; grid-template-columns: 1fr; grid-template-rows: minmax(560px, auto) 70vh; }
@@ -107,9 +127,33 @@ INDEX_HTML = """<!doctype html>
   </form>
 </aside>
 <main class="preview">
-  <div class="bar"><span id="status">Your preview will appear here.</span><div class="bar-right"><a id="open" href="#" target="_blank" rel="noopener" hidden>Open preview ↗</a></div></div>
+  <div class="bar"><span id="status">Your preview will appear here.</span><div class="bar-right">
+    <button id="previewTab" class="view-tab active" type="button">Preview</button>
+    <button id="architectureTab" class="view-tab" type="button">Architecture</button>
+    <a id="open" href="#" target="_blank" rel="noopener" hidden>Open preview ↗</a>
+  </div></div>
   <iframe id="frame" title="Generated app preview" src="about:blank"></iframe>
+  <section id="architecturePane" class="architecture" hidden>
+    <div class="architecture-inner">
+      <div class="architecture-heading">
+        <div><h2>How your app is connected</h2><p id="servicesSummary">Build an app to detect its backend service plugs.</p></div>
+        <span id="architectureOrigin" class="origin-badge">Generated</span>
+      </div>
+      <div id="diagram" class="diagram-surface"><div class="diagram-fallback">The service diagram will appear after the workspace is created.</div></div>
+      <label class="source-label" for="architectureSource">Mermaid source</label>
+      <textarea id="architectureSource" spellcheck="false" aria-describedby="architectureHelp" placeholder="flowchart LR&#10;  App --> Gateway"></textarea>
+      <p id="architectureHelp">Edit this diagram to explain your intended architecture. Saved edits become context for the agent on the next update.</p>
+      <div class="architecture-actions">
+        <span id="architectureStatus" role="status">Not saved yet</span>
+        <div class="architecture-buttons">
+          <button id="saveArchitecture" class="secondary-button" type="button">Save context</button>
+          <button id="applyArchitecture" class="apply-button" type="button">Save &amp; update app</button>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js"></script>
 <script>
   const log = document.getElementById('log'), messages = document.getElementById('messages'),
         form = document.getElementById('f'), promptEl = document.getElementById('p'),
@@ -118,7 +162,12 @@ INDEX_HTML = """<!doctype html>
         buildCard = document.getElementById('buildCard'), buildTitle = document.getElementById('buildTitle'),
         buildMessage = document.getElementById('buildMessage'), progressBar = document.getElementById('progressBar'),
         timeLabel = document.getElementById('timeLabel'), progressTrack = document.querySelector('.track'),
-        eventCount = document.getElementById('eventCount');
+        eventCount = document.getElementById('eventCount'),
+        previewTab = document.getElementById('previewTab'), architectureTab = document.getElementById('architectureTab'),
+        architecturePane = document.getElementById('architecturePane'), diagram = document.getElementById('diagram'),
+        architectureSource = document.getElementById('architectureSource'), servicesSummary = document.getElementById('servicesSummary'),
+        architectureOrigin = document.getElementById('architectureOrigin'), architectureStatus = document.getElementById('architectureStatus'),
+        saveArchitectureBtn = document.getElementById('saveArchitecture'), applyArchitectureBtn = document.getElementById('applyArchitecture');
 
   const phases = {
     prepare: { progress: 10, step: 0, title: 'Getting things ready', message: 'Reading your request and checking available features.' },
@@ -130,7 +179,8 @@ INDEX_HTML = """<!doctype html>
 
   let slug = new URLSearchParams(location.search).get('app'), es = null;
   let building = false, startedAt = 0, progress = 0, progressTimer = null;
-  let technicalEvents = 0, agentReportedError = false, lastPhase = '';
+  let technicalEvents = 0, agentReportedError = false, lastPhase = '', architectureDirty = false;
+  if (window.mermaid) window.mermaid.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'neutral'});
 
   function addMessage(kind, text) {
     if (!text) return;
@@ -147,6 +197,86 @@ INDEX_HTML = """<!doctype html>
     log.appendChild(el); log.scrollTop = log.scrollHeight;
     while (log.children.length > 200) log.firstElementChild.remove();
     technicalEvents += 1; eventCount.textContent = '(' + technicalEvents + ')';
+  }
+
+  function showView(name) {
+    const architectureVisible = name === 'architecture';
+    frame.hidden = architectureVisible; architecturePane.hidden = !architectureVisible;
+    previewTab.classList.toggle('active', !architectureVisible);
+    architectureTab.classList.toggle('active', architectureVisible);
+    statusEl.textContent = architectureVisible ? 'Architecture and service plugs' : (slug ? 'Live preview' : 'Your preview will appear here.');
+    openLink.hidden = architectureVisible || !slug;
+    if (architectureVisible) renderArchitecture();
+  }
+
+  async function renderArchitecture() {
+    const source = architectureSource.value.trim();
+    if (!source) {
+      diagram.innerHTML = '<div class="diagram-fallback">Add Mermaid source to preview the architecture.</div>';
+      return;
+    }
+    if (!window.mermaid) {
+      diagram.innerHTML = '<div class="diagram-fallback">Diagram rendering is unavailable, but you can still edit and save the Mermaid source.</div>';
+      return;
+    }
+    try {
+      const id = 'appArchitecture' + Date.now();
+      const rendered = await window.mermaid.render(id, source);
+      diagram.innerHTML = rendered.svg;
+      if (rendered.bindFunctions) rendered.bindFunctions(diagram);
+    } catch (error) {
+      diagram.textContent = 'Mermaid could not render this source: ' + String(error.message || error);
+      diagram.classList.add('diagram-fallback');
+      return;
+    }
+    diagram.classList.remove('diagram-fallback');
+  }
+
+  function setArchitecture(data, force) {
+    data = data || {};
+    if (force || !architectureDirty) {
+      architectureSource.value = data.source || '';
+      architectureDirty = false;
+    }
+    const services = data.services || [];
+    servicesSummary.textContent = services.length
+      ? 'Connected through Kong: ' + services.join(', ')
+      : 'No backend service calls are detected in the current frontend yet.';
+    architectureOrigin.textContent = data.origin === 'user' ? 'User context' : 'Generated';
+    architectureStatus.textContent = data.origin === 'user'
+      ? 'Saved as agent context'
+      : 'Generated from the current app';
+    renderArchitecture();
+  }
+
+  async function loadArchitecture() {
+    if (!slug) return;
+    const response = await fetch('/api/apps/' + encodeURIComponent(slug) + '/architecture');
+    if (!response.ok) return;
+    setArchitecture(await response.json(), true);
+  }
+
+  async function saveArchitecture(applyToApp) {
+    if (!slug) {
+      architectureStatus.textContent = 'Build an app before saving architecture context.';
+      return;
+    }
+    architectureStatus.textContent = 'Saving…';
+    const response = await fetch('/api/apps/' + encodeURIComponent(slug) + '/architecture', {
+      method: 'PUT', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({source: architectureSource.value})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      architectureStatus.textContent = data.detail || 'Could not save this Mermaid source.';
+      return;
+    }
+    setArchitecture(data, true);
+    architectureStatus.textContent = applyToApp ? 'Saved. Updating the app…' : 'Saved. The agent will use it on the next update.';
+    if (applyToApp) {
+      showView('preview');
+      await send('Update the app to follow the user-edited architecture diagram. Keep all service calls within the available plug contracts.');
+    }
   }
 
   function setProgress(value) {
@@ -181,6 +311,7 @@ INDEX_HTML = """<!doctype html>
     building = true; agentReportedError = false; lastPhase = '';
     startedAt = Date.now(); progress = 0; buildCard.hidden = false;
     buildCard.className = 'build-card building'; btn.disabled = true; btn.textContent = 'Building…';
+    applyArchitectureBtn.disabled = true;
     document.getElementById('stateIcon').textContent = '';
     timeLabel.textContent = 'Usually 5–10 minutes with backend tests'; statusEl.textContent = 'Building your app…';
     setPhase('prepare');
@@ -199,6 +330,7 @@ INDEX_HTML = """<!doctype html>
   function finishBuild(failed) {
     building = false; clearInterval(progressTimer); progressTimer = null;
     btn.disabled = false; btn.textContent = slug ? 'Update app' : 'Build app';
+    applyArchitectureBtn.disabled = false;
     buildCard.hidden = false;
     if (failed) {
       buildCard.className = 'build-card failed';
@@ -232,6 +364,7 @@ INDEX_HTML = """<!doctype html>
     if (type === 'tool_result') return (data.ok === false ? 'failed — ' : 'ok — ') + (data.summary || 'completed');
     if (type === 'error') return data.message || data.userMessage || 'Unknown error';
     if (type === 'preview') return 'Preview updated: ' + (data.url || '');
+    if (type === 'architecture') return 'Architecture updated: ' + ((data.services || []).join(', ') || 'no backend services');
     if (type === 'verification') return data.userMessage || data.report || 'Testing live backend endpoints';
     if (type === 'done' || type === 'build_complete') return data.is_error ? 'completed with errors' : 'completed';
     return JSON.stringify(data || {});
@@ -263,6 +396,8 @@ INDEX_HTML = """<!doctype html>
         setPhase('check'); setProgress(data.status === 'passed' ? 96 : 90);
         buildMessage.textContent = data.userMessage || 'Testing the real backend endpoints used by this app.';
       }
+    } else if (type === 'architecture') {
+      if (!options.replay) setArchitecture(data, false);
     } else if (type === 'preview') {
       frame.src = data.url + '?t=' + Date.now(); openLink.href = data.url; openLink.hidden = false;
       if (building) { setPhase('check'); setProgress(94); }
@@ -302,7 +437,7 @@ INDEX_HTML = """<!doctype html>
   function connect() {
     if (es) es.close();
     es = new EventSource('/api/apps/' + encodeURIComponent(slug) + '/events');
-    ['user','thinking','assistant_text','assistant_delta','tool_use','tool_result','verification','preview','error','done','build_complete']
+    ['user','thinking','assistant_text','assistant_delta','tool_use','tool_result','verification','architecture','preview','error','done','build_complete']
       .forEach(type => es.addEventListener(type, event => renderEvent(type, JSON.parse(event.data))));
     es.onerror = () => {
       if (building) buildMessage.textContent = 'Reconnecting to the builder… your work is still safe.';
@@ -318,6 +453,7 @@ INDEX_HTML = """<!doctype html>
       if (!response.ok) throw new Error('Could not create an app workspace.');
       const data = await response.json(); slug = data.slug;
       window.history.replaceState(null, '', '?app=' + encodeURIComponent(slug)); connect();
+      await loadArchitecture();
       await new Promise(resolve => setTimeout(resolve, 150));
     }
     const response = await fetch('/api/apps/' + encodeURIComponent(slug) + '/message', {
@@ -342,11 +478,28 @@ INDEX_HTML = """<!doctype html>
     if (!building && slug && statusEl.textContent === 'Opening your app…') statusEl.textContent = 'Preview opened';
   });
 
+  let architectureRenderTimer = null;
+  architectureSource.addEventListener('input', () => {
+    architectureDirty = true; architectureStatus.textContent = 'Unsaved changes';
+    clearTimeout(architectureRenderTimer);
+    architectureRenderTimer = setTimeout(renderArchitecture, 450);
+  });
+  previewTab.addEventListener('click', () => showView('preview'));
+  architectureTab.addEventListener('click', () => showView('architecture'));
+  saveArchitectureBtn.addEventListener('click', () => saveArchitecture(false));
+  applyArchitectureBtn.addEventListener('click', async () => {
+    try { await saveArchitecture(true); }
+    catch (error) {
+      architectureStatus.textContent = String(error.message || error);
+      if (building) finishBuild(true);
+    }
+  });
+
   if (slug) {
     statusEl.textContent = 'Opening your app…';
     openLink.href = '/apps/' + encodeURIComponent(slug) + '/'; openLink.hidden = false;
     frame.src = '/apps/' + encodeURIComponent(slug) + '/';
-    loadHistory().finally(connect);
+    Promise.all([loadHistory(), loadArchitecture()]).finally(connect);
   }
 </script>
 </body></html>

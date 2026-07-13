@@ -65,6 +65,21 @@ _SERVICE_PATH_MARKERS: dict[str, tuple[str, ...]] = {
     "whatsapp-service": ("/chat",),
 }
 
+_SERVICE_DISPLAY_NAMES: dict[str, str] = {
+    "auth-service": "Authentication",
+    "bff": "Backend for Frontend",
+    "booking-service": "Booking",
+    "comment-service": "Comments",
+    "leetcode-service": "Coding challenges",
+    "media-service": "Media",
+    "post-search-service": "Search",
+    "tweeter-service": "Posts",
+    "whatsapp-service": "Chat",
+}
+_ARCHITECTURE_FILE = "ARCHITECTURE.mmd"
+_ARCHITECTURE_META = ".appbuilder/architecture.json"
+_MAX_ARCHITECTURE_CHARS = 30_000
+
 
 def _frontend_sources(cwd: Path) -> list[Path]:
     candidates = {*cwd.rglob("*.html"), *cwd.rglob("*.js")}
@@ -84,6 +99,118 @@ def services_used_by_frontend(cwd: Path) -> list[str]:
         service for service, markers in _SERVICE_PATH_MARKERS.items()
         if any(marker in source for marker in markers)
     ]
+
+
+def _architecture_hash(source: str) -> str:
+    return hashlib.sha256(source.encode("utf-8")).hexdigest()
+
+
+def _architecture_meta(cwd: Path) -> dict:
+    try:
+        data = json.loads((cwd / _ARCHITECTURE_META).read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_architecture_meta(cwd: Path, data: dict) -> None:
+    target = cwd / _ARCHITECTURE_META
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def generate_architecture(cwd: Path) -> str:
+    """Create a deterministic Mermaid view of the browser-to-plug wiring."""
+    services = services_used_by_frontend(cwd)
+    lines = [
+        "flowchart LR",
+        '  User([User]) --> App["Generated web app"]',
+    ]
+    if not services:
+        lines.append('  App -. "No backend calls detected yet" .-> Static["Static interface"]')
+        return "\n".join(lines) + "\n"
+
+    lines.extend([
+        '  App -->|"API requests; JWT when required"| Kong["Kong API Gateway<br/>localhost:18000"]',
+        "  subgraph Plugs[Backend service plugs]",
+    ])
+    for index, service in enumerate(services):
+        node = f"S{index}"
+        display = _SERVICE_DISPLAY_NAMES.get(service, service)
+        lines.append(f'    {node}["{display}<br/>{service}"]')
+    lines.append("  end")
+    for index, service in enumerate(services):
+        gateway_paths = ", ".join(_SERVICE_PATH_MARKERS[service])
+        lines.append(f'  Kong -->|"{gateway_paths}"| S{index}')
+    return "\n".join(lines) + "\n"
+
+
+def architecture_payload(cwd: Path, *, refresh_generated: bool = False) -> dict:
+    """Return the editable diagram, preserving user changes across regeneration."""
+    target = cwd / _ARCHITECTURE_FILE
+    meta = _architecture_meta(cwd)
+    existing = target.read_text(encoding="utf-8") if target.is_file() else ""
+    last_generated_hash = str(meta.get("lastGeneratedHash", ""))
+
+    # A direct IDE edit is user intent too, even if it did not go through the API.
+    manually_changed = bool(existing and last_generated_hash and _architecture_hash(existing) != last_generated_hash)
+    untracked_existing = bool(existing and not last_generated_hash)
+    user_owned = meta.get("origin") == "user" or manually_changed or untracked_existing
+
+    if not existing or (refresh_generated and not user_owned):
+        existing = generate_architecture(cwd)
+        target.write_text(existing, encoding="utf-8")
+        meta = {
+            "origin": "generated",
+            "lastGeneratedHash": _architecture_hash(existing),
+        }
+        _write_architecture_meta(cwd, meta)
+    elif user_owned and meta.get("origin") != "user":
+        meta["origin"] = "user"
+        _write_architecture_meta(cwd, meta)
+
+    return {
+        "source": existing,
+        "services": services_used_by_frontend(cwd),
+        "origin": meta.get("origin", "user" if user_owned else "generated"),
+    }
+
+
+def save_user_architecture(cwd: Path, source: str) -> dict:
+    normalized = source.strip() + "\n"
+    if len(normalized) > _MAX_ARCHITECTURE_CHARS:
+        raise ValueError(f"Mermaid source must be at most {_MAX_ARCHITECTURE_CHARS} characters")
+    if not re.match(
+        r"^(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|journey|gantt|mindmap|timeline)\b",
+        normalized,
+    ):
+        raise ValueError("Mermaid source must start with a supported diagram declaration such as 'flowchart LR'")
+    target = cwd / _ARCHITECTURE_FILE
+    target.write_text(normalized, encoding="utf-8")
+    _write_architecture_meta(cwd, {
+        "origin": "user",
+        "lastGeneratedHash": _architecture_meta(cwd).get("lastGeneratedHash", ""),
+    })
+    return architecture_payload(cwd)
+
+
+def request_with_architecture(cwd: Path, request: str) -> str:
+    architecture = architecture_payload(cwd)
+    if architecture["origin"] == "user":
+        guidance = (
+            "The Mermaid diagram below is user-authored architecture intent. Use it as context, "
+            "but only wire services and endpoints present in the plugs skill."
+        )
+    else:
+        guidance = (
+            "The Mermaid diagram below is an automatically detected snapshot of the previous/current "
+            "frontend. It is context, not a constraint on this new request."
+        )
+    return (
+        f"{request.rstrip()}\n\n"
+        f"App Builder architecture context:\n{guidance}\n"
+        f"```mermaid\n{architecture['source'].rstrip()}\n```"
+    )
 
 
 def _source_fingerprint(cwd: Path) -> str:
@@ -246,6 +373,7 @@ async def scaffold(slug: str) -> Path:
     skill_dir = cwd / ".hermes" / "skills" / "plugs"
     skill_dir.mkdir(parents=True, exist_ok=True)
     (skill_dir / "SKILL.md").write_text(render_skill(plugs, endpoints))
+    architecture_payload(cwd)
     return cwd
 
 

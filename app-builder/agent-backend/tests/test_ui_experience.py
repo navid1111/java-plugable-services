@@ -23,6 +23,14 @@ class BuilderExperienceTest(unittest.TestCase):
         self.assertIn("verification", PERSISTED_EVENT_TYPES)
         self.assertIn("data.userMessage", INDEX_HTML)
 
+    def test_editable_mermaid_architecture_is_visible_and_can_update_the_agent(self) -> None:
+        self.assertIn('id="architectureTab"', INDEX_HTML)
+        self.assertIn('id="architectureSource"', INDEX_HTML)
+        self.assertIn("mermaid@11.12.2", INDEX_HTML)
+        self.assertIn("Save &amp; update app", INDEX_HTML)
+        self.assertIn("/architecture", INDEX_HTML)
+        self.assertIn("architecture", PERSISTED_EVENT_TYPES)
+
 
 if __name__ == "__main__":
     unittest.main()

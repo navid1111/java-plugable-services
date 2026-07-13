@@ -54,7 +54,9 @@ Rules for every request:
   (over)write it, never a differently named entry.
 - Read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md` FIRST. They list the only
   backends and endpoints you may call, the `GATEWAY` base URL, the required JWT
-  auth flow, and the backend verification command. Never invent an endpoint or a service.
+  auth flow, and the local contract verification command. Never invent an endpoint or a service.
+- `ARCHITECTURE.mmd` is App Builder's user-editable architecture context. Read and honor
+  user changes in it, but do not overwrite that file; App Builder keeps it synchronized.
 - For a requested capability that has no backend in the skill, render a visible but
   DISABLED placeholder card labelled "Being developed — backend not available yet".
   Do not fake it as working.
@@ -63,13 +65,14 @@ Rules for every request:
 - Be efficient with tools: you are already in the project directory — never `cd`.
   Don't create README/summary/doc files unless asked. Don't run servers or installers.
 - If the app uses any backend fetch(), implement register/login or login, store the JWT,
-  attach `Authorization: Bearer <token>` on protected calls, then run `./verify-backend.sh`.
-  The verifier lints the actual generated HTML/JS before testing the live services. Never edit,
-  delete, weaken, or bypass `verify-frontend-contracts.py` or `verify-backend.sh`. Treat any
-  failure as a real frontend contract bug or infrastructure blocker; do not claim the app is wired.
-- The server independently reruns contract checks and the official smoke test for every backend
-  service referenced by the generated HTML/JS before it releases the preview. A successful CLI
-  response is not completion; fix every verifier failure and allow up to ten minutes for this gate.
+  attach `Authorization: Bearer <token>` on protected calls, then run
+  `python3 verify-frontend-contracts.py .`. Never edit, delete, weaken, or bypass that linter.
+  Fix every reported frontend contract problem before finishing.
+- Do NOT run `./verify-backend.sh` from the agent sandbox. Network sockets are intentionally
+  unavailable there, so curl failures such as "Operation not permitted" are not backend results.
+  App Builder's server independently reruns the canonical contract linter, CORS checks, and the
+  official live smoke test for every referenced service before releasing the preview. A successful
+  agent response is not completion; allow up to ten minutes for the server-owned gate.
 - In async DOM event handlers, capture `const form = event.currentTarget` before the first `await`.
   Browsers may clear `event.currentTarget` after dispatch, so never access it after an `await`.
 - Backend writes followed immediately by dependent writes can cross an asynchronous projection
@@ -404,7 +407,8 @@ User request:
 
 Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
 Build only the static app files in this directory. If you add or change backend fetch code,
-run `./verify-backend.sh` before finishing and report the real result.
+run `python3 verify-frontend-contracts.py .` before finishing. Do not run the networked
+`./verify-backend.sh` inside this sandbox; App Builder's server owns live endpoint verification.
 """
 
 
@@ -546,5 +550,6 @@ class ClaudeCliAppAgent:
 
 Before editing, read `AGENTS.md` and `.hermes/skills/plugs/SKILL.md`.
 Build only the static app files in this directory. If you add or change backend fetch code,
-run `./verify-backend.sh` before finishing and report the real result.
+run `python3 verify-frontend-contracts.py .` before finishing. Do not run the networked
+`./verify-backend.sh` inside this sandbox; App Builder's server owns live endpoint verification.
 """

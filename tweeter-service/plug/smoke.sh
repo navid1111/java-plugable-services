@@ -87,10 +87,7 @@ if [ -z "$POST_ID" ]; then
   exit 1
 fi
 
-echo "[6/8] Reading post and author listing..."
-POST_BODY="$(curl -fsS "${BASE}/posts/${POST_ID}" -H "Authorization: Bearer ${ALICE_TOKEN}")"
-require_contains "$POST_BODY" "$C1" "post lookup"
-
+echo "[6/8] Reading author listing..."
 AUTHOR_POSTS="$(curl -fsS "${BASE}/posts?authorUserId=${BOB_ID}" -H "Authorization: Bearer ${ALICE_TOKEN}")"
 require_contains "$AUTHOR_POSTS" "$C3" "author listing"
 

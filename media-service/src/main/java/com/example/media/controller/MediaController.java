@@ -147,6 +147,8 @@ public class MediaController {
             var identity = jwtHelper.extractIdentity(authorization);
             MediaAsset asset = media.upload(identity.userId(), identity.username(), targetType, targetId, file, caption, altText);
             return ResponseEntity.status(HttpStatus.CREATED).body(MediaAssetResponse.from(asset));
+        } catch (MediaService.ForbiddenException e) {
+            return error(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (MediaService.PayloadTooLargeException e) {
             return error(HttpStatus.PAYLOAD_TOO_LARGE, e.getMessage());
         } catch (CloudinaryClient.CloudinaryConfigurationException e) {

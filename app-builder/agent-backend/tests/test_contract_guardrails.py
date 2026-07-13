@@ -152,6 +152,7 @@ class ContractGuardrailTest(unittest.TestCase):
 
     def test_required_verifier_cannot_skip_frontend_lint(self) -> None:
         verifier = render_backend_verifier()
+        agents = render_agents_md(AVAILABLE_AUTH, {"auth-service": ["GET /auth/me"]})
 
         self.assertLess(
             verifier.index("verify-frontend-contracts.py"),
@@ -160,6 +161,11 @@ class ContractGuardrailTest(unittest.TestCase):
         self.assertIn('dirname "${BASH_SOURCE[0]}"', verifier)
         self.assertIn("Never edit", APPBUILDER_SYSTEM_APPEND)
         self.assertIn("arbitrary payload fallbacks", APPBUILDER_SYSTEM_APPEND)
+        self.assertIn("python3 verify-frontend-contracts.py .", APPBUILDER_SYSTEM_APPEND)
+        self.assertIn("Do NOT run `./verify-backend.sh`", APPBUILDER_SYSTEM_APPEND)
+        self.assertIn("python3 verify-frontend-contracts.py .", agents)
+        self.assertIn("sandbox intentionally cannot open network sockets", agents)
+        self.assertIn("server runs the canonical linter", agents)
 
 
 if __name__ == "__main__":

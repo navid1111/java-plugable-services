@@ -25,6 +25,7 @@ PERSISTED_EVENT_TYPES = {
     "done",
     "build_complete",
     "verification",
+    "architecture",
 }
 
 
@@ -92,8 +93,11 @@ class SessionManager:
                 await append_event(session.cwd, "user", {"text": text})
                 await bus.publish(slug, "user", {"text": text})
                 workspace.invalidate_live_verification(session.cwd)
-                await session.agent.run(text)
+                await session.agent.run(workspace.request_with_architecture(session.cwd, text))
                 await save_agent_history(session.cwd, session.agent.history())
+                architecture = workspace.architecture_payload(session.cwd, refresh_generated=True)
+                await append_event(session.cwd, "architecture", architecture)
+                await bus.publish(slug, "architecture", architecture)
                 valid, report = await workspace.validate_frontend_contracts(session.cwd)
                 if not valid:
                     message = (

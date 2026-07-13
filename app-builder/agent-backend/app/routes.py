@@ -25,6 +25,10 @@ class Message(BaseModel):
     text: str
 
 
+class ArchitectureUpdate(BaseModel):
+    source: str
+
+
 @router.get("/", response_class=HTMLResponse)
 async def home() -> str:
     return INDEX_HTML
@@ -66,6 +70,25 @@ async def history(slug: str) -> dict:
     if not cwd.exists():
         raise HTTPException(404, "unknown app")
     return {"events": await list_events(cwd)}
+
+
+@router.get("/api/apps/{slug}/architecture")
+async def architecture(slug: str) -> dict:
+    cwd = workspace.workspace_dir(slug)
+    if not cwd.exists():
+        raise HTTPException(404, "unknown app")
+    return workspace.architecture_payload(cwd)
+
+
+@router.put("/api/apps/{slug}/architecture")
+async def update_architecture(slug: str, body: ArchitectureUpdate) -> dict:
+    cwd = workspace.workspace_dir(slug)
+    if not cwd.exists():
+        raise HTTPException(404, "unknown app")
+    try:
+        return workspace.save_user_architecture(cwd, body.source)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.get("/api/apps/{slug}/events")

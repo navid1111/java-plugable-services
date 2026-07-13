@@ -456,17 +456,20 @@ def render_agents_md(plugs: list[dict], endpoints: dict[str, list[str]]) -> str:
         "",
         "## Required feedback loop",
         "",
-        "`./verify-backend.sh` first lints the actual HTML/JS and then exercises the live stack.",
-        "Do not edit, delete, weaken, or bypass `verify-frontend-contracts.py` or the verifier.",
-        "After writing or changing backend fetch code, run `./verify-backend.sh` from this directory.",
-        "Do not claim the backend is wired until it passes. If it fails, fix the frontend contract or report the exact blocker.",
+        "After writing or changing backend fetch code, run `python3 verify-frontend-contracts.py .`.",
+        "Do not edit, delete, weaken, or bypass `verify-frontend-contracts.py`.",
+        "The coding-agent sandbox intentionally cannot open network sockets. Do not run",
+        "`./verify-backend.sh` there and do not report sandbox curl errors as backend failures.",
+        "App Builder's server runs the canonical linter plus CORS and official live service smokes",
+        "outside the sandbox before releasing the preview. `verify-backend.sh` remains available",
+        "for a human to run manually from a normal host shell.",
         "",
     ]
     return "\n".join(lines)
 
 
 def render_backend_verifier() -> str:
-    """End-to-end gateway test for the service composition used by generated apps."""
+    """Manual host-side gateway test; the restricted coding agent must not run it."""
     return f'''#!/usr/bin/env bash
 set -euo pipefail
 

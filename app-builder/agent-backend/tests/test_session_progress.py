@@ -9,8 +9,11 @@ from app.sessions import AppSession, SessionManager
 
 
 class FakeAgent:
+    def __init__(self) -> None:
+        self.last_text = ""
+
     async def run(self, _text: str) -> None:
-        return None
+        self.last_text = _text
 
     async def interrupt(self) -> None:
         return None
@@ -20,6 +23,30 @@ class FakeAgent:
 
 
 class SessionProgressTest(unittest.IsolatedAsyncioTestCase):
+
+    async def test_user_architecture_is_sent_to_agent_and_update_is_published(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            cwd = Path(temporary)
+            (cwd / "index.html").write_text("<!doctype html><title>Ready</title>")
+            (cwd / "ARCHITECTURE.mmd").write_text("flowchart LR\n  App --> Booking\n")
+            (cwd / ".appbuilder").mkdir()
+            (cwd / ".appbuilder" / "architecture.json").write_text('{"origin":"user"}')
+            agent = FakeAgent()
+            manager = SessionManager()
+            manager._sessions["demo"] = AppSession("demo", cwd, agent)
+
+            with (
+                patch("app.sessions.append_event", new=AsyncMock()),
+                patch("app.sessions.save_agent_history", new=AsyncMock()),
+                patch("app.sessions.bus.publish", new=AsyncMock()) as publish,
+                patch("app.sessions.workspace.validate_frontend_contracts", new=AsyncMock(return_value=(True, "passed"))),
+                patch("app.sessions.workspace.validate_live_backend_endpoints", new=AsyncMock(return_value=(True, "live passed"))),
+            ):
+                await manager.run_turn("demo", "use my diagram")
+
+            self.assertIn("App --> Booking", agent.last_text)
+            self.assertIn("user-authored architecture intent", agent.last_text)
+            self.assertIn("architecture", [call.args[1] for call in publish.await_args_list])
 
     async def test_completion_is_published_only_after_server_validation_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,0 +1,15 @@
+flowchart LR
+  User([User]) --> App["Generated web app"]
+  App -->|"API requests; JWT when required"| Kong["Kong API Gateway<br/>localhost:18000"]
+  subgraph Plugs[Backend service plugs]
+    S0["Authentication<br/>auth-service"]
+    S1["Backend for Frontend<br/>bff"]
+    S2["Comments<br/>comment-service"]
+    S3["Search<br/>post-search-service"]
+    S4["Posts<br/>tweeter-service"]
+  end
+  Kong -->|"/auth/"| S0
+  Kong -->|"/bff/"| S1
+  Kong -->|"/comments"| S2
+  Kong -->|"/post-search"| S3
+  Kong -->|"/posts"| S4

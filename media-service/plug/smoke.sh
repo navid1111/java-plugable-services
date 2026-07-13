@@ -6,10 +6,7 @@ STAMP="$(date +%s)"
 ALICE="media_alice_${STAMP}"
 BOB="media_bob_${STAMP}"
 PASS="smoke_pass"
-POST_TARGET_TYPE="tweeter.post"
-POST_TARGET_ID="post_${STAMP}"
-COMMENT_TARGET_TYPE="comment.comment"
-COMMENT_TARGET_ID="comment_${STAMP}"
+TARGET_TYPE="post"
 IMAGE_FILE="/tmp/media-smoke-${STAMP}.png"
 
 echo "Running media smoke test against ${BASE}"
@@ -39,11 +36,39 @@ upload_media() {
   local path="$4"
   local mime_type="$5"
   local caption="$6"
-  curl -fsS -X POST "${BASE}/media/targets/${target_type}/${target_id}" \
+  local response body status attempt
+  for attempt in 1 2; do
+    response="$(curl -sS -X POST "${BASE}/media/targets/${target_type}/${target_id}" \
+      -H "Authorization: Bearer ${token}" \
+      -F "file=@${path};type=${mime_type}" \
+      -F "caption=${caption}" \
+      -F "altText=media smoke asset ${STAMP}" \
+      -w $'\n%{http_code}')"
+    status="${response##*$'\n'}"
+    body="${response%$'\n'*}"
+    if [ "$status" = "201" ]; then
+      printf '%s' "$body"
+      return 0
+    fi
+    if { [ "$status" = "400" ] || [ "$status" = "403" ]; } \
+        && printf '%s' "$body" | grep -F "target does not exist or is deleted" >/dev/null \
+        && [ "$attempt" -lt 2 ]; then
+      echo "Waiting for media target projection (${attempt}/2)..." >&2
+      sleep 1
+      continue
+    fi
+    echo "Media upload failed with HTTP ${status}: ${body}" >&2
+    return 1
+  done
+}
+
+post_as() {
+  local token="$1"
+  local content="$2"
+  curl -fsS -X POST "${BASE}/posts" \
     -H "Authorization: Bearer ${token}" \
-    -F "file=@${path};type=${mime_type}" \
-    -F "caption=${caption}" \
-    -F "altText=media smoke asset ${STAMP}"
+    -H 'Content-Type: application/json' \
+    -d "{\"content\":\"${content}\"}"
 }
 
 delete_media() {
@@ -81,15 +106,15 @@ parse_number_field() {
   printf '%s' "$json" | sed -n "s/.*\"${field}\":\\([0-9][0-9]*\\).*/\\1/p"
 }
 
-echo "[1/9] Preparing tiny image fixture..."
+echo "[1/10] Preparing tiny image fixture..."
 printf 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=' \
   | base64 -d > "$IMAGE_FILE"
 
-echo "[2/9] Registering users..."
+echo "[2/10] Registering users..."
 register "$ALICE"
 register "$BOB"
 
-echo "[3/9] Logging in..."
+echo "[3/10] Logging in..."
 ALICE_TOKEN="$(login "$ALICE")"
 BOB_TOKEN="$(login "$BOB")"
 
@@ -98,68 +123,80 @@ if [ -z "$ALICE_TOKEN" ] || [ -z "$BOB_TOKEN" ]; then
   exit 1
 fi
 
-echo "[4/9] Verifying Kong rejects missing token..."
+echo "[4/10] Creating two real post targets..."
+POST_A="$(post_as "$ALICE_TOKEN" "media smoke target A ${STAMP}")"
+POST_B="$(post_as "$ALICE_TOKEN" "media smoke target B ${STAMP}")"
+TARGET_A_ID="$(parse_number_field "$POST_A" "id")"
+TARGET_B_ID="$(parse_number_field "$POST_B" "id")"
+if [ -z "$TARGET_A_ID" ] || [ -z "$TARGET_B_ID" ]; then
+  echo "Failed to create real post targets"
+  echo "$POST_A"
+  echo "$POST_B"
+  exit 1
+fi
+
+echo "[5/10] Verifying Kong rejects missing token..."
 HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" \
-  "${BASE}/media/targets/${POST_TARGET_TYPE}/${POST_TARGET_ID}")"
+  "${BASE}/media/targets/${TARGET_TYPE}/${TARGET_A_ID}")"
 if [ "$HTTP_CODE" != "401" ]; then
   echo "Expected 401 for unauthenticated /media, got ${HTTP_CODE}"
   exit 1
 fi
 
-echo "[5/9] Uploading media to post and comment target references..."
-POST_CAPTION="post media ${STAMP}"
-COMMENT_CAPTION="comment media ${STAMP}"
-POST_MEDIA="$(upload_media "$ALICE_TOKEN" "$POST_TARGET_TYPE" "$POST_TARGET_ID" "$IMAGE_FILE" "image/png" "$POST_CAPTION")"
-COMMENT_MEDIA="$(upload_media "$ALICE_TOKEN" "$COMMENT_TARGET_TYPE" "$COMMENT_TARGET_ID" "$IMAGE_FILE" "image/png" "$COMMENT_CAPTION")"
+echo "[6/10] Uploading media to two real post targets..."
+FIRST_CAPTION="first post media ${STAMP}"
+SECOND_CAPTION="second post media ${STAMP}"
+FIRST_MEDIA="$(upload_media "$ALICE_TOKEN" "$TARGET_TYPE" "$TARGET_A_ID" "$IMAGE_FILE" "image/png" "$FIRST_CAPTION")"
+SECOND_MEDIA="$(upload_media "$ALICE_TOKEN" "$TARGET_TYPE" "$TARGET_B_ID" "$IMAGE_FILE" "image/png" "$SECOND_CAPTION")"
 
-POST_MEDIA_ID="$(parse_number_field "$POST_MEDIA" "id")"
-COMMENT_MEDIA_ID="$(parse_number_field "$COMMENT_MEDIA" "id")"
+FIRST_MEDIA_ID="$(parse_number_field "$FIRST_MEDIA" "id")"
+SECOND_MEDIA_ID="$(parse_number_field "$SECOND_MEDIA" "id")"
 
-if [ -z "$POST_MEDIA_ID" ] || [ -z "$COMMENT_MEDIA_ID" ]; then
+if [ -z "$FIRST_MEDIA_ID" ] || [ -z "$SECOND_MEDIA_ID" ]; then
   echo "Failed to parse uploaded media ids"
-  echo "$POST_MEDIA"
-  echo "$COMMENT_MEDIA"
+  echo "$FIRST_MEDIA"
+  echo "$SECOND_MEDIA"
   exit 1
 fi
 
-require_contains "$POST_MEDIA" "$POST_CAPTION" "post upload"
-require_contains "$POST_MEDIA" "$POST_TARGET_TYPE" "post upload"
-require_contains "$COMMENT_MEDIA" "$COMMENT_CAPTION" "comment upload"
-require_contains "$COMMENT_MEDIA" "$COMMENT_TARGET_TYPE" "comment upload"
+require_contains "$FIRST_MEDIA" "$FIRST_CAPTION" "first post upload"
+require_contains "$FIRST_MEDIA" "$TARGET_TYPE" "first post upload"
+require_contains "$SECOND_MEDIA" "$SECOND_CAPTION" "second post upload"
+require_contains "$SECOND_MEDIA" "$TARGET_TYPE" "second post upload"
 
-echo "[6/9] Listing media by target with isolation..."
-POST_LIST="$(curl -fsS "${BASE}/media/targets/${POST_TARGET_TYPE}/${POST_TARGET_ID}?pageSize=2" \
+echo "[7/10] Listing media by target with isolation..."
+FIRST_LIST="$(curl -fsS "${BASE}/media/targets/${TARGET_TYPE}/${TARGET_A_ID}?pageSize=2" \
   -H "Authorization: Bearer ${BOB_TOKEN}")"
-require_contains "$POST_LIST" "$POST_CAPTION" "post media list"
-require_not_contains "$POST_LIST" "$COMMENT_CAPTION" "post media list"
+require_contains "$FIRST_LIST" "$FIRST_CAPTION" "first post media list"
+require_not_contains "$FIRST_LIST" "$SECOND_CAPTION" "first post media list"
 
-COMMENT_LIST="$(curl -fsS "${BASE}/media/targets/${COMMENT_TARGET_TYPE}/${COMMENT_TARGET_ID}?pageSize=2" \
+SECOND_LIST="$(curl -fsS "${BASE}/media/targets/${TARGET_TYPE}/${TARGET_B_ID}?pageSize=2" \
   -H "Authorization: Bearer ${BOB_TOKEN}")"
-require_contains "$COMMENT_LIST" "$COMMENT_CAPTION" "comment media list"
-require_not_contains "$COMMENT_LIST" "$POST_CAPTION" "comment media list"
+require_contains "$SECOND_LIST" "$SECOND_CAPTION" "second post media list"
+require_not_contains "$SECOND_LIST" "$FIRST_CAPTION" "second post media list"
 
-echo "[7/9] Reading uploaded media by id..."
-MEDIA_BODY="$(curl -fsS "${BASE}/media/${POST_MEDIA_ID}" \
+echo "[8/10] Reading uploaded media by id..."
+MEDIA_BODY="$(curl -fsS "${BASE}/media/${FIRST_MEDIA_ID}" \
   -H "Authorization: Bearer ${BOB_TOKEN}")"
-require_contains "$MEDIA_BODY" "$POST_CAPTION" "media lookup"
+require_contains "$MEDIA_BODY" "$FIRST_CAPTION" "media lookup"
 require_contains "$MEDIA_BODY" "secureUrl" "media lookup"
 
-echo "[8/9] Verifying non-owner cannot delete..."
-HTTP_CODE="$(delete_media "$BOB_TOKEN" "$POST_MEDIA_ID")"
+echo "[9/10] Verifying non-owner cannot delete..."
+HTTP_CODE="$(delete_media "$BOB_TOKEN" "$FIRST_MEDIA_ID")"
 if [ "$HTTP_CODE" != "403" ]; then
   echo "Expected 403 for non-owner delete, got ${HTTP_CODE}"
   exit 1
 fi
 
-echo "[9/9] Owner deletes uploaded media..."
-HTTP_CODE="$(delete_media "$ALICE_TOKEN" "$POST_MEDIA_ID")"
+echo "[10/10] Owner deletes uploaded media..."
+HTTP_CODE="$(delete_media "$ALICE_TOKEN" "$FIRST_MEDIA_ID")"
 if [ "$HTTP_CODE" != "204" ]; then
   echo "Expected 204 for owner delete on post media, got ${HTTP_CODE}"
   exit 1
 fi
-HTTP_CODE="$(delete_media "$ALICE_TOKEN" "$COMMENT_MEDIA_ID")"
+HTTP_CODE="$(delete_media "$ALICE_TOKEN" "$SECOND_MEDIA_ID")"
 if [ "$HTTP_CODE" != "204" ]; then
-  echo "Expected 204 for owner delete on comment media, got ${HTTP_CODE}"
+  echo "Expected 204 for owner delete on second post media, got ${HTTP_CODE}"
   exit 1
 fi
 
