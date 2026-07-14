@@ -1,0 +1,211 @@
+* { box-sizing: border-box; }
+
+:root {
+  color: #142033;
+  background:
+    radial-gradient(circle at top left, rgba(255, 206, 143, 0.5), transparent 28%),
+    radial-gradient(circle at top right, rgba(88, 163, 255, 0.16), transparent 28%),
+    linear-gradient(180deg, #f6efe6 0%, #eef4fb 45%, #f9fbff 100%);
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: #142033;
+  background: transparent;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.fb-shell .ab-main,
+.fb-auth-shell .ab-main {
+  background: transparent;
+}
+
+.fb-auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
+  gap: 24px;
+  align-items: center;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.fb-auth-copy h1 {
+  margin: 16px 0 8px;
+  font-size: clamp(3rem, 8vw, 5.6rem);
+  line-height: 0.94;
+}
+
+.fb-auth-copy p {
+  max-width: 52ch;
+  font-size: 1.05rem;
+}
+
+.fb-auth-switch {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.fb-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.fb-main-column,
+.fb-right-rail,
+.fb-sidebar-stack,
+.fb-modal-stack,
+.fb-feed-list,
+.fb-comments,
+.fb-search-results {
+  display: grid;
+  gap: 16px;
+}
+
+.fb-header-actions,
+.fb-role-row,
+.fb-post-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fb-profile-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.fb-profile-card__hero {
+  height: 88px;
+  background:
+    linear-gradient(135deg, rgba(250, 147, 64, 0.94), rgba(64, 120, 240, 0.92)),
+    linear-gradient(90deg, #fa9340, #4078f0);
+}
+
+.fb-profile-card__body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin-top: -28px;
+}
+
+.fb-profile-card__body h2,
+.fb-profile-card__body p {
+  margin: 0;
+}
+
+.fb-post-card,
+.fb-search-card,
+.fb-insight-card,
+.fb-placeholder-card,
+.fb-search-result-card {
+  backdrop-filter: blur(10px);
+}
+
+.fb-post-card__top,
+.fb-post-card__identity,
+.fb-comment-card__head,
+.fb-insight-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.fb-post-card__top,
+.fb-comment-card__head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fb-post-card__identity {
+  align-items: center;
+}
+
+.fb-post-card__meta {
+  color: #61708a;
+  font-size: 0.86rem;
+}
+
+.fb-post-card__content {
+  margin: 0;
+  font-size: 1.03rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.fb-post-card__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(97, 112, 138, 0.18);
+  color: #61708a;
+  font-size: 0.92rem;
+}
+
+.fb-comment-card p,
+.fb-search-result-card p {
+  margin: 8px 0 0;
+  color: #425168;
+}
+
+.fb-insight-grid {
+  justify-content: space-between;
+}
+
+.fb-insight-grid div {
+  display: grid;
+  gap: 6px;
+}
+
+.fb-insight-grid strong {
+  font-size: 1.8rem;
+}
+
+.fb-insight-grid span {
+  color: #61708a;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1080px) {
+  .fb-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fb-right-rail {
+    order: 3;
+  }
+}
+
+@media (max-width: 900px) {
+  .fb-auth-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .fb-shell.ab-shell--with-sidebar {
+    display: grid;
+  }
+
+  .fb-shell .ab-sidebar {
+    order: 2;
+  }
+
+  .fb-shell .ab-main {
+    order: 1;
+  }
+
+  .fb-post-card__stats,
+  .fb-insight-grid {
+    flex-direction: column;
+  }
+}

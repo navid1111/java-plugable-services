@@ -51,3 +51,5 @@ app-builder/agent-backend/workspaces/*/.appbuilder/dist/
 app-builder/agent-backend/workspaces/.verification/
 **/__pycache__/
 *.py[cod]
+app-builder/agent-backend/app/__pycache__/
+app-builder/agent-backend/app/__pycache__/agent.cpython-314.pyc
