@@ -526,5 +526,37 @@
       "userMessage": "The interface checks passed. Now testing every backend service used by this app; this can take several minutes."
     },
     "createdAt": 1784067344.1738338
+  },
+  {
+    "type": "verification",
+    "data": {
+      "status": "passed",
+      "userMessage": "The real backend endpoint checks passed.",
+      "report": "live endpoint verification passed: auth-service, bff, comment-service, post-search-service, tweeter-service"
+    },
+    "createdAt": 1784067477.3345308
+  },
+  {
+    "type": "preview",
+    "data": {
+      "url": "/apps/make-me-a-simple-facebook-clone-5369/",
+      "stage": "verified"
+    },
+    "createdAt": 1784067477.5778685
+  },
+  {
+    "type": "build_complete",
+    "data": {
+      "is_error": false,
+      "validation": "live-endpoints"
+    },
+    "createdAt": 1784067477.5783908
+  },
+  {
+    "type": "user",
+    "data": {
+      "text": "add realtime messaging to it"
+    },
+    "createdAt": 1784067720.6904402
   }
 ]

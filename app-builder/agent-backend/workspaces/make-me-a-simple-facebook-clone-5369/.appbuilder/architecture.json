@@ -22,11 +22,6 @@
         "target": "service:bff"
       },
       {
-        "id": "gateway-comment-service",
-        "source": "gateway",
-        "target": "service:comment-service"
-      },
-      {
         "id": "gateway-post-search-service",
         "source": "gateway",
         "target": "service:post-search-service"
@@ -35,6 +30,16 @@
         "id": "gateway-tweeter-service",
         "source": "gateway",
         "target": "service:tweeter-service"
+      },
+      {
+        "id": "gateway-comment-service",
+        "source": "gateway",
+        "target": "service:comment-service"
+      },
+      {
+        "id": "gateway-whatsapp-service",
+        "source": "gateway",
+        "target": "service:whatsapp-service"
       }
     ],
     "nodes": [
@@ -134,5 +139,5 @@
     ]
   },
   "lastGeneratedHash": "e69f0c4a2f870ac8f3b7211c0d4ba4b3b7ef2d7814457425495a72da4496fe69",
-  "origin": "generated"
+  "origin": "user"
 }

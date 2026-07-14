@@ -16,8 +16,9 @@ flowchart LR
   N1 --> N2
   N2 -->|"/auth/"| N3
   N2 -->|"/bff/"| N4
-  N2 -->|"/comments"| N6
   N2 -->|"/post-search"| N9
   N2 -->|"/posts"| N10
+  N2 -->|"/comments"| N6
+  N2 -->|"/chat"| N11
   classDef available fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b
-  class N5,N7,N8,N11 available
+  class N5,N7,N8 available
