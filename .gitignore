@@ -53,3 +53,27 @@ app-builder/agent-backend/workspaces/.verification/
 *.py[cod]
 app-builder/agent-backend/app/__pycache__/
 app-builder/agent-backend/app/__pycache__/agent.cpython-314.pyc
+
+# ---- Personal study / scratch docs (not project documentation) ----
+# Per-service prep notes kept alongside the code but not part of the repo's docs.
+# The maintained docs live in README.md, final architecture/, docs/, examples/.
+**/*_interview_prep.md
+**/*_sprint_pattern.md
+**/*_spring_pattern.md
+**/*_test.md
+**/*_atchitechture.md
+**/*_architecture.md
+
+# Root-level planning scratch
+/plan.md
+/spec.md
+/task.md
+
+# Generated App Builder per-workspace agent scaffolding
+app-builder/agent-backend/workspaces/*/AGENTS.md
+app-builder/agent-backend/workspaces/*/.hermes/
+app-builder/agent-backend/workspaces/*/.agents/
+app-builder/agent-backend/workspaces/*/.codex/
+
+# Deploy logs from scripts/deploy.sh
+.deploy-logs/

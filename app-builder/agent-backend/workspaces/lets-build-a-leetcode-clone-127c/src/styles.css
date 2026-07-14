@@ -1,0 +1,390 @@
+body {
+  background:
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 32%),
+    linear-gradient(180deg, #07111d 0%, #0d1727 100%);
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.leetcode-shell {
+  position: relative;
+}
+
+.lc-sidebar {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-brand {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.lc-brand strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.lc-brand p,
+.lc-profile-card p,
+.lc-sidebar-card p,
+.lc-nav__item span,
+.lc-muted {
+  margin: 0;
+  color: var(--ab-muted);
+}
+
+.lc-brand__mark {
+  min-width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: #082032;
+  background: linear-gradient(135deg, #fbbf24, #22d3ee);
+  font-weight: 900;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+}
+
+.lc-profile-card,
+.lc-sidebar-card {
+  display: grid;
+  gap: 14px;
+}
+
+.lc-profile-card__row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lc-role-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lc-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.lc-nav__item {
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  color: var(--ab-text);
+  background: rgba(15, 23, 42, 0.44);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.lc-nav__item strong,
+.lc-nav__item span {
+  display: block;
+}
+
+.lc-nav__item:hover,
+.lc-nav__item.is-active {
+  transform: translateY(-1px);
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.lc-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lc-hero,
+.lc-layout,
+.lc-roadmap {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-hero {
+  grid-template-columns: 1.7fr 1fr;
+  margin-bottom: 22px;
+}
+
+.lc-hero__primary,
+.lc-hero__auth {
+  height: 100%;
+}
+
+.lc-hero__primary {
+  display: grid;
+  gap: 18px;
+  align-content: space-between;
+}
+
+.lc-hero__copy h2 {
+  margin: 12px 0;
+  font-size: clamp(1.5rem, 2vw, 2.2rem);
+  line-height: 1.05;
+}
+
+.lc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lc-stats div {
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background: rgba(8, 15, 29, 0.52);
+}
+
+.lc-stats span,
+.lc-submission-grid span {
+  display: block;
+  color: var(--ab-muted);
+  font-size: 0.8rem;
+}
+
+.lc-stats strong,
+.lc-submission-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.1rem;
+}
+
+.lc-auth-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.lc-layout {
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.lc-main-column {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 12px;
+  align-items: end;
+}
+
+.lc-filter {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--ab-muted);
+}
+
+.lc-problem-list {
+  display: grid;
+  gap: 10px;
+  max-height: 760px;
+  overflow: auto;
+}
+
+.lc-problem-row {
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  color: var(--ab-text);
+  background: rgba(2, 6, 23, 0.42);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.lc-problem-row:hover,
+.lc-problem-row.is-active {
+  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.34);
+  background: rgba(34, 211, 238, 0.1);
+}
+
+.lc-problem-row__top,
+.lc-problem-row__meta,
+.lc-case-card__header,
+.lc-case-stack__header,
+.lc-editor-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.lc-problem-row__top strong {
+  font-size: 0.95rem;
+}
+
+.lc-problem-row__meta {
+  margin-top: 10px;
+  color: var(--ab-muted);
+  font-size: 0.8rem;
+  align-items: flex-start;
+}
+
+.lc-problem-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-problem-detail__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.lc-problem-detail__copy p {
+  margin: 0;
+  color: #d6e2f1;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.lc-tag-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lc-example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.lc-example-card,
+.lc-submission-card,
+.lc-placeholder-card {
+  display: grid;
+  gap: 14px;
+}
+
+.lc-code-block {
+  display: grid;
+  gap: 8px;
+}
+
+.lc-code-block strong {
+  font-size: 0.82rem;
+}
+
+.lc-code-block pre {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.6);
+  color: #d6e2f1;
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.lc-editor {
+  min-height: 320px;
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  font-size: 0.92rem;
+}
+
+.lc-submission-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lc-roadmap {
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lc-placeholder-card {
+  opacity: 0.76;
+}
+
+.lc-admin-form,
+.lc-case-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.lc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.lc-case-card {
+  display: grid;
+  gap: 14px;
+}
+
+.lc-case-card__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.lc-case-stack__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lc-checkbox {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ab-muted);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1080px) {
+  .lc-hero,
+  .lc-layout,
+  .lc-roadmap {
+    grid-template-columns: 1fr;
+  }
+
+  .lc-stats,
+  .lc-submission-grid,
+  .lc-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .lc-toolbar,
+  .lc-stats,
+  .lc-submission-grid,
+  .lc-form-grid,
+  .lc-problem-row__top,
+  .lc-problem-row__meta,
+  .lc-case-card__header,
+  .lc-case-stack__header,
+  .lc-editor-actions {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .lc-header-actions,
+  .lc-role-strip {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pluggable Services Platform</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface-2: #eef1f6;
+    --line: rgba(15, 23, 42, .12);
+    --line-strong: rgba(15, 23, 42, .22);
+    --text: #131722;
+    --muted: #566072;
+    --accent: #c9760a;
+    --accent-strong: #a85f00;
+    --teal: #0d7a70;
+    --green: #1a7f37;
+    --blue: #2258c9;
+    --shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f17;
+      --surface: #121826;
+      --surface-2: #1a2233;
+      --line: rgba(148, 163, 184, .14);
+      --line-strong: rgba(148, 163, 184, .28);
+      --text: #e6e9ef;
+      --muted: #97a1b3;
+      --accent: #f2a63b;
+      --accent-strong: #ffbf5b;
+      --teal: #4fd1c5;
+      --green: #56d364;
+      --blue: #6ea8fe;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f9; --surface: #ffffff; --surface-2: #eef1f6;
+    --line: rgba(15,23,42,.12); --line-strong: rgba(15,23,42,.22);
+    --text: #131722; --muted: #566072;
+    --accent: #c9760a; --accent-strong: #a85f00; --teal: #0d7a70;
+    --green: #1a7f37; --blue: #2258c9;
+    --shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f17; --surface: #121826; --surface-2: #1a2233;
+    --line: rgba(148,163,184,.14); --line-strong: rgba(148,163,184,.28);
+    --text: #e6e9ef; --muted: #97a1b3;
+    --accent: #f2a63b; --accent-strong: #ffbf5b; --teal: #4fd1c5;
+    --green: #56d364; --blue: #6ea8fe;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: #0b0f17; }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- eyebrow / labels ---- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  .kicker { color: var(--muted); }
+
+  /* ---- hero ---- */
+  header.hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(120% 90% at 82% -10%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 60%),
+      var(--surface);
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, var(--line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(120% 80% at 70% 0%, #000 20%, transparent 75%);
+    opacity: .6;
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; padding: 92px 0 72px; }
+  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px color-mix(in oklab, var(--green) 26%, transparent); animation: pulse 2.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+  .brandline span { font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4.1rem);
+    line-height: 1.02;
+    letter-spacing: -.03em;
+    font-weight: 800;
+    margin: 0 0 22px;
+    text-wrap: balance;
+    max-width: 15ch;
+  }
+  h1 .hl { color: var(--accent); }
+  .lede { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--muted); max-width: 60ch; margin: 0 0 34px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 34px; margin-top: 42px; }
+  .stat .n { font-family: var(--mono); font-size: 2rem; font-weight: 700; letter-spacing: -.02em; color: var(--text); font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 13px; color: var(--muted); }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 13px; letter-spacing: .02em;
+    padding: 11px 17px; border-radius: 9px; text-decoration: none;
+    border: 1px solid var(--line-strong); color: var(--text); background: var(--surface);
+    transition: border-color .15s, transform .15s, background .15s;
+  }
+  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: #0b0f17; border-color: transparent; font-weight: 600; }
+  .btn.primary:hover { background: var(--accent-strong); }
+  .btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- section frame ---- */
+  section { padding: 76px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { margin-bottom: 40px; }
+  .sec-head h2 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); letter-spacing: -.02em; margin: 0 0 10px; font-weight: 750; text-wrap: balance; }
+  .sec-head p { color: var(--muted); margin: 0; max-width: 62ch; }
+
+  /* ---- routing panel ---- */
+  .panel {
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    background: var(--surface); box-shadow: var(--shadow);
+  }
+  .panel-top {
+    display: flex; align-items: center; gap: 8px;
+    padding: 13px 18px; border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em;
+  }
+  .panel-top .led { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .panel-top .grow { flex: 1; }
+  .route {
+    display: grid;
+    grid-template-columns: 148px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--line);
+    transition: background .14s;
+  }
+  .route:last-child { border-bottom: 0; }
+  .route:hover { background: var(--surface-2); }
+  .prefix { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: 15px; }
+  .svc .name { font-weight: 650; }
+  .svc .desc { color: var(--muted); font-size: 13.5px; }
+  .tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid var(--line-strong);
+  }
+  .tag.public { color: var(--green); border-color: color-mix(in oklab, var(--green) 45%, transparent); }
+  .tag.jwt { color: var(--blue); border-color: color-mix(in oklab, var(--blue) 45%, transparent); }
+
+  /* ---- pattern cards ---- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 16px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 13px; padding: 22px;
+    background: var(--surface); transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+  .card .num { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .05em; }
+  .card h3 { margin: 12px 0 8px; font-size: 1.06rem; letter-spacing: -.01em; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .card code { font-family: var(--mono); font-size: .86em; color: var(--text); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* ---- event backbone ---- */
+  .bus {
+    display: grid; grid-template-columns: 1fr; gap: 20px;
+  }
+  .exchange {
+    font-family: var(--mono); text-align: center;
+    border: 1px dashed var(--line-strong); border-radius: 12px; padding: 16px;
+    background: linear-gradient(0deg, color-mix(in oklab, var(--teal) 8%, transparent), transparent);
+    color: var(--teal); font-size: 14px; letter-spacing: .03em;
+  }
+  .evt-table { width: 100%; }
+  .evt-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+  thead th { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .key { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  td.prod { font-weight: 600; }
+  td .con { color: var(--muted); }
+
+  /* ---- quick start ---- */
+  .terminal { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; box-shadow: var(--shadow); }
+  .terminal .bar { display: flex; gap: 7px; padding: 12px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+  .terminal .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line-strong); display: inline-block; }
+  pre { margin: 0; padding: 20px 18px; overflow-x: auto; background: var(--surface); font-family: var(--mono); font-size: 13.5px; line-height: 1.85; color: var(--text); }
+  pre .c { color: var(--muted); }
+  pre .p { color: var(--accent); }
+
+  /* ---- footer ---- */
+  footer { padding: 54px 0 70px; }
+  .foot-grid { display: flex; flex-wrap: wrap; gap: 30px 60px; }
+  .foot-col h4 { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 0 0 14px; }
+  .foot-col a { display: block; text-decoration: none; color: var(--text); font-size: 14px; padding: 4px 0; opacity: .85; }
+  .foot-col a:hover { opacity: 1; color: var(--accent); }
+  .foot-note { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; font-family: var(--mono); }
+
+  @media (max-width: 620px) {
+    .route { grid-template-columns: 1fr auto; }
+    .route .prefix { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-grid"></div>
+  <div class="wrap hero-inner">
+    <div class="brandline">
+      <span class="dot" aria-hidden="true"></span>
+      <span>kong&nbsp;·&nbsp;spring boot&nbsp;·&nbsp;rabbitmq&nbsp;·&nbsp;docker</span>
+    </div>
+    <p class="eyebrow">Pluggable Services Platform</p>
+    <h1>Ten services. <span class="hl">One gateway.</span> No shared tables.</h1>
+    <p class="lede">
+      A microservices backend where Kong verifies every request at the edge and each service is a
+      self-contained plug kit — its own database, its own routes, wired together by events instead
+      of foreign keys. Snap a service onto the gateway or pull it off without touching the rest.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href="#routing">View the routing map</a>
+      <a class="btn" href="#quickstart">Quick start ↓</a>
+      <a class="btn" href="final%20architecture/00-system-overview.md">Architecture docs</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">10</div><div class="l">owning services + judge worker</div></div>
+      <div class="stat"><div class="n">1</div><div class="l">edge gateway, JWT-verified</div></div>
+      <div class="stat"><div class="n">8</div><div class="l">isolated Postgres databases</div></div>
+      <div class="stat"><div class="n">:18000</div><div class="l">single public entry point</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="routing">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The edge</p>
+      <h2>Every request enters through Kong</h2>
+      <p>Kong owns the public port, verifies the JWT, and forwards to the owning service on its prefix.
+      <code style="font-family:var(--mono);font-size:.85em">/auth</code> is public because it mints the tokens; everything else requires a bearer JWT.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-top"><span class="led" aria-hidden="true"></span> KONG API GATEWAY<span class="grow"></span>proxy :18000 · admin :18001</div>
+
+      <div class="route"><span class="prefix">/auth</span><span class="svc"><span class="name">auth-service</span> · <span class="desc">user identity + JWT minting</span></span><span class="tag public">public</span></div>
+      <div class="route"><span class="prefix">/posts</span><span class="svc"><span class="name">tweeter-service</span> · <span class="desc">posts, follows, cursor feed</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/comments</span><span class="svc"><span class="name">comment-service</span> · <span class="desc">reusable comments on any target</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/post-search</span><span class="svc"><span class="name">post-search-service</span> · <span class="desc">keyword search projection</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/media</span><span class="svc"><span class="name">media-service</span> · <span class="desc">Cloudinary attachments</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/bookings</span><span class="svc"><span class="name">booking-service</span> · <span class="desc">generic slot booking</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/chat</span><span class="svc"><span class="name">whatsapp-service</span> · <span class="desc">REST history + WebSocket delivery</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/leetcode</span><span class="svc"><span class="name">leetcode-service</span> · <span class="desc">problems + sandboxed judge worker</span></span><span class="tag jwt">jwt</span></div>
+      <div class="route"><span class="prefix">/bff</span><span class="svc"><span class="name">bff</span> · <span class="desc">client-shaped read composer, no DB</span></span><span class="tag jwt">jwt</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="patterns">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">How it holds together</p>
+      <h2>Six patterns every service follows</h2>
+      <p>The same contract repeats across the platform, which is what makes services interchangeable
+      and independently deployable.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="num">EDGE AUTH</div><h3>JWT verified at the gateway</h3><p>Kong checks the token once at the edge; services trust the verified identity. Signing secret and issuer are shared with Kong's JWT credential.</p></div>
+      <div class="card"><div class="num">ISOLATION</div><h3>Database per service</h3><p>No shared tables. Data crosses a boundary only as an event or an authenticated HTTP export — never a direct read of another service's schema.</p></div>
+      <div class="card"><div class="num">RELIABILITY</div><h3>Transactional outbox</h3><p>The domain row and its event commit in one transaction; a scheduled relay publishes to RabbitMQ and marks it sent. At-least-once, no dual-write race.</p></div>
+      <div class="card"><div class="num">INTERNAL</div><h3>Workload JWT plane</h3><p>Service-to-service calls to <code>/internal/*</code> carry a separate short-lived workload token with a trusted-caller list — distinct from end-user JWTs.</p></div>
+      <div class="card"><div class="num">READS</div><h3>Denormalized identity</h3><p>Services store <code>userId</code> + username inline, so reads never call auth synchronously. An identity backfill reconciles gaps from the auth export.</p></div>
+      <div class="card"><div class="num">PACKAGING</div><h3>Plug-kit per service</h3><p>Each service ships a <code>plug/</code> dir — a compose fragment, <code>kong-setup.sh</code>, and <code>smoke.sh</code> — so it plugs onto the gateway on its own.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="events">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The backbone</p>
+      <h2>Services talk over one event exchange</h2>
+      <p>A single durable topic exchange carries every domain event; the routing key is the event type.
+      Each consumer binds only the keys it needs, with a dead-letter path for messages that fail after retry.</p>
+    </div>
+
+    <div class="bus">
+      <div class="exchange">platform.events.v1&nbsp;&nbsp;·&nbsp;&nbsp;topic exchange&nbsp;&nbsp;→&nbsp;&nbsp;per-consumer queues&nbsp;&nbsp;→&nbsp;&nbsp;platform.events.dlx</div>
+      <div class="evt-scroll">
+        <table>
+          <thead><tr><th>Domain</th><th>Events</th><th>Produced by</th><th>Consumed by</th></tr></thead>
+          <tbody>
+            <tr><td class="prod">user</td><td><span class="key">user.registered / profile-updated / deactivated</span></td><td>auth</td><td class="con">projections, backfill</td></tr>
+            <tr><td class="prod">post</td><td><span class="key">post.created / updated / deleted</span></td><td>tweeter</td><td class="con">post-search, comment, media</td></tr>
+            <tr><td class="prod">follow</td><td><span class="key">follow.created / deleted</span></td><td>tweeter</td><td class="con">—</td></tr>
+            <tr><td class="prod">comment</td><td><span class="key">comment.created / deleted</span></td><td>comment</td><td class="con">—</td></tr>
+            <tr><td class="prod">media</td><td><span class="key">media.uploaded / deleted / …</span></td><td>media</td><td class="con">—</td></tr>
+            <tr><td class="prod">leetcode</td><td><span class="key">judge.requested / completed</span></td><td>api / worker</td><td class="con">worker / api</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Run it</p>
+      <h2>Up in three steps</h2>
+      <p>Services turn on à la carte with compose profiles; RabbitMQ joins any event-driven profile automatically.
+      Register each one at the gateway once Kong is healthy.</p>
+    </div>
+    <div class="terminal">
+      <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+<pre><span class="c"># 1 · secrets</span>
+echo <span class="p">"JWT_SECRET=change-me-…-min-32-bytes"</span> &gt; .env
+echo <span class="p">"JWT_ISSUER=springboot-auth"</span> &gt;&gt; .env
+
+<span class="c"># 2 · start the profiles you want (additive)</span>
+docker compose --profile auth     up --build -d
+docker compose --profile tweeter  up --build -d
+docker compose --profile media    up --build -d
+
+<span class="c"># 3 · register services at the gateway</span>
+./kong/setup-core.sh       <span class="c"># jwt issuer + auth (first)</span>
+./kong/setup-tweeter.sh    <span class="c"># /posts</span>
+./kong/setup-media.sh      <span class="c"># /media</span>
+
+<span class="c"># verify a full flow through Kong</span>
+./auth-service/plug/smoke.sh</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <h4>Architecture</h4>
+        <a href="final%20architecture/00-system-overview.md">System overview</a>
+        <a href="final%20architecture/README.md">All service diagrams</a>
+        <a href="final%20architecture/10-platform-messaging-observability.md">Messaging &amp; observability</a>
+      </div>
+      <div class="foot-col">
+        <h4>Services</h4>
+        <a href="final%20architecture/01-auth-service.md">auth · /auth</a>
+        <a href="final%20architecture/02-tweeter-service.md">tweeter · /posts</a>
+        <a href="final%20architecture/09-bff.md">bff · /bff</a>
+      </div>
+      <div class="foot-col">
+        <h4>Operate</h4>
+        <a href="README.md">README &amp; run guide</a>
+        <a href="scripts/deploy.sh">App Builder deploy</a>
+        <a href="docs/architecture/event-catalog.md">Event catalog</a>
+      </div>
+    </div>
+    <p class="foot-note">Kong :18000 · Spring Boot services :8080 (internal) · RabbitMQ platform.events.v1 · database-per-service</p>
+  </div>
+</footer>
+
+<script>
+  // Theme toggle stamped by the host overrides the media query in both directions.
+  // Also expose a manual toggle via ?theme= for local viewing.
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    if (p === 'dark' || p === 'light') document.documentElement.setAttribute('data-theme', p);
+  })();
+</script>
+</body>
+</html>

@@ -193,11 +193,14 @@ It brings up everything the App Builder needs, in order, and opens an ngrok tunn
 4. ngrok → public URL forwarding to `:8090`
 
 Requires `NGROK_AUTH_TOKEN` in `.env`. Set `NGROK_URL` (or `NGROK_DOMAIN`) to pin a reserved
-domain; otherwise ngrok assigns one. Logs are written to `.deploy-logs/`. Note that
-generated apps call the gateway at `localhost:18000` at runtime, so remote visitors' generated
-apps need the gateway reachable too (free-tier ngrok allows only one tunnel at a time).
+domain; otherwise ngrok assigns one. Logs are written to `.deploy-logs/`. Generated apps call
+the gateway at `localhost:18000` at runtime, so remote visitors' generated apps need the
+gateway reachable too.
 
-**Current deployment URL:** https://elective-reoccupy-unknown.ngrok-free.dev
+> ⚠️ **Free-tier ngrok allows only one tunnel at a time.** If another ngrok agent is already
+> running (e.g. a different project sharing the same authtoken/reserved domain), `deploy.sh`
+> detects it and leaves the App Builder reachable **locally at http://localhost:8090** instead
+> of starting a second tunnel. Stop the other agent first to make this app public.
 
 ## Test it
 

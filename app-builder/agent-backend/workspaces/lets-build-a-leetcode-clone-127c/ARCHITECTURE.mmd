@@ -1,0 +1,20 @@
+flowchart LR
+  %% Gateway edges are selected services; dashed nodes are available scaffolding.
+  N0(["User"])
+  N1["React app"]
+  N2["Kong API Gateway"]
+  N3["Authentication<br/>auth-service"]
+  N4["Backend for Frontend<br/>bff"]
+  N5["Booking<br/>booking-service"]
+  N6["Comments<br/>comment-service"]
+  N7["Coding challenges<br/>leetcode-service"]
+  N8["Media<br/>media-service"]
+  N9["Search<br/>post-search-service"]
+  N10["Posts<br/>tweeter-service"]
+  N11["Chat<br/>whatsapp-service"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|"/auth/"| N3
+  N2 -->|"/leetcode"| N7
+  classDef available fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b
+  class N4,N5,N6,N8,N9,N10,N11 available

@@ -48,9 +48,12 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 wait_for() { # url attempts label
-  local url="$1" attempts="$2" label="$3" i
+  # Success = the server answers with any HTTP status (a 404 still means it's up).
+  # curl exit 0 with a non-000 code = reachable; -f is intentionally NOT used.
+  local url="$1" attempts="$2" label="$3" i code
   for ((i = 1; i <= attempts; i++)); do
-    if curl -sf -o /dev/null "$url"; then echo "  ${label} is up."; return 0; fi
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$url" 2>/dev/null || echo 000)
+    if [[ "$code" != "000" ]]; then echo "  ${label} is up (HTTP ${code})."; return 0; fi
     sleep 2
   done
   echo "  ${label} did not come up ($url). Check logs in $LOG_DIR." >&2
@@ -81,6 +84,19 @@ else
 fi
 
 echo "4/4 Opening ngrok tunnel to :${APPBUILDER_PORT}..."
+# Free-tier ngrok allows only ONE agent session at a time. If another tunnel is
+# already up (e.g. a different app), don't clobber it — leave the App Builder
+# reachable locally and tell the user.
+if pgrep -x ngrok >/dev/null 2>&1 || curl -s --max-time 2 -o /dev/null http://127.0.0.1:4040/api/tunnels 2>/dev/null; then
+  echo "  An ngrok agent is already running (free tier allows one at a time)." >&2
+  echo "  Not starting a second tunnel. App Builder is up locally:" >&2
+  echo "    http://127.0.0.1:${APPBUILDER_PORT}" >&2
+  echo "  Stop the other ngrok agent first if you want this app public." >&2
+  # Keep the catalog + App Builder we started alive for local use.
+  CATALOG_PID="" ; APPBUILDER_PID=""
+  exit 0
+fi
+
 ngrok config add-authtoken "$NGROK_AUTH_TOKEN" >/dev/null
 NGROK_ARGS=(http "$APPBUILDER_PORT")
 [[ -n "$NGROK_URL" ]] && NGROK_ARGS=(http "--url=${NGROK_URL#https://}" "$APPBUILDER_PORT")

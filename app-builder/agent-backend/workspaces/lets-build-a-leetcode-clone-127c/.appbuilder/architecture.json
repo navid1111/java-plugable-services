@@ -1,0 +1,123 @@
+{
+  "graph": {
+    "edges": [
+      {
+        "id": "user-app",
+        "source": "user",
+        "target": "app"
+      },
+      {
+        "id": "app-gateway",
+        "source": "app",
+        "target": "gateway"
+      },
+      {
+        "id": "gateway-auth-service",
+        "source": "gateway",
+        "target": "service:auth-service"
+      },
+      {
+        "id": "gateway-leetcode-service",
+        "source": "gateway",
+        "target": "service:leetcode-service"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "user",
+        "label": "User",
+        "type": "actor",
+        "x": 60,
+        "y": 210
+      },
+      {
+        "id": "app",
+        "label": "React app",
+        "type": "app",
+        "x": 285,
+        "y": 210
+      },
+      {
+        "id": "gateway",
+        "label": "Kong API Gateway",
+        "type": "gateway",
+        "x": 520,
+        "y": 210
+      },
+      {
+        "id": "service:auth-service",
+        "label": "Authentication",
+        "serviceId": "auth-service",
+        "type": "service",
+        "x": 760,
+        "y": 35
+      },
+      {
+        "id": "service:bff",
+        "label": "Backend for Frontend",
+        "serviceId": "bff",
+        "type": "service",
+        "x": 760,
+        "y": 130
+      },
+      {
+        "id": "service:booking-service",
+        "label": "Booking",
+        "serviceId": "booking-service",
+        "type": "service",
+        "x": 760,
+        "y": 225
+      },
+      {
+        "id": "service:comment-service",
+        "label": "Comments",
+        "serviceId": "comment-service",
+        "type": "service",
+        "x": 760,
+        "y": 320
+      },
+      {
+        "id": "service:leetcode-service",
+        "label": "Coding challenges",
+        "serviceId": "leetcode-service",
+        "type": "service",
+        "x": 760,
+        "y": 415
+      },
+      {
+        "id": "service:media-service",
+        "label": "Media",
+        "serviceId": "media-service",
+        "type": "service",
+        "x": 760,
+        "y": 510
+      },
+      {
+        "id": "service:post-search-service",
+        "label": "Search",
+        "serviceId": "post-search-service",
+        "type": "service",
+        "x": 760,
+        "y": 605
+      },
+      {
+        "id": "service:tweeter-service",
+        "label": "Posts",
+        "serviceId": "tweeter-service",
+        "type": "service",
+        "x": 760,
+        "y": 700
+      },
+      {
+        "id": "service:whatsapp-service",
+        "label": "Chat",
+        "serviceId": "whatsapp-service",
+        "type": "service",
+        "x": 760,
+        "y": 795
+      }
+    ]
+  },
+  "lastGeneratedHash": "a3b865ee65cc2c81ccbcbe9e4b01c5c9d6ccf050bd21902032cbcbfa9da20642",
+  "origin": "generated"
+}
